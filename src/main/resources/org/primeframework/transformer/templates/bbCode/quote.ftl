@@ -1,0 +1,1 @@
+<div class="quote">${body}</div>

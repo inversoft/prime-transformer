@@ -1,0 +1,1 @@
+<span style="text-decoration: line-through">${body}</span>

@@ -1,0 +1,56 @@
+/*
+ * Copyright (c) 2014, Inversoft Inc., All Rights Reserved
+ */
+// Project Info
+group = "org.primeframework"
+version = "0.1"
+description = "Prime Transformer"
+
+// Plugins
+apply plugin: "java"
+apply plugin: "idea"
+apply plugin: "groovy"
+apply plugin: "testng"
+apply plugin: "init"
+apply plugin: "release"
+
+releasePlugin.publicRepo = false
+
+// Build script config
+buildscript {
+    repositories {
+        ivy {
+            name "inversoftPublic"
+            ivyPattern "http://hawking.inversoft.com/repository/public/[organisation]/[module]/[revision]/ivy.xml"
+            artifactPattern "http://hawking.inversoft.com/repository/public/[organisation]/[module]/[revision]/[type]s/[artifact]-[revision].[ext]"
+        }
+        ivy {
+            url "${project.gradle.gradleUserHomeDir}/integration-cache"
+        }
+    }
+    dependencies {
+        classpath(
+                "org.primeframework.gradle:gradle-init-plugin:0.4",
+                "org.primeframework.gradle:gradle-release-plugin:0.11",
+                "org.primeframework.gradle:gradle-testng-plugin:0.9"
+        )
+    }
+}
+
+// Dependencies
+repositories {
+    mavenCentral()
+
+}
+
+dependencies {
+    compile(
+            "org.freemarker:freemarker:2.3.19"
+    )
+
+    testCompile(
+            "org.codehaus.groovy:groovy-all:2.3.0",
+            "org.spockframework:spock-core:0.7-groovy-2.0",
+            "org.testng:testng:6.8"
+    )
+}
