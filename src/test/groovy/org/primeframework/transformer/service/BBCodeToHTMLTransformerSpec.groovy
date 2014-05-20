@@ -45,9 +45,9 @@ public class BBCodeToHTMLTransformerSpec extends Specification {
     //@Unroll("BBCode to HTML : #bbCode")
     def "BBCode to HTML"() {
 
-        expect: "when HTML transformer is called with bbcode properly formatted bbocde is returned"
+        expect: "when HTML transformer is called with bbcode properly formatted HTML is returned"
             def document = bbCodeParser.buildDocument(new DocumentSource(bbCode))
-            bbCodeToFreeMarkerTransformer.transform(document).replaceAll("\n", "").replaceAll("  ", " ").replaceAll("\" ", "\"") == html
+            bbCodeToFreeMarkerTransformer.transform(document).replaceAll("\n", "").replaceAll("\t", "").replaceAll("  ", " ").replaceAll("\" ", "\"") == html
 
         where:
             html                                                                                                                    | bbCode
@@ -66,6 +66,9 @@ public class BBCodeToHTMLTransformerSpec extends Specification {
             "<span style=\"text-decoration: underline\">Underline</span>"                                                           | "[u]Underline[/u]"
             "<a href=\"http://foo.com\">http://foo.com</a>"                                                                         | "[url=http://foo.com]http://foo.com[/url]"
             "<a href=\"http://foo.com\">foo.com</a>"                                                                                | "[url=http://foo.com]foo.com[/url]"
+            "<pre>public void main(String[]) {System.out.println(\"Hello World!\");}</pre>" | "[code]public void main(String[]) {\n\tSystem.out.println(\"Hello World!\");\n}[/code]"
+            "<pre> [b] bold text [/b] </pre>"                                               | "[code] [b] bold text [/b] [/code]"
+            "Testing []"                                                                    | "Testing []"
 
 
     }

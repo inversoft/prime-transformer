@@ -61,7 +61,8 @@ public abstract class AbstractParser implements Parser {
     }
 
     /**
-     * Return the index of the end tag character. The opening tag must be closed, if the tag is found not to be closed a {@link ParserException} will be thrown.
+     * Return the index of the end tag character. The opening tag must be closed, if the tag is found not to be
+     * closed a {@link ParserException} will be thrown.
      *
      * @param document
      * @param startIndex
@@ -77,7 +78,8 @@ public abstract class AbstractParser implements Parser {
     }
 
     /**
-     * Return the index of the start of the next tag between the start and end index values.
+     * Return the index of the start of the next tag between the start and end index values. A valid opening tag must
+     * not be followed immediately by a closing tag.
      *
      * @param document
      * @param startIndex
@@ -85,7 +87,11 @@ public abstract class AbstractParser implements Parser {
      * @return -1 is returned if the opening tag character is not found within the provided range.
      */
     protected int indexOfOpeningTagOpenCharacter(Document document, int startIndex, int endIndex) {
-        return indexOfCharacter(document, startIndex, endIndex, getTagOpenChar());
+        int openTag = indexOfCharacter(document, startIndex, endIndex, getTagOpenChar());
+        if (document.documentSource.source[openTag + 1] == getTagCloseChar()) {
+            openTag = indexOfCharacter(document, openTag + 2, endIndex, getTagOpenChar());
+        }
+        return openTag;
     }
 
     /**

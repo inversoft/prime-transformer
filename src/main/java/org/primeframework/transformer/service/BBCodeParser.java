@@ -35,6 +35,10 @@ public class BBCodeParser extends AbstractParser {
     private static final String CLOSING_TAG = "[/%s]";
 
     private static final Set<String> NO_CLOSING_TAG = new HashSet<>(Arrays.asList("*"));
+    /**
+     * The body of an 'escape' tag is not parsed.
+     */
+    private static final Set<String> ESCAPE_TAG = new HashSet<>(Arrays.asList("code"));
 
     @Override
     public Document buildDocument(DocumentSource documentSource) {
@@ -102,13 +106,14 @@ public class BBCodeParser extends AbstractParser {
             // If no closing tag is found
             if (bodyEnd == -1) {
                 if (!NO_CLOSING_TAG.contains(tagName)) {
-                    throw new ParserException("Malformed markup. No closing tag was found for " + closeTag + ". "
-                            + "Open tag started at index " + (openingTagEndIndex + 1 - closeTag.length()) + " and ended at " + openingTagEndIndex + 1 + ".\n\t" + document.documentSource);
-
+                    throw new ParserException("Malformed markup. No closing tag was found for " + closeTag +
+                            ". Open tag started at index " + (openingTagEndIndex + 1 - closeTag.length()) + " and ended at " +
+                            openingTagEndIndex + 1 + ".\n\t" + document.documentSource);
                 }
-                // When no closing tag is not required:
-                //  - 1. Find the next opening tag, this will be the end of this body
-                //  - 2. Else, use the end of this range (endIndex) as the end of this body
+                /*
+                 *  When no closing tag is not required, the next opening tag will indicate the end of this body.
+                 *  If no additional opening tags are found, the endIndex will identify the end of this body.
+                 */
                 int nextTagIndex = indexOfString(document, openingTagEndIndex, endIndex, openTag);
                 if (nextTagIndex == -1) {
                     bodyEnd = endIndex;
@@ -124,10 +129,16 @@ public class BBCodeParser extends AbstractParser {
             TagNode tag = new TagNode(document, tagBegin, attributeBegin, bodyBegin, bodyEnd, tagEnd);
             tag.attribute = attribute;
 
-            // Check for additional nested nodes
-            int nestedStartIndex = bodyBegin;
-            while (nestedStartIndex < bodyEnd) {
-                nestedStartIndex = addNextNode(document, nestedStartIndex, bodyEnd, tag.children);
+            // A tag such as [code] may not have embedded tags, only a text body.
+            if (ESCAPE_TAG.contains(tagName)) {
+                TextNode textNode = new TextNode(document, bodyBegin, bodyEnd);
+                tag.children.add(textNode);
+            } else {
+                // Add sub-nodes to this tag.
+                int nestedStartIndex = bodyBegin;
+                while (nestedStartIndex < bodyEnd) {
+                    nestedStartIndex = addNextNode(document, nestedStartIndex, bodyEnd, tag.children);
+                }
             }
             children.add(tag);
             startIndex = NO_CLOSING_TAG.contains(tagName) ? bodyEnd : bodyEnd + closeTag.length();
