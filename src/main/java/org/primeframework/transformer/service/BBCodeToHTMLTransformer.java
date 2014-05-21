@@ -55,6 +55,7 @@ public class BBCodeToHTMLTransformer implements Transformer {
         DEFAULT_TEMPLATES.put("td", "td.ftl");
         DEFAULT_TEMPLATES.put("code", "code.ftl");
         DEFAULT_TEMPLATES.put("quote", "quote.ftl");
+        DEFAULT_TEMPLATES.put("email", "email.ftl");
     }
 
     public BBCodeToHTMLTransformer() {
@@ -75,6 +76,7 @@ public class BBCodeToHTMLTransformer implements Transformer {
 
     @Override
     public String transform(Document document) {
-        return transformer.transform(document);
+        // transform and then replace line return and tabs
+        return transformer.transform(document).replaceAll("\n", "<br>").replaceAll("\t", "&nbsp;&nbsp;&nbsp;&nbsp;");
     }
 }

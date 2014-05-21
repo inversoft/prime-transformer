@@ -47,12 +47,12 @@ public class BBCodeToHTMLTransformerSpec extends Specification {
 
         expect: "when HTML transformer is called with bbcode properly formatted HTML is returned"
             def document = bbCodeParser.buildDocument(new DocumentSource(bbCode))
-            bbCodeToFreeMarkerTransformer.transform(document).replaceAll("\n", "").replaceAll("\t", "").replaceAll("  ", " ").replaceAll("\" ", "\"") == html
+            bbCodeToFreeMarkerTransformer.transform(document).replaceAll(" ", "").replaceAll("<br>", "").replaceAll("&nbsp;", "") == html.replaceAll(" ", "");
 
         where:
             html                                                                                                                    | bbCode
-            "<strong>bold</strong> No format. <strong>bold</strong>"                                                                | "[b]bold[/b] No format. [b]bold[/b]"
-            "<strong>bold <em>italic embedded</em> bold</strong>"                                                                   | "[b]bold [i]italic embedded[/i] bold[/b]"
+            "<strong>bold</strong> No format. <strong>bold</strong>"                                                                | "[b]bold[/b]No format.[b]bold[/b]"
+            "<strong>bold <em>italic embedded</em> bold</strong>"                                                                   | "[b]bold[i]italic embedded[/i]bold[/b]"
             "<a href=\"http://foo.com\">http://foo.com</a>"                                                                         | "[url]http://foo.com[/url]"
             "<ul><li>item1</li><li>item2</li></ul>"                                                                                 | "[list][*]item1[*]item2[/list]"
             "<ul><li>item1</li><li>item2</li></ul>"                                                                                 | "[list][li]item1[/li][li]item2[/li][/list]"
@@ -66,9 +66,11 @@ public class BBCodeToHTMLTransformerSpec extends Specification {
             "<span style=\"text-decoration: underline\">Underline</span>"                                                           | "[u]Underline[/u]"
             "<a href=\"http://foo.com\">http://foo.com</a>"                                                                         | "[url=http://foo.com]http://foo.com[/url]"
             "<a href=\"http://foo.com\">foo.com</a>"                                                                                | "[url=http://foo.com]foo.com[/url]"
-            "<pre>public void main(String[]) {System.out.println(\"Hello World!\");}</pre>" | "[code]public void main(String[]) {\n\tSystem.out.println(\"Hello World!\");\n}[/code]"
-            "<pre> [b] bold text [/b] </pre>"                                               | "[code] [b] bold text [/b] [/code]"
-            "Testing []"                                                                    | "Testing []"
+            "<pre>public void main(String[]) {System.out.println(\"Hello World!\");}</pre>"                                         | "[code]public void main(String[]) {\n\tSystem.out.println(\"Hello World!\");\n}[/code]"
+            "<pre> [b] bold text [/b] </pre>"                                                                                       | "[code][b]bold text[/b][/code]"
+            "Testing []"                                                                                                            | "Testing []"
+            "<a href=\"mailto:barney@rubble.com\">barney</a>"                                                                       | "[email=barney@rubble.com]barney[/email]"
+            "<a href=\"mailto:barney@rubble.com\">barney@rubble.com</a>"                                                            | "[email=barney@rubble.com]barney@rubble.com[/email]"
 
 
     }
