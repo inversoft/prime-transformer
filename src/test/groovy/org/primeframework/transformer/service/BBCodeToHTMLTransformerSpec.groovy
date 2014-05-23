@@ -42,8 +42,8 @@ public class BBCodeToHTMLTransformerSpec extends Specification {
 
     }
 
-    //@Unroll("BBCode to HTML : #bbCode")
-    def "BBCode to HTML"() {
+    //@Unroll("BBCode to HTML : #html")
+    def "BBCode to HTML - simple"() {
 
         expect: "when HTML transformer is called with bbcode properly formatted HTML is returned"
             def document = bbCodeParser.buildDocument(new DocumentSource(bbCode))
@@ -60,17 +60,31 @@ public class BBCodeToHTMLTransformerSpec extends Specification {
             "<ul><li><strong><em>1</em></strong></li><li><strong><em>2</em></strong></li></ul>"                                     | "[list][*][b][i]1[/i][/b][*][b][i]2[/i][/b][/list]"
             "<table><tr><td>Row1 Column1</td><td>Row1 Column2</td></tr><tr><td>Row2 Column1</td><td>Row2 Column2</td></tr></table>" | "[table][tr][td]Row1 Column1[/td][td]Row1 Column2[/td][/tr][tr][td]Row2 Column1[/td][td]Row2 Column2[/td][/tr][/table]"
             "<ol><li>item 1</li></ol>"                                                                                              | "[ol][li]item 1[/li][/ol]"
-            "<pre>String test = \"test\";</pre>"                                                                                    | "[code]String test = \"test\";[/code]"
             "<div class=\"quote\">Quote</div>"                                                                                      | "[quote]Quote[/quote]"
             "<span style=\"text-decoration: line-through\">Strike</span>"                                                           | "[s]Strike[/s]"
             "<span style=\"text-decoration: underline\">Underline</span>"                                                           | "[u]Underline[/u]"
             "<a href=\"http://foo.com\">http://foo.com</a>"                                                                         | "[url=http://foo.com]http://foo.com[/url]"
             "<a href=\"http://foo.com\">foo.com</a>"                                                                                | "[url=http://foo.com]foo.com[/url]"
-            "<pre>public void main(String[]) {System.out.println(\"Hello World!\");}</pre>"                                         | "[code]public void main(String[]) {\n\tSystem.out.println(\"Hello World!\");\n}[/code]"
-            "<pre> [b] bold text [/b] </pre>"                                                                                       | "[code][b]bold text[/b][/code]"
             "Testing []"                                                                                                            | "Testing []"
             "<a href=\"mailto:barney@rubble.com\">barney</a>"                                                                       | "[email=barney@rubble.com]barney[/email]"
             "<a href=\"mailto:barney@rubble.com\">barney@rubble.com</a>"                                                            | "[email=barney@rubble.com]barney@rubble.com[/email]"
+
+    }
+
+    //@Unroll("BBCode to HTML : #fileName")
+    def "BBCode to HTML - complex"() {
+
+        expect: "when HTML transformer is called with bbcode properly formatted HTML is returned"
+
+            def bbcode = this.getClass().getResourceAsStream("/org/primeframework/transformer/bbcode/" + fileName).getText();
+            def html = this.getClass().getResourceAsStream("/org/primeframework/transformer/html/" + fileName).getText();
+
+            def document = bbCodeParser.buildDocument(new DocumentSource(bbcode))
+            bbCodeToFreeMarkerTransformer.transform(document).replaceAll("<br>", "").replaceAll("\\s+", "") == html.replaceAll("\\s+", "")
+
+        where:
+            fileName | _
+            "code"  | _
 
 
     }

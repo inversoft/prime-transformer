@@ -3,14 +3,13 @@
  */
 // Project Info
 group = "org.primeframework"
-version = "0.13"
+version = "0.14"
 description = "Prime Transformer"
 
 // Plugins
 apply plugin: "java"
 apply plugin: "idea"
 apply plugin: "groovy"
-apply plugin: "testng"
 apply plugin: "init"
 apply plugin: "release"
 
@@ -31,8 +30,7 @@ buildscript {
     dependencies {
         classpath(
                 "org.primeframework.gradle:gradle-init-plugin:0.4",
-                "org.primeframework.gradle:gradle-release-plugin:0.11",
-                "org.primeframework.gradle:gradle-testng-plugin:0.9"
+                "org.primeframework.gradle:gradle-release-plugin:0.11"
         )
     }
 }
@@ -50,7 +48,6 @@ dependencies {
 
     testCompile(
             "org.codehaus.groovy:groovy-all:2.3.0",
-            "org.spockframework:spock-core:0.7-groovy-2.0",
-            "org.testng:testng:6.8"
+            "org.spockframework:spock-core:0.7-groovy-2.0"
     )
 }

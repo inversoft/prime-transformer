@@ -1,0 +1,5 @@
+[code]public void main(String[] args) {
+    System.out.println("Hello World!");
+}[/code]
+[code][b]bold text[/b][/code]
+[code]String test = "test";[/code]
