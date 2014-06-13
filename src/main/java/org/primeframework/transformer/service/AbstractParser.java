@@ -119,4 +119,17 @@ public abstract class AbstractParser implements Parser {
         }
         return -1;
     }
+
+    /**
+     * Remove leading and trailing single or double quotes.
+     * <p>Examples: <pre> "htt://.foo.com"     --> http://foo.com </pre>
+     * <pre> 'htt://.foo.com'     --> http://foo.com </pre>
+     * <pre> "testing " string"   --> testing " string </pre></p>
+     *
+     * @param string
+     * @return
+     */
+    protected String removeQuotes(String string) {
+        return string.replaceAll("^\"|\"$", "").replaceAll("^'|'$", "");
+    }
 }

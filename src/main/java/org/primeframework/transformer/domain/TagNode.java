@@ -18,7 +18,7 @@ package org.primeframework.transformer.domain;
 
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -48,28 +48,34 @@ import java.util.stream.Collectors;
  */
 public class TagNode extends BaseNode {
 
-    // Support for simple parameterized tag
-    // Example: [tag=foo]bar[/tag]
+    /**
+     * Support for a simple attribute.
+     * Example: [tag=foo]bar[/tag]
+     */
     public String attribute;
-    // TODO Support complex parameterized tags
-    // Example: [tag value="xxx" value2="yyy"]foo[/tag]
-    public Map<String, String> attributes = new HashMap<>();
+    /**
+     * Support for complex attributes.
+     * Example: [tag width="100" height="200" title="foo"]bar[/tag]
+     */
+    public Map<String, String> attributes = new LinkedHashMap<>();
     public List<Node> children = new ArrayList<>();
-    public int attributeBegin;
+    public int attributesBegin;
     public int bodyBegin;
     public int bodyEnd;
 
-    public TagNode(Document document, int tagBegin, int attributeBegin, int bodyBegin, int bodyEnd, int tagEnd) {
+    public TagNode(Document document, int tagBegin, int attributesBegin, int bodyBegin, int bodyEnd, int tagEnd, String attribute, Map<String, String> attributes) {
         this.document = document;
         this.tagBegin = tagBegin;
-        this.attributeBegin = attributeBegin;
+        this.attributesBegin = attributesBegin;
         this.bodyBegin = bodyBegin;
         this.bodyEnd = bodyEnd;
         this.tagEnd = tagEnd;
+        this.attribute = attribute;
+        this.attributes = attributes;
     }
 
     public String getName() {
-        return document.getString(tagBegin + 1, attributeBegin);
+        return document.getString(tagBegin + 1, attributesBegin != -1 ? attributesBegin : bodyBegin - 1);
     }
 
     @Override

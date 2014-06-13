@@ -18,18 +18,13 @@ package org.primeframework.transformer.service;
 
 import org.primeframework.transformer.domain.*;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  * BBCode Parser Implementation.
  */
 public class BBCodeParser extends AbstractParser {
 
-    private static final char OPEN_CHAR = '[';
-    private static final char CLOSE_CHAR = ']';
     private static final String OPENING_TAG = "[%s]";
 
     private static final String CLOSING_TAG = "[/%s]";
@@ -38,7 +33,7 @@ public class BBCodeParser extends AbstractParser {
     /**
      * The body of an 'escape' tag is not parsed.
      */
-    private static final Set<String> ESCAPE_TAG = new HashSet<>(Arrays.asList("code"));
+    private static final Set<String> ESCAPE_TAG = new HashSet<>(Arrays.asList("code", "noparse"));
 
     @Override
     public Document buildDocument(DocumentSource documentSource) {
@@ -54,12 +49,12 @@ public class BBCodeParser extends AbstractParser {
 
     @Override
     protected char getTagCloseChar() {
-        return CLOSE_CHAR;
+        return ']';
     }
 
     @Override
     protected char getTagOpenChar() {
-        return OPEN_CHAR;
+        return '[';
     }
 
     /**
@@ -88,18 +83,37 @@ public class BBCodeParser extends AbstractParser {
             int openingTagEndIndex = indexOfOpeningTagCloseCharacter(document, tagBegin, endIndex);
 
             String attribute = null;
-            int attributeBegin = indexOfCharacter(document, tagBegin, openingTagEndIndex, '=');
-            if (attributeBegin == -1) {
-                attributeBegin = openingTagEndIndex;
+            Map<String, String> attributes = new LinkedHashMap<>(3);
+            int attributesBegin = indexOfCharacter(document, tagBegin, openingTagEndIndex, ' ');
+            if (attributesBegin != -1) {
+                int attributeIndex = attributesBegin;
+                while (attributeIndex < openingTagEndIndex) {
+                    int equalsIndex = indexOfCharacter(document, attributeIndex, openingTagEndIndex, '=');
+                    String key = document.getString(attributeIndex, equalsIndex);
+                    int nextEqualsIndex = indexOfCharacter(document, equalsIndex + 1, openingTagEndIndex, '=');
+                    int endKeyValueIndex = nextEqualsIndex;
+                    if (endKeyValueIndex == -1) {
+                        endKeyValueIndex = openingTagEndIndex;
+                    } else {
+                        while (document.documentSource.source[endKeyValueIndex] != ' ') {
+                            endKeyValueIndex--;
+                        }
+                    }
+                    String value = removeQuotes(document.getString(equalsIndex + 1, endKeyValueIndex));
+                    attributes.put(key, value);
+                    attributeIndex = endKeyValueIndex;
+                }
             } else {
-                attribute = document.getString(attributeBegin + 1, openingTagEndIndex);
+                attributesBegin = indexOfCharacter(document, tagBegin, openingTagEndIndex, '=');
+                if (attributesBegin != -1) {
+                    attribute = removeQuotes(document.getString(attributesBegin + 1, openingTagEndIndex));
+                }
             }
 
-            String tagName = document.getString(tagBegin + 1, attributeBegin);
-            String openTag = String.format(OPENING_TAG, tagName);
-            String closeTag = String.format(CLOSING_TAG, tagName);
-
+            int tagNameEndIndex = attributesBegin != -1 ? attributesBegin : openingTagEndIndex;
             int bodyBegin = openingTagEndIndex + 1;
+            String tagName = document.getString(tagBegin + 1, tagNameEndIndex);
+            String closeTag = String.format(CLOSING_TAG, tagName);
             int bodyEnd = indexOfString(document, bodyBegin, endIndex, closeTag);
 
             int tagEnd;
@@ -114,6 +128,7 @@ public class BBCodeParser extends AbstractParser {
                  *  When no closing tag is not required, the next opening tag will indicate the end of this body.
                  *  If no additional opening tags are found, the endIndex will identify the end of this body.
                  */
+                String openTag = String.format(OPENING_TAG, tagName);
                 int nextTagIndex = indexOfString(document, openingTagEndIndex, endIndex, openTag);
                 if (nextTagIndex == -1) {
                     bodyEnd = endIndex;
@@ -126,9 +141,7 @@ public class BBCodeParser extends AbstractParser {
             }
 
             // Build tag node
-            TagNode tag = new TagNode(document, tagBegin, attributeBegin, bodyBegin, bodyEnd, tagEnd);
-            tag.attribute = attribute;
-
+            TagNode tag = new TagNode(document, tagBegin, attributesBegin, bodyBegin, bodyEnd, tagEnd, attribute, attributes);
             // A tag such as [code] may not have embedded tags, only a text body.
             if (ESCAPE_TAG.contains(tagName)) {
                 TextNode textNode = new TextNode(document, bodyBegin, bodyEnd);

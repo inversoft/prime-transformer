@@ -1,0 +1,3 @@
+<img src="http://www.foo.com/bar.jpg">
+<img width="100" height="50" src="http://www.foo.com/bar.jpg">
+<img width="100" height="50" alt="Foo" title="This is a photo of foo" src="http://www.foo.com/bar.jpg">

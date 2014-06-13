@@ -60,14 +60,23 @@ public class BBCodeToHTMLTransformerSpec extends Specification {
             "<ul><li><strong><em>1</em></strong></li><li><strong><em>2</em></strong></li></ul>"                                     | "[list][*][b][i]1[/i][/b][*][b][i]2[/i][/b][/list]"
             "<table><tr><td>Row1 Column1</td><td>Row1 Column2</td></tr><tr><td>Row2 Column1</td><td>Row2 Column2</td></tr></table>" | "[table][tr][td]Row1 Column1[/td][td]Row1 Column2[/td][/tr][tr][td]Row2 Column1[/td][td]Row2 Column2[/td][/tr][/table]"
             "<ol><li>item 1</li></ol>"                                                                                              | "[ol][li]item 1[/li][/ol]"
-            "<div class=\"quote\">Quote</div>"                                                                                      | "[quote]Quote[/quote]"
             "<span style=\"text-decoration: line-through\">Strike</span>"                                                           | "[s]Strike[/s]"
-            "<span style=\"text-decoration: underline\">Underline</span>"                                                           | "[u]Underline[/u]"
+            "<u>Underline</u>"                                                                                                      | "[u]Underline[/u]"
             "<a href=\"http://foo.com\">http://foo.com</a>"                                                                         | "[url=http://foo.com]http://foo.com[/url]"
             "<a href=\"http://foo.com\">foo.com</a>"                                                                                | "[url=http://foo.com]foo.com[/url]"
             "Testing []"                                                                                                            | "Testing []"
             "<a href=\"mailto:barney@rubble.com\">barney</a>"                                                                       | "[email=barney@rubble.com]barney[/email]"
             "<a href=\"mailto:barney@rubble.com\">barney@rubble.com</a>"                                                            | "[email=barney@rubble.com]barney@rubble.com[/email]"
+            "Text <sub>subscript</sub> Other text"                                                                                  | "Text [sub]subscript[/sub] Other text"
+            "Text <sup>superscript</sup> Other text"                                                                                | "Text [sup]superscript[/sup] Other text"
+            "Testing <div>[b] Testing [/b] [url]http://www.google.com[/url]</div> Text"                                             | "Testing [noparse][b] Testing [/b] [url]http://www.google.com[/url][/noparse] Text"
+            "Test color is <span style=\"color: red\">red</span>."                                                                  | "Test color is [color=red]red[/color]."
+            "Test color is <span style=\"color: #FFF\">white</span>."                                                               | "Test color is [color=\"#FFF\"]white[/color]."
+            "Test color is <span style=\"color: black\">black</span>."                                                              | "Test color is [color=\"black\"]black[/color]."
+            "<div align=\"left\">Left</div>"                                                                                        | "[left]Left[/left]"
+            "<div align=\"center\">Center</div>"                                                                                    | "[center]Center[/center]"
+            "<div align=\"right\">Right</div>"                                                                                      | "[right]Right[/right]"
+
 
     }
 
@@ -84,7 +93,10 @@ public class BBCodeToHTMLTransformerSpec extends Specification {
 
         where:
             fileName | _
-            "code"  | _
+            "code"   | _
+            "image"  | _
+            "size"   | _
+            "quote"  | _
 
 
     }

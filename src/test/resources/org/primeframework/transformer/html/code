@@ -1,11 +1,7 @@
-<pre style="border-width: 1px; border-style: dashed; font-family: Consolas, 'Bitstream Vera Sans Mono', 'Courier New', Courier, monospace; padding: 3px 5px 3px 5px; background-color: #F1F1F1;">
+<pre style="margin: 5px 15px 5px 15px; border: 1px dashed #2f6fab; font-family: monospace; padding: 3px 5px 3px 5px; background-color: #f9f9f9;">
 public void main(String[] args) {
     System.out.println("Hello World!");
 }
 </pre>
-<pre style="border-width: 1px; border-style: dashed; font-family: Consolas, 'Bitstream Vera Sans Mono', 'Courier New', Courier, monospace; padding: 3px 5px 3px 5px; background-color: #F1F1F1;">
-    [b] bold text [/b]
-</pre>
-<pre style="border-width: 1px; border-style: dashed; font-family: Consolas, 'Bitstream Vera Sans Mono', 'Courier New', Courier, monospace; padding: 3px 5px 3px 5px; background-color: #F1F1F1;">
-String test = "test";
-</pre>
+<pre style="margin: 5px 15px 5px 15px; border: 1px dashed #2f6fab; font-family: monospace; padding: 3px 5px 3px 5px; background-color: #f9f9f9;">[b] bold text [/b]</pre>
+<pre style="margin: 5px 15px 5px 15px; border: 1px dashed #2f6fab; font-family: monospace; padding: 3px 5px 3px 5px; background-color: #f9f9f9;">String test = "test";</pre>

@@ -1,0 +1,13 @@
+[#ftl/]
+[#-- @ftlvariable name="body" type="java.lang.String" --]
+[#-- @ftlvariable name="attribute" type="java.lang.String" --]
+[#-- @ftlvariable name="attributes" type="java.util.Map<java.lang.String, java.lang.String>" --]
+[#import "_macros.ftl" as macros/]
+[#if attribute??]
+  [#-- img tag may contain a single attribute for width x height --]
+  [#if attribute?contains("x") ]
+   [#assign attr = attribute?split("x")]
+   [#assign attribute = "width=\"" + attr[0] + "\" height=\"" + attr[1] + "\""]
+  [/#if]
+[/#if]
+<img [#if attribute??]${attribute}[/#if] [@macros.attributes attributes /] src="${body}">

@@ -30,4 +30,9 @@ public class DocumentSource {
         return Arrays.copyOfRange(source, start, end).toString();
 
     }
+
+    @Override
+    public String toString() {
+        return new String(source);
+    }
 }

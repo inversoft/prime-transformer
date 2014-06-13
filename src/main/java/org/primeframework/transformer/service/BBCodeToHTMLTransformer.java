@@ -56,6 +56,15 @@ public class BBCodeToHTMLTransformer implements Transformer {
         DEFAULT_TEMPLATES.put("code", "code.ftl");
         DEFAULT_TEMPLATES.put("quote", "quote.ftl");
         DEFAULT_TEMPLATES.put("email", "email.ftl");
+        DEFAULT_TEMPLATES.put("img", "image.ftl");
+        DEFAULT_TEMPLATES.put("size", "size.ftl");
+        DEFAULT_TEMPLATES.put("sub", "sub.ftl");
+        DEFAULT_TEMPLATES.put("sup", "sup.ftl");
+        DEFAULT_TEMPLATES.put("noparse", "noparse.ftl");
+        DEFAULT_TEMPLATES.put("color", "color.ftl");
+        DEFAULT_TEMPLATES.put("left", "left.ftl");
+        DEFAULT_TEMPLATES.put("center", "center.ftl");
+        DEFAULT_TEMPLATES.put("right", "right.ftl");
     }
 
     public BBCodeToHTMLTransformer() {
