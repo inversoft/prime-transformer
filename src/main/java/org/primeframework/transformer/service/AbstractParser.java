@@ -52,7 +52,6 @@ public abstract class AbstractParser implements Parser {
     protected int indexOfCharacter(Document document, int startIndex, int endIndex, char character) {
         char[] source = document.documentSource.source;
         for (int i = startIndex; i < endIndex; i++) {
-            // TODO Detect escape characters ?
             if (source[i] == character) {
                 return i;
             }

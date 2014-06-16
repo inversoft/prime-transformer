@@ -86,6 +86,6 @@ public class BBCodeToHTMLTransformer implements Transformer {
     @Override
     public String transform(Document document) {
         // transform and then replace line return and tabs
-        return transformer.transform(document).replaceAll("\n", "<br>").replaceAll("\t", "&nbsp;&nbsp;&nbsp;&nbsp;");
+        return transformer.transform(document).replaceAll("\n", "<br>").replaceAll("\t", "&nbsp;&nbsp;");
     }
 }

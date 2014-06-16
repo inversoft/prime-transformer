@@ -51,17 +51,17 @@ public class FreeMarkerTransformer implements Transformer {
             for (Node child : tag.children) {
                 transformNode(childSB, child);
             }
-            Map<String, Object> data = new HashMap<>(1);
+            Map<String, Object> data = new HashMap<>(3);
             data.put("body", childSB.toString());
             data.put("attributes", tag.attributes);
             data.put("attribute", tag.attribute);
-            Writer out = new StringWriter();
 
             Template template = templates.get(tag.getName());
             if (template == null) {
                 sb.append(tag.getRawString());
             } else {
                 try {
+                    Writer out = new StringWriter();
                     template.process(data, out);
                     sb.append(out.toString());
                 } catch (Exception e) {
