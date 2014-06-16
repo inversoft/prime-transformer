@@ -15,7 +15,5 @@ public class BBCodeParserSpec extends Specification {
 
         and: "result should not be null"
             document != null
-
     }
-
 }

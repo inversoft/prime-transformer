@@ -35,28 +35,6 @@ public class BBCodeParser extends AbstractParser {
      */
     private static final Set<String> ESCAPE_TAG = new HashSet<>(Arrays.asList("code", "noparse"));
 
-    @Override
-    public Document buildDocument(DocumentSource documentSource) {
-        Document document = new Document(documentSource);
-        int sourceIndex = 0;
-        int sourceLength = documentSource.source.length;
-        // Traverse the source and build nodes
-        while (sourceIndex < sourceLength) {
-            sourceIndex = addNextNode(document, sourceIndex, sourceLength, document.children);
-        }
-        return document;
-    }
-
-    @Override
-    protected char getTagCloseChar() {
-        return ']';
-    }
-
-    @Override
-    protected char getTagOpenChar() {
-        return '[';
-    }
-
     /**
      * Find the next node between the start and end index and add to the provided node list.
      *
@@ -157,6 +135,28 @@ public class BBCodeParser extends AbstractParser {
             startIndex = NO_CLOSING_TAG.contains(tagName) ? bodyEnd : bodyEnd + closeTag.length();
         }
         return startIndex;
+    }
+
+    @Override
+    public Document buildDocument(DocumentSource documentSource) {
+        Document document = new Document(documentSource);
+        int sourceIndex = 0;
+        int sourceLength = documentSource.source.length;
+        // Traverse the source and build nodes
+        while (sourceIndex < sourceLength) {
+            sourceIndex = addNextNode(document, sourceIndex, sourceLength, document.children);
+        }
+        return document;
+    }
+
+    @Override
+    protected char getTagCloseChar() {
+        return ']';
+    }
+
+    @Override
+    protected char getTagOpenChar() {
+        return '[';
     }
 
 }

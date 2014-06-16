@@ -76,8 +76,6 @@ public class BBCodeToHTMLTransformerSpec extends Specification {
             "<div align=\"left\">Left</div>"                                                                                        | "[left]Left[/left]"
             "<div align=\"center\">Center</div>"                                                                                    | "[center]Center[/center]"
             "<div align=\"right\">Right</div>"                                                                                      | "[right]Right[/right]"
-
-
     }
 
     //@Unroll("BBCode to HTML : #fileName")
