@@ -59,6 +59,7 @@ public class BBCodeToHTMLTransformerSpec extends Specification {
             "<ul><li>1</li><li>2</li></ul>"                                                                                         | "[list][*]1[*]2[/list]"
             "<ul><li><strong><em>1</em></strong></li><li><strong><em>2</em></strong></li></ul>"                                     | "[list][*][b][i]1[/i][/b][*][b][i]2[/i][/b][/list]"
             "<table><tr><td>Row1 Column1</td><td>Row1 Column2</td></tr><tr><td>Row2 Column1</td><td>Row2 Column2</td></tr></table>" | "[table][tr][td]Row1 Column1[/td][td]Row1 Column2[/td][/tr][tr][td]Row2 Column1[/td][td]Row2 Column2[/td][/tr][/table]"
+            "<table><tr><th>Header 1</th></tr><tr><td>Row1 Column1</td></tr></table>"                                               | "[table][tr][th]Header 1[/th][/tr][tr][td]Row1 Column1[/td][/tr][/table]"
             "<ol><li>item 1</li></ol>"                                                                                              | "[ol][li]item 1[/li][/ol]"
             "<span style=\"text-decoration: line-through\">Strike</span>"                                                           | "[s]Strike[/s]"
             "<u>Underline</u>"                                                                                                      | "[u]Underline[/u]"

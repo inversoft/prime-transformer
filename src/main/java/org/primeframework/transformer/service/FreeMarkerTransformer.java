@@ -69,7 +69,7 @@ public class FreeMarkerTransformer implements Transformer {
                 }
             }
         } else { // TextNode
-            sb.append(((TextNode) node).getBody());
+            sb.append(((TextNode) node).getBody().replaceAll("\n", "<br>"));
         }
     }
 }

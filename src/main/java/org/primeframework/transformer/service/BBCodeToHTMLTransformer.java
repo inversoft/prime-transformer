@@ -65,6 +65,7 @@ public class BBCodeToHTMLTransformer implements Transformer {
         DEFAULT_TEMPLATES.put("left", "left.ftl");
         DEFAULT_TEMPLATES.put("center", "center.ftl");
         DEFAULT_TEMPLATES.put("right", "right.ftl");
+        DEFAULT_TEMPLATES.put("th", "th.ftl");
     }
 
     public BBCodeToHTMLTransformer() {
@@ -85,6 +86,6 @@ public class BBCodeToHTMLTransformer implements Transformer {
 
     @Override
     public String transform(Document document) {
-        return transformer.transform(document).replaceAll("\n", "<br>");
+        return transformer.transform(document);
     }
 }
