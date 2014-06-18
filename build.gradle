@@ -3,7 +3,7 @@
  */
 // Project Info
 group = "org.primeframework"
-version = "0.17"
+version = "0.18"
 description = "Prime Transformer"
 
 // Plugins

@@ -77,6 +77,8 @@ public class BBCodeToHTMLTransformerSpec extends Specification {
             "<div align=\"left\">Left</div>"                                                                                        | "[left]Left[/left]"
             "<div align=\"center\">Center</div>"                                                                                    | "[center]Center[/center]"
             "<div align=\"right\">Right</div>"                                                                                      | "[right]Right[/right]"
+            "<span style=\"font-family: monospace\">mono</span>"                                                                    | "[font=monospace]mono[/font]"
+
     }
 
     //@Unroll("BBCode to HTML : #fileName")
@@ -92,6 +94,7 @@ public class BBCodeToHTMLTransformerSpec extends Specification {
 
         where:
             fileName | _
+            "other"  | _
             "code"   | _
             "image"  | _
             "size"   | _

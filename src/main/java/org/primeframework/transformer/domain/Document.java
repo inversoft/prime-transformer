@@ -17,7 +17,6 @@
 package org.primeframework.transformer.domain;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -37,11 +36,7 @@ public class Document extends BaseNode {
     }
 
     public String getString(int start, int end) {
-        StringBuilder sb = new StringBuilder(end - start);
-        for (char c : Arrays.copyOfRange(documentSource.source, start, end)) {
-            sb.append(c);
-        }
-        return sb.toString();
+        return new String(documentSource.source, start, end - start);
     }
 
     @Override

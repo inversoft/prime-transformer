@@ -66,6 +66,7 @@ public class BBCodeToHTMLTransformer implements Transformer {
         DEFAULT_TEMPLATES.put("center", "center.ftl");
         DEFAULT_TEMPLATES.put("right", "right.ftl");
         DEFAULT_TEMPLATES.put("th", "th.ftl");
+        DEFAULT_TEMPLATES.put("font", "font.ftl");
     }
 
     public BBCodeToHTMLTransformer() {

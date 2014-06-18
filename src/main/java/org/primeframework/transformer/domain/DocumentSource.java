@@ -16,19 +16,12 @@
 
 package org.primeframework.transformer.domain;
 
-import java.util.Arrays;
-
 public class DocumentSource {
 
     public char[] source;
 
     public DocumentSource(String source) {
         this.source = source.toCharArray();
-    }
-
-    public String getString(int start, int end) {
-        return Arrays.copyOfRange(source, start, end).toString();
-
     }
 
     @Override

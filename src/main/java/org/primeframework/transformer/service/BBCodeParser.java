@@ -63,11 +63,11 @@ public class BBCodeParser extends AbstractParser {
             String attribute = null;
             Map<String, String> attributes = new LinkedHashMap<>(3);
             int attributesBegin = indexOfCharacter(document, tagBegin, openingTagEndIndex, ' ');
-            if (attributesBegin != -1) {
+            int equalsIndex = indexOfCharacter(document, tagBegin, openingTagEndIndex, '=');
+            if (attributesBegin != -1 && (equalsIndex == -1 || equalsIndex > attributesBegin)) {
                 int attributeIndex = attributesBegin;
                 while (attributeIndex < openingTagEndIndex) {
-                    int equalsIndex = indexOfCharacter(document, attributeIndex, openingTagEndIndex, '=');
-                    String key = document.getString(attributeIndex, equalsIndex);
+                    equalsIndex = indexOfCharacter(document, attributeIndex, openingTagEndIndex, '=');
                     int nextEqualsIndex = indexOfCharacter(document, equalsIndex + 1, openingTagEndIndex, '=');
                     int endKeyValueIndex = nextEqualsIndex;
                     if (endKeyValueIndex == -1) {
@@ -77,6 +77,7 @@ public class BBCodeParser extends AbstractParser {
                             endKeyValueIndex--;
                         }
                     }
+                    String key = document.getString(attributeIndex, equalsIndex);
                     String value = removeQuotes(document.getString(equalsIndex + 1, endKeyValueIndex));
                     attributes.put(key, value);
                     attributeIndex = endKeyValueIndex;
