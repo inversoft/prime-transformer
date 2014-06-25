@@ -43,7 +43,7 @@ public class Document extends BaseNode {
     public String toString() {
         return "Document{" +
                 "children=[" +
-                String.join(", ", children.stream().map((node) -> node.toString()).collect(Collectors.toList())) +
+                String.join(", ", children.stream().map(Object::toString).collect(Collectors.toList())) +
                 "]}";
     }
 

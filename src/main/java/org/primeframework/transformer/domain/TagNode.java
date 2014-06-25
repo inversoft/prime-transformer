@@ -86,7 +86,7 @@ public class TagNode extends BaseNode {
                 String.join(", ", attributes.keySet().stream().map((attribute) -> attribute + ":" + attributes.get(attribute)).collect(Collectors.toList())) +
                 "}" +
                 ", children=[" +
-                String.join(", ", children.stream().map((node) -> node.toString()).collect(Collectors.toList())) +
+                String.join(", ", children.stream().map(Object::toString).collect(Collectors.toList())) +
                 "]" +
                 ", name=" + getName() +
                 "}";
