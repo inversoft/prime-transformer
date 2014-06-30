@@ -14,12 +14,8 @@ input -> DocumentSource -> Parser.buildDocument() -> Document -> Transformer.tra
 Example:
 
 ```java
-String bbCode = "[b]Hello World![/b]";
-DocumentSource documentSource = new DocumentSource(bbCode);
-Document document = new BBCodeParser().buildDocument(documentSource);
-
+Document document = new BBCodeParser().buildDocument(new DocumentSource("[b]Hello World![/b]"));
 String html = new BBCodeToHTMLTransformer().transform(document);
-
 ```
 
 Result:
