@@ -17,11 +17,10 @@ Example:
 // DocumentSource object can be passed to any parser.
 DocumentSource documentSource = new DocumentSource("[b]Hello World![/b]");
 
-// Document will contain the original source markup and an AST built by the parser
-// Document object can be passed to any transformer
+// Document contains source markup and can be passed to any transformer.
 Document document = new BBCodeParser().buildDocument(documentSource);
 
-// A transformer will take a Document and return the transform markup in string form
+// A transformer will take a Document and return the transformed markup in string form.
 String html = new BBCodeToHTMLTransformer().transform(document);
 ```
 
