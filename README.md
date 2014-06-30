@@ -14,7 +14,13 @@ input -> DocumentSource -> Parser.buildDocument() -> Document -> Transformer.tra
 Example:
 
 ```java
-Document document = new BBCodeParser().buildDocument(new DocumentSource("[b]Hello World![/b]"));
+// DocumentSource object can be passed to any parser.
+DocumentSource documentSource = new DocumentSource("[b]Hello World![/b]");
+
+// Document will contain the original source markup and an AST built by the specific parser and can be passed to any transformer
+Document document = new BBCodeParser().buildDocument(documentSource);
+
+// A transformer will take a Document and return the transform markup in string form
 String html = new BBCodeToHTMLTransformer().transform(document);
 ```
 
