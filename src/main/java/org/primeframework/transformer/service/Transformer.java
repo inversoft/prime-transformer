@@ -17,8 +17,33 @@
 package org.primeframework.transformer.service;
 
 import org.primeframework.transformer.domain.Document;
+import org.primeframework.transformer.domain.TransformerException;
 
 public interface Transformer {
 
-    String transform(Document document);
+    /**
+     * Return true if strict mode is enabled. When strict mode is enabled a {@link org.primeframework.transformer.domain.TransformerException}
+     * will be thrown if a tag is not able to be transformed. If set to false, or disabled, when a tag is encountered that is not able
+     * to be transformed, the entire string including the tag will be returned.
+     *
+     * @return
+     */
+    boolean isStrict();
+
+    /**
+     * Sets the strict mode of the transformer, passing a true value will enable strict mode.
+     *
+     * @param strict
+     */
+    Transformer setStrict(boolean strict);
+
+    /**
+     * Transform the document. The returned string will be defined by the implementation.
+     *
+     * @param document
+     * @return
+     * @throws TransformerException
+     */
+    String transform(Document document) throws TransformerException;
+
 }

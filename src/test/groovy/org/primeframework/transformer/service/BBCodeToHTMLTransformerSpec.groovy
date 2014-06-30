@@ -2,6 +2,7 @@ package org.primeframework.transformer.service
 
 import org.primeframework.transformer.domain.DocumentSource
 import org.primeframework.transformer.domain.ParserException
+import org.primeframework.transformer.domain.TransformerException
 import spock.lang.Shared
 import spock.lang.Specification
 
@@ -17,7 +18,7 @@ public class BBCodeToHTMLTransformerSpec extends Specification {
         bbCodeToFreeMarkerTransformer = TransformerFactory.newBBCodeToHTMLTransformer()
     }
 
-    def "No FreeMarker template for tag"() {
+    def "No FreeMarker template for tag with strict mode disabled"() {
 
         when: "A BBCodeParser is setup and a template has not been provided for a tag"
             def document = bbCodeParser.buildDocument(new DocumentSource("[unknown]Testing[/unknown]"))
@@ -27,6 +28,18 @@ public class BBCodeToHTMLTransformerSpec extends Specification {
 
         then: "the output should should equal the input"
             html == "[unknown]Testing[/unknown]"
+    }
+
+    def "No FreeMarker template for tag with strict mode enabled"() {
+
+        when: "A BBCodeParser is setup and a template has not been provided for a tag"
+            def document = bbCodeParser.buildDocument(new DocumentSource("[unknown]Testing[/unknown]"))
+
+        and: "transform is bbCodeTransformer"
+            def html = bbCodeToFreeMarkerTransformer.setStrict(true) transform(document);
+
+        then: "an exception should be thrown"
+            thrown TransformerException
     }
 
     def "No closing BBCode tag"() {
@@ -102,4 +115,5 @@ public class BBCodeToHTMLTransformerSpec extends Specification {
 
 
     }
+
 }

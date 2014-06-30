@@ -14,20 +14,14 @@
  * language governing permissions and limitations under the License.
  */
 
-package org.primeframework.transformer.service;
+package org.primeframework.transformer.domain;
 
-import freemarker.template.Template;
-
-import java.util.Map;
-
-public class TransformerFactory {
-
-    public static Transformer newBBCodeToHTMLTransformer() {
-        return new BBCodeToHTMLTransformer();
+public class TransformerRuntimeException extends RuntimeException {
+    public TransformerRuntimeException(String message, Throwable e) {
+        super(message, e);
     }
 
-    public static Transformer newFreeMarkerTransformer(Map<String, Template> templates) {
-        return new FreeMarkerTransformer(templates);
+    public TransformerRuntimeException(String message) {
+        super(message);
     }
-
 }
