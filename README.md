@@ -4,7 +4,7 @@ prime-transformer
 Prime Transformer is a markup parser and transformation library. Written initially for parsing BBCode and transforming to HTML, additional implementations may be added support additional source or target markup languages.
 
 
-Prime transformer is designed to be able to parse any markup and transform to any other markup language. A DocumentSource object is created using the source markup, and passed to a Parser which returns a Document. The document object can then be passed to an Transformer implementation.
+Prime transformer is designed to be able to parse any markup and transform to any other markup language. A DocumentSource object is created using the source markup, and passed to a Parser which returns a Document. The document object can then be passed to any Transformer implementation.
 
 source markup -> DocumentSource -> Parser.buildDocument() -> Document -> Transformer.transform() -> transformed markup
 
