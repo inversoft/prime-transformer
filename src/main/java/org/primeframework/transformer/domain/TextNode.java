@@ -17,8 +17,8 @@
 package org.primeframework.transformer.domain;
 
 /**
- * The <code>TextNode</code> holds index values to the document source to outline the start
- * and end of the plain text body.
+ * The <code>TextNode</code> holds index values to the document source to outline the start and end of the plain text
+ * body.
  * <p>
  * The following is an example in BBCode, but the same applies to other tags.
  * <pre>
@@ -34,20 +34,20 @@ package org.primeframework.transformer.domain;
  */
 public class TextNode extends BaseNode {
 
-    public TextNode(Document document, int tagBegin, int tagEnd) {
-        this.document = document;
-        this.tagBegin = tagBegin;
-        this.tagEnd = tagEnd;
-    }
+  public TextNode(Document document, int tagBegin, int tagEnd) {
+    this.document = document;
+    this.tagBegin = tagBegin;
+    this.tagEnd = tagEnd;
+  }
 
-    public String getBody() {
-        return document.getString(tagBegin, tagEnd).toString();
-    }
+  public String getBody() {
+    return document.getString(tagBegin, tagEnd).toString();
+  }
 
-    @Override
-    public String toString() {
-        return "TextNode{" +
-                "body=" + getBody() +
-                "}";
-    }
+  @Override
+  public String toString() {
+    return "TextNode{" +
+        "body=" + getBody() +
+        "}";
+  }
 }

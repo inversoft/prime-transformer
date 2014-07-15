@@ -18,14 +18,14 @@ package org.primeframework.transformer.domain;
 
 public abstract class BaseNode implements Node {
 
-    public Document document;
+  public Document document;
 
-    public int tagBegin;
-    public int tagEnd;
+  public int tagBegin;
+  public int tagEnd;
 
-    @Override
-    public String getRawString() {
-        return document.getString(tagBegin, tagEnd);
-    }
+  @Override
+  public String getRawString() {
+    return document.getString(tagBegin, tagEnd);
+  }
 
 }

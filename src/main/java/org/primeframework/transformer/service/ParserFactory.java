@@ -18,7 +18,7 @@ package org.primeframework.transformer.service;
 
 public class ParserFactory {
 
-    public static Parser newBBCodeParser() {
-        return new BBCodeParser();
-    }
+  public static Parser newBBCodeParser() {
+    return new BBCodeParser();
+  }
 }

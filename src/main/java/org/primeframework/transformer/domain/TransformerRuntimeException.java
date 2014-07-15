@@ -17,11 +17,11 @@
 package org.primeframework.transformer.domain;
 
 public class TransformerRuntimeException extends RuntimeException {
-    public TransformerRuntimeException(String message, Throwable e) {
-        super(message, e);
-    }
+  public TransformerRuntimeException(String message, Throwable e) {
+    super(message, e);
+  }
 
-    public TransformerRuntimeException(String message) {
-        super(message);
-    }
+  public TransformerRuntimeException(String message) {
+    super(message);
+  }
 }

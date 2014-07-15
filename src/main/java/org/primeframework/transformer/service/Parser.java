@@ -20,20 +20,19 @@ import org.primeframework.transformer.domain.Document;
 import org.primeframework.transformer.domain.DocumentSource;
 
 /**
- * Parser interface.
- * <p>Parser implementations are only responsible for building the abstract syntax tree (AST). The
+ * Parser interface. <p>Parser implementations are only responsible for building the abstract syntax tree (AST). The
  * returned <code>Document</code> holds the original source and an AST that maps the source to index values identifying
  * the source markup tags and content.
  */
 public interface Parser {
 
-    /**
-     * Return a constructed <code>Document</code> representation of the document source.<p>No transformation
-     * is done as a part of building the document.</p><p>The returned document may then be passed into any
-     * transformer implementation.</p>
-     *
-     * @param documentSource
-     * @return
-     */
-    Document buildDocument(DocumentSource documentSource);
+  /**
+   * Return a constructed <code>Document</code> representation of the document source.<p>No transformation is done as a
+   * part of building the document.</p><p>The returned document may then be passed into any transformer
+   * implementation.</p>
+   *
+   * @param documentSource
+   * @return
+   */
+  Document buildDocument(DocumentSource documentSource);
 }

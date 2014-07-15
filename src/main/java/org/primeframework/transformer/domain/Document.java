@@ -21,30 +21,31 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * The <code>Document</code> is the top level {@link Node} in the document model built to represent the document source.
+ * The <code>Document</code> is the top level {@link Node} in the document model built to represent the document
+ * source.
  */
 public class Document extends BaseNode {
 
-    public List<Node> children = new ArrayList<>();
+  public List<Node> children = new ArrayList<>();
 
-    public DocumentSource documentSource;
+  public DocumentSource documentSource;
 
-    public Document(DocumentSource documentSource) {
-        this.documentSource = documentSource;
-        this.tagBegin = 0;
-        this.tagEnd = this.documentSource.source.length;
-    }
+  public Document(DocumentSource documentSource) {
+    this.documentSource = documentSource;
+    this.tagBegin = 0;
+    this.tagEnd = this.documentSource.source.length;
+  }
 
-    public String getString(int start, int end) {
-        return new String(documentSource.source, start, end - start);
-    }
+  public String getString(int start, int end) {
+    return new String(documentSource.source, start, end - start);
+  }
 
-    @Override
-    public String toString() {
-        return "Document{" +
-                "children=[" +
-                String.join(", ", children.stream().map(Object::toString).collect(Collectors.toList())) +
-                "]}";
-    }
+  @Override
+  public String toString() {
+    return "Document{" +
+        "children=[" +
+        String.join(", ", children.stream().map(Object::toString).collect(Collectors.toList())) +
+        "]}";
+  }
 
 }

@@ -16,18 +16,18 @@
 
 package org.primeframework.transformer.service;
 
-import freemarker.template.Template;
-
 import java.util.Map;
+
+import freemarker.template.Template;
 
 public class TransformerFactory {
 
-    public static Transformer newBBCodeToHTMLTransformer() {
-        return new BBCodeToHTMLTransformer();
-    }
+  public static Transformer newBBCodeToHTMLTransformer() {
+    return new BBCodeToHTMLTransformer();
+  }
 
-    public static Transformer newFreeMarkerTransformer(Map<String, Template> templates) {
-        return new FreeMarkerTransformer(templates);
-    }
+  public static Transformer newFreeMarkerTransformer(Map<String, Template> templates) {
+    return new FreeMarkerTransformer(templates);
+  }
 
 }

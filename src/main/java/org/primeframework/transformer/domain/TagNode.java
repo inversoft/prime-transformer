@@ -24,8 +24,8 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
- * The <code>TagNode</code> holds index values to the document source to outline the start
- * and end of the tag and the body of the tag.
+ * The <code>TagNode</code> holds index values to the document source to outline the start and end of the tag and the
+ * body of the tag.
  * <p>
  * The following is an example in BBCode, but the same applies to other tags.
  * <pre>
@@ -43,57 +43,56 @@ import java.util.stream.Collectors;
  *  3. bodyEnd
  *  4. tagEnd
  * </pre>
- * The body of the tag is contained in the children collection. A child may be either another <code>TagNode</code> or a <code>TextNode</code>.
- * The <code>TagNode</code> itself does not have a body, the body will be contained in a child <code>TextNode</code>.
+ * The body of the tag is contained in the children collection. A child may be either another <code>TagNode</code> or a
+ * <code>TextNode</code>. The <code>TagNode</code> itself does not have a body, the body will be contained in a child
+ * <code>TextNode</code>.
  */
 public class TagNode extends BaseNode {
 
-    /**
-     * Support for a simple attribute.
-     * Example: [tag=foo]bar[/tag]
-     */
-    public String attribute;
-    /**
-     * Support for complex attributes.
-     * Example: [tag width="100" height="200" title="foo"]bar[/tag]
-     */
-    public Map<String, String> attributes = new LinkedHashMap<>();
-    public List<Node> children = new ArrayList<>();
-    public int attributesBegin;
-    public int bodyBegin;
-    public int bodyEnd;
+  /**
+   * Support for a simple attribute. Example: [tag=foo]bar[/tag]
+   */
+  public String attribute;
+  /**
+   * Support for complex attributes. Example: [tag width="100" height="200" title="foo"]bar[/tag]
+   */
+  public Map<String, String> attributes = new LinkedHashMap<>();
+  public List<Node> children = new ArrayList<>();
+  public int attributesBegin;
+  public int bodyBegin;
+  public int bodyEnd;
 
-    public boolean transform;
+  public boolean transform;
 
-    public TagNode(Document document, int tagBegin, int attributesBegin, int bodyBegin, int bodyEnd, int tagEnd, String attribute, Map<String, String> attributes) {
-        this.document = document;
-        this.tagBegin = tagBegin;
-        this.attributesBegin = attributesBegin;
-        this.bodyBegin = bodyBegin;
-        this.bodyEnd = bodyEnd;
-        this.tagEnd = tagEnd;
-        this.attribute = attribute;
-        this.attributes = attributes;
-        this.transform = true;
-    }
+  public TagNode(Document document, int tagBegin, int attributesBegin, int bodyBegin, int bodyEnd, int tagEnd, String attribute, Map<String, String> attributes) {
+    this.document = document;
+    this.tagBegin = tagBegin;
+    this.attributesBegin = attributesBegin;
+    this.bodyBegin = bodyBegin;
+    this.bodyEnd = bodyEnd;
+    this.tagEnd = tagEnd;
+    this.attribute = attribute;
+    this.attributes = attributes;
+    this.transform = true;
+  }
 
-    public String getName() {
-        return document.getString(tagBegin + 1, attributesBegin != -1 ? attributesBegin : bodyBegin - 1);
-    }
+  public String getName() {
+    return document.getString(tagBegin + 1, attributesBegin != -1 ? attributesBegin : bodyBegin - 1);
+  }
 
-    @Override
-    public String toString() {
-        return "TagNode{" +
-                "attribute=" + attribute +
-                ",attributes={" +
-                String.join(", ", attributes.keySet().stream().map((attribute) -> attribute + ":" + attributes.get(attribute)).collect(Collectors.toList())) +
-                "}" +
-                ", children=[" +
-                String.join(", ", children.stream().map(Object::toString).collect(Collectors.toList())) +
-                "]" +
-                ", name=" + getName() +
-                "}";
-    }
+  @Override
+  public String toString() {
+    return "TagNode{" +
+        "attribute=" + attribute +
+        ",attributes={" +
+        String.join(", ", attributes.keySet().stream().map((attribute) -> attribute + ":" + attributes.get(attribute)).collect(Collectors.toList())) +
+        "}" +
+        ", children=[" +
+        String.join(", ", children.stream().map(Object::toString).collect(Collectors.toList())) +
+        "]" +
+        ", name=" + getName() +
+        "}";
+  }
 
 
 }

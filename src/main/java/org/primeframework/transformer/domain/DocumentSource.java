@@ -18,18 +18,18 @@ package org.primeframework.transformer.domain;
 
 public class DocumentSource {
 
-    public char[] source;
+  public char[] source;
 
-    public DocumentSource(String source) {
-        this.source = source.toCharArray();
-    }
+  public DocumentSource(String source) {
+    this.source = source.toCharArray();
+  }
 
-    public DocumentSource(char[] source) {
-        this.source = source;
-    }
+  public DocumentSource(char[] source) {
+    this.source = source;
+  }
 
-    @Override
-    public String toString() {
-        return new String(source);
-    }
+  @Override
+  public String toString() {
+    return new String(source);
+  }
 }

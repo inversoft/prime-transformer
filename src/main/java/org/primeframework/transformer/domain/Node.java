@@ -18,12 +18,12 @@ package org.primeframework.transformer.domain;
 
 public interface Node {
 
-    /**
-     * Return the raw string representing the node in the document source. This will include the full tag and body.
-     * <p>Example return value:
-     * <pre> [url]http://foo.com[/url]</pre></p>
-     *
-     * @return
-     */
-    String getRawString();
+  /**
+   * Return the raw string representing the node in the document source. This will include the full tag and body.
+   * <p>Example return value:
+   * <pre> [url]http://foo.com[/url]</pre></p>
+   *
+   * @return
+   */
+  String getRawString();
 }

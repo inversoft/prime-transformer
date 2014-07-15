@@ -16,96 +16,101 @@
 
 package org.primeframework.transformer.service;
 
-import freemarker.template.Template;
-import org.primeframework.transformer.domain.*;
-
 import java.io.StringWriter;
 import java.io.Writer;
 import java.util.HashMap;
 import java.util.Map;
+
+import org.primeframework.transformer.domain.Document;
+import org.primeframework.transformer.domain.Node;
+import org.primeframework.transformer.domain.TagNode;
+import org.primeframework.transformer.domain.TextNode;
+import org.primeframework.transformer.domain.TransformerException;
+
+import freemarker.template.Template;
 
 /**
  * FreeMarker transformer implementation.
  */
 public class FreeMarkerTransformer implements Transformer {
 
-    private boolean strict;
+  private boolean strict;
 
-    private Map<String, Template> templates = new HashMap<>();
+  private Map<String, Template> templates = new HashMap<>();
 
-    /**
-     * Constructor takes the FreeMarker templates.
-     *
-     * @param templates
-     */
-    public FreeMarkerTransformer(Map<String, Template> templates) {
-        this.templates.putAll(templates);
+  /**
+   * Constructor takes the FreeMarker templates.
+   *
+   * @param templates
+   */
+  public FreeMarkerTransformer(Map<String, Template> templates) {
+    this.templates.putAll(templates);
+  }
+
+  /**
+   * Constructor takes the FreeMarker templates and strict mode.
+   *
+   * @param templates
+   * @param strict
+   */
+  public FreeMarkerTransformer(Map<String, Template> templates, boolean strict) {
+    this.strict = strict;
+    this.templates.putAll(templates);
+  }
+
+  @Override
+  public boolean isStrict() {
+    return strict;
+  }
+
+  @Override
+  public Transformer setStrict(boolean strict) {
+    this.strict = strict;
+    return this;
+  }
+
+  @Override
+  public String transform(Document document) throws TransformerException {
+    StringBuilder sb = new StringBuilder();
+    for (Node node : document.children) {
+      transformNode(sb, node);
     }
+    return sb.toString().trim();
+  }
 
-    /**
-     * Constructor takes the FreeMarker templates and strict mode.
-     *
-     * @param templates
-     * @param strict
-     */
-    public FreeMarkerTransformer(Map<String, Template> templates, boolean strict) {
-        this.strict = strict;
-        this.templates.putAll(templates);
-    }
+  private void transformNode(StringBuilder sb, Node node) throws TransformerException {
+    if (node instanceof TagNode) {
+      TagNode tag = (TagNode) node;
+      if (!tag.transform) {
+        sb.append(tag.getRawString());
+        return;
+      }
+      StringBuilder childSB = new StringBuilder();
+      for (Node child : tag.children) {
+        transformNode(childSB, child);
+      }
+      Map<String, Object> data = new HashMap<>(3);
+      data.put("body", childSB.toString());
+      data.put("attributes", tag.attributes);
+      data.put("attribute", tag.attribute);
 
-    @Override
-    public boolean isStrict() {
-        return strict;
-    }
-
-    @Override
-    public Transformer setStrict(boolean strict) {
-        this.strict = strict;
-        return this;
-    }
-
-    @Override
-    public String transform(Document document) throws TransformerException {
-        StringBuilder sb = new StringBuilder();
-        for (Node node : document.children) {
-            transformNode(sb, node);
+      Template template = templates.get(tag.getName());
+      if (template == null) {
+        if (strict) {
+          throw new TransformerException("No template found for tag [" + tag.getName() + "]");
         }
-        return sb.toString().trim();
-    }
-
-    private void transformNode(StringBuilder sb, Node node) throws TransformerException {
-        if (node instanceof TagNode) {
-            TagNode tag = (TagNode) node;
-            if (!tag.transform) {
-                sb.append(tag.getRawString());
-                return;
-            }
-            StringBuilder childSB = new StringBuilder();
-            for (Node child : tag.children) {
-                transformNode(childSB, child);
-            }
-            Map<String, Object> data = new HashMap<>(3);
-            data.put("body", childSB.toString());
-            data.put("attributes", tag.attributes);
-            data.put("attribute", tag.attribute);
-
-            Template template = templates.get(tag.getName());
-            if (template == null) {
-                if (strict) {
-                    throw new TransformerException("No template found for tag [" + tag.getName() + "]");
-                }
-                sb.append(tag.getRawString());
-            } else {
-                try {
-                    Writer out = new StringWriter();
-                    template.process(data, out);
-                    sb.append(out.toString());
-                } catch (Exception e) {
-                    throw new TransformerException("FreeMarker processing failed for template " + template.getName() + " \n\t Data model: " + data.get("body"), e);
-                }
-            }
-        } else { // TextNode
-            sb.append(((TextNode) node).getBody());
+        sb.append(tag.getRawString());
+      } else {
+        try {
+          Writer out = new StringWriter();
+          template.process(data, out);
+          sb.append(out.toString());
+        } catch (Exception e) {
+          throw new TransformerException("FreeMarker processing failed for template " + template.getName() + " \n\t Data model: " + data.get("body"), e);
         }
+      }
+    } else { // TextNode
+      sb.append(((TextNode) node).getBody());
     }
+  }
 }
