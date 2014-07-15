@@ -1,9 +1,7 @@
 package org.primeframework.transformer.service
-
 import org.primeframework.transformer.domain.DocumentSource
 import org.primeframework.transformer.domain.ParserException
 import org.primeframework.transformer.domain.TransformerException
-import org.primeframework.transformer.domain.TransformerRuntimeException
 import spock.lang.Shared
 import spock.lang.Specification
 
@@ -55,7 +53,7 @@ public class BBCodeToHTMLTransformerSpec extends Specification {
             def html = bbCodeToFreeMarkerTransformer.transform(document);
 
         then: "an exception should be thrown"
-            thrown TransformerRuntimeException
+            thrown TransformerException
 
         and: "html should be null"
             html == null

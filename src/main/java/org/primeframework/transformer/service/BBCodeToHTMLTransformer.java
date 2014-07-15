@@ -116,7 +116,7 @@ public class BBCodeToHTMLTransformer implements Transformer {
     @Override
     public String transform(Document document) throws TransformerException {
         if (!readyToTransform) {
-            throw new TransformerRuntimeException("Transformer has not yet been initialized. Run init() prior to transform().");
+            throw new TransformerException("Transformer has not yet been initialized. Run init() prior to transform().");
         }
         transformer.setStrict(strict);
         return transformer.transform(document);
