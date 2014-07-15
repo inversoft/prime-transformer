@@ -16,18 +16,13 @@
 
 package org.primeframework.transformer.service;
 
+import freemarker.template.Template;
+import org.primeframework.transformer.domain.*;
+
 import java.io.StringWriter;
 import java.io.Writer;
 import java.util.HashMap;
 import java.util.Map;
-
-import org.primeframework.transformer.domain.Document;
-import org.primeframework.transformer.domain.Node;
-import org.primeframework.transformer.domain.TagNode;
-import org.primeframework.transformer.domain.TextNode;
-import org.primeframework.transformer.domain.TransformerException;
-
-import freemarker.template.Template;
 
 /**
  * FreeMarker transformer implementation.
@@ -35,18 +30,24 @@ import freemarker.template.Template;
 public class FreeMarkerTransformer implements Transformer {
 
     private boolean strict;
+
     private Map<String, Template> templates = new HashMap<>();
 
-    private String newLine;
-
-    public FreeMarkerTransformer(Map<String, Template> templates, String newLine) {
-        this.templates.putAll(templates);
-        this.newLine = newLine;
-    }
+    /**
+     * Constructor takes the FreeMarker templates.
+     *
+     * @param templates
+     */
     public FreeMarkerTransformer(Map<String, Template> templates) {
-        this(templates, "<br>");
+        this.templates.putAll(templates);
     }
 
+    /**
+     * Constructor takes the FreeMarker templates and strict mode.
+     *
+     * @param templates
+     * @param strict
+     */
     public FreeMarkerTransformer(Map<String, Template> templates, boolean strict) {
         this.strict = strict;
         this.templates.putAll(templates);
@@ -72,17 +73,12 @@ public class FreeMarkerTransformer implements Transformer {
         return sb.toString().trim();
     }
 
-    private String transform(Document document, boolean strict) throws TransformerException {
-        this.strict = strict;
-        return transform(document);
-    }
-
     private void transformNode(StringBuilder sb, Node node) throws TransformerException {
         if (node instanceof TagNode) {
             TagNode tag = (TagNode) node;
-            if(!tag.transform) {
-              sb.append(tag.getRawString());
-              return;
+            if (!tag.transform) {
+                sb.append(tag.getRawString());
+                return;
             }
             StringBuilder childSB = new StringBuilder();
             for (Node child : tag.children) {
@@ -109,7 +105,7 @@ public class FreeMarkerTransformer implements Transformer {
                 }
             }
         } else { // TextNode
-            sb.append(((TextNode) node).getBody().replaceAll("\n", newLine));
+            sb.append(((TextNode) node).getBody());
         }
     }
 }
