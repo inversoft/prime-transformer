@@ -16,14 +16,15 @@
 
 package org.primeframework.transformer.service;
 
-import freemarker.template.Configuration;
-import freemarker.template.Template;
-import org.primeframework.transformer.domain.Document;
-import org.primeframework.transformer.domain.TransformerException;
-
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+
+import org.primeframework.transformer.domain.Document;
+import org.primeframework.transformer.domain.TransformerException;
+
+import freemarker.template.Configuration;
+import freemarker.template.Template;
 
 /**
  * BBCode to HTML Transformer.

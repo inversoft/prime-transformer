@@ -63,6 +63,8 @@ public class TagNode extends BaseNode {
     public int bodyBegin;
     public int bodyEnd;
 
+    public boolean transform;
+
     public TagNode(Document document, int tagBegin, int attributesBegin, int bodyBegin, int bodyEnd, int tagEnd, String attribute, Map<String, String> attributes) {
         this.document = document;
         this.tagBegin = tagBegin;
@@ -72,6 +74,7 @@ public class TagNode extends BaseNode {
         this.tagEnd = tagEnd;
         this.attribute = attribute;
         this.attributes = attributes;
+        this.transform = true;
     }
 
     public String getName() {
