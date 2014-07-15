@@ -34,7 +34,8 @@ import freemarker.template.Template;
  */
 public class FreeMarkerTransformer implements Transformer {
 
-    public Map<String, Template> templates = new HashMap<>();
+    private boolean strict;
+    private Map<String, Template> templates = new HashMap<>();
 
     private String newLine;
 
@@ -46,13 +47,34 @@ public class FreeMarkerTransformer implements Transformer {
         this(templates, "<br>");
     }
 
+    public FreeMarkerTransformer(Map<String, Template> templates, boolean strict) {
+        this.strict = strict;
+        this.templates.putAll(templates);
+    }
+
     @Override
-    public String transform(Document document) {
+    public boolean isStrict() {
+        return strict;
+    }
+
+    @Override
+    public Transformer setStrict(boolean strict) {
+        this.strict = strict;
+        return this;
+    }
+
+    @Override
+    public String transform(Document document) throws TransformerException {
         StringBuilder sb = new StringBuilder();
         for (Node node : document.children) {
             transformNode(sb, node);
         }
         return sb.toString().trim();
+    }
+
+    private String transform(Document document, boolean strict) throws TransformerException {
+        this.strict = strict;
+        return transform(document);
     }
 
     private void transformNode(StringBuilder sb, Node node) throws TransformerException {
@@ -73,6 +95,9 @@ public class FreeMarkerTransformer implements Transformer {
 
             Template template = templates.get(tag.getName());
             if (template == null) {
+                if (strict) {
+                    throw new TransformerException("No template found for tag [" + tag.getName() + "]");
+                }
                 sb.append(tag.getRawString());
             } else {
                 try {

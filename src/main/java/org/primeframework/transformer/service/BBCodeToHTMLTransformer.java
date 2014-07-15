@@ -16,15 +16,16 @@
 
 package org.primeframework.transformer.service;
 
+import freemarker.template.Configuration;
+import freemarker.template.Template;
+import org.primeframework.transformer.domain.Document;
+import org.primeframework.transformer.domain.TransformerException;
+import org.primeframework.transformer.domain.TransformerRuntimeException;
+
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.primeframework.transformer.domain.Document;
-import org.primeframework.transformer.domain.TransformerException;
-
-import freemarker.template.Configuration;
-import freemarker.template.Template;
 
 /**
  * BBCode to HTML Transformer.
@@ -38,6 +39,7 @@ import freemarker.template.Template;
 public class BBCodeToHTMLTransformer implements Transformer {
 
     private static final Map<String, String> DEFAULT_TEMPLATES = new HashMap<>();
+    private boolean strict;
     private FreeMarkerTransformer transformer;
 
     static {
@@ -80,14 +82,26 @@ public class BBCodeToHTMLTransformer implements Transformer {
             try {
                 templates.put(template, configuration.getTemplate(DEFAULT_TEMPLATES.get(template)));
             } catch (IOException e) {
-                throw new TransformerException("Failed to load FreeMarker template " + template + " from classpath.", e);
+                throw new TransformerRuntimeException("Failed to load FreeMarker template " + template + " from classpath.", e);
             }
         }
         transformer = new FreeMarkerTransformer(templates);
     }
 
     @Override
-    public String transform(Document document) {
+    public boolean isStrict() {
+        return strict;
+    }
+
+    @Override
+    public Transformer setStrict(boolean strict) {
+        this.strict = strict;
+        return this;
+    }
+
+    @Override
+    public String transform(Document document) throws TransformerException {
+        transformer.setStrict(strict);
         return transformer.transform(document);
     }
 }

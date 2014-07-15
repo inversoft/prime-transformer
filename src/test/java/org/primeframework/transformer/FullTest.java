@@ -8,6 +8,7 @@ import java.util.Map;
 import org.primeframework.transformer.domain.Document;
 import org.primeframework.transformer.domain.DocumentSource;
 import org.primeframework.transformer.domain.TagNode;
+import org.primeframework.transformer.domain.TransformerException;
 import org.primeframework.transformer.service.BBCodeParser;
 import org.primeframework.transformer.service.FreeMarkerTransformer;
 import org.primeframework.transformer.service.Parser;
@@ -33,7 +34,7 @@ public class FullTest {
   }
 
   @Test
-  public void testTheTransformFlag() {
+  public void testTheTransformFlag() throws TransformerException {
     Parser parser = new BBCodeParser();
     Transformer transformer = new FreeMarkerTransformer(templates);
     Document doc = parser.buildDocument(new DocumentSource("abc[b]bbb[/b]123"));
