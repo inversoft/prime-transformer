@@ -28,7 +28,7 @@ import org.primeframework.transformer.domain.DocumentSource;
 public interface Parser {
 
     /**
-     * Return a contstructed <code>Document</code> representation of the document source.<p>No transformation
+     * Return a constructed <code>Document</code> representation of the document source.<p>No transformation
      * is done as a part of building the document.</p><p>The returned document may then be passed into any
      * transformer implementation.</p>
      *

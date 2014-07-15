@@ -38,7 +38,11 @@ import java.util.Map;
 public class BBCodeToHTMLTransformer implements Transformer {
 
     private static final Map<String, String> DEFAULT_TEMPLATES = new HashMap<>();
+
+    private boolean readyToTransform;
+
     private boolean strict;
+
     private FreeMarkerTransformer transformer;
 
     static {
@@ -72,6 +76,14 @@ public class BBCodeToHTMLTransformer implements Transformer {
     }
 
     public BBCodeToHTMLTransformer() {
+    }
+
+    public BBCodeToHTMLTransformer(boolean strict) {
+        this();
+        this.strict = strict;
+    }
+
+    public BBCodeToHTMLTransformer init() {
         Map<String, Template> templates = new HashMap<>();
 
         Configuration configuration = new Configuration();
@@ -85,6 +97,8 @@ public class BBCodeToHTMLTransformer implements Transformer {
             }
         }
         transformer = new FreeMarkerTransformer(templates);
+        readyToTransform = true;
+        return this;
     }
 
     @Override
@@ -100,6 +114,9 @@ public class BBCodeToHTMLTransformer implements Transformer {
 
     @Override
     public String transform(Document document) throws TransformerException {
+        if (!readyToTransform) {
+            throw new TransformerRuntimeException("Transformer has not yet been initialized. Run init() prior to transform().");
+        }
         transformer.setStrict(strict);
         return transformer.transform(document);
     }

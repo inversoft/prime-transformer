@@ -3,6 +3,7 @@ package org.primeframework.transformer.service
 import org.primeframework.transformer.domain.DocumentSource
 import org.primeframework.transformer.domain.ParserException
 import org.primeframework.transformer.domain.TransformerException
+import org.primeframework.transformer.domain.TransformerRuntimeException
 import spock.lang.Shared
 import spock.lang.Specification
 
@@ -24,7 +25,7 @@ public class BBCodeToHTMLTransformerSpec extends Specification {
             def document = bbCodeParser.buildDocument(new DocumentSource("[unknown]Testing[/unknown]"))
 
         and: "transform is bbCodeTransformer"
-            def html = bbCodeToFreeMarkerTransformer.transform(document);
+            def html = bbCodeToFreeMarkerTransformer.init().transform(document);
 
         then: "the output should should equal the input"
             html == "[unknown]Testing[/unknown]"
@@ -40,6 +41,39 @@ public class BBCodeToHTMLTransformerSpec extends Specification {
 
         then: "an exception should be thrown"
             thrown TransformerException
+
+        and: "html should be null"
+            html == null
+    }
+
+    def "Call transform without calling init"() {
+
+        when: "A BBCodeParser is setup with valid BBCode"
+            def document = bbCodeParser.buildDocument(new DocumentSource("[b]Testing[/b]"))
+
+        and: "transform is bbCodeTransformer without calling init()"
+            def html = bbCodeToFreeMarkerTransformer.transform(document);
+
+        then: "an exception should be thrown"
+            thrown TransformerRuntimeException
+
+        and: "html should be null"
+            html == null
+    }
+
+    def "No FreeMarker template for tag with strict mode enabled in the constructor"() {
+
+        when: "A BBCodeParser is setup and a template has not been provided for a tag"
+            def document = bbCodeParser.buildDocument(new DocumentSource("[unknown]Testing[/unknown]"))
+
+        and: "transform is bbCodeTransformer"
+            def html = new BBCodeToHTMLTransformer(true).init().transform(document);
+
+        then: "an exception should be thrown"
+            thrown TransformerException
+
+        and: "html should be null"
+            html == null
     }
 
     def "No closing BBCode tag"() {

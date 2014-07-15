@@ -24,6 +24,10 @@ public class DocumentSource {
         this.source = source.toCharArray();
     }
 
+    public DocumentSource(char[] source) {
+        this.source = source;
+    }
+
     @Override
     public String toString() {
         return new String(source);
