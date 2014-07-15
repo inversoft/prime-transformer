@@ -2,3 +2,4 @@ build
 .gradle
 *.iws
 .idea
+out

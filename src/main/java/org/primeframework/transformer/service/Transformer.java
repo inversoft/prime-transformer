@@ -16,7 +16,11 @@
 
 package org.primeframework.transformer.service;
 
+import java.util.List;
+
 import org.primeframework.transformer.domain.Document;
+import org.primeframework.transformer.domain.Pair;
+
 import org.primeframework.transformer.domain.TransformerException;
 
 public interface Transformer {
@@ -46,4 +50,38 @@ public interface Transformer {
      */
     String transform(Document document) throws TransformerException;
 
+  /**
+   * This is 'in work'.....
+   */
+  public static class TransformedResult {
+
+    // e.g. at offset 1, shift right 3; at offset 4, shift right 6, etc...
+    private List<Pair<Integer, Integer>> offsets;
+
+    public String result;
+
+    /**
+     * @return the number of chars the source string must be moved at oldIndex. e.g. if the source string is A[B]C and
+     * the target is A12345C. Here are sample calls to this method:
+     * @{code computeOffsetFromIndex(0)} => 0
+     * @{code computeOffsetFromIndex(1)} => 1
+     * @{code computeOffsetFromIndex(2)} => 1
+     * @{code computeOffsetFromIndex(3)} => 1
+     * @{code computeOffsetFromIndex(4)} => 6
+     */
+    public int computeOffsetFromIndex(int oldIndex) {
+      // sample implementation
+      int totalOffset = 0;
+      for (Pair<Integer, Integer> offset : offsets) {
+        if (oldIndex >= offset.first) {
+          totalOffset += offset.second;
+        }
+      }
+      return totalOffset;
+    }
+
+    public void addOffset(int oldIndex, int incrementBy) {
+
+    }
+  }
 }

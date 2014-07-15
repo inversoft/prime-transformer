@@ -16,13 +16,18 @@
 
 package org.primeframework.transformer.service;
 
-import freemarker.template.Template;
-import org.primeframework.transformer.domain.*;
-
 import java.io.StringWriter;
 import java.io.Writer;
 import java.util.HashMap;
 import java.util.Map;
+
+import org.primeframework.transformer.domain.Document;
+import org.primeframework.transformer.domain.Node;
+import org.primeframework.transformer.domain.TagNode;
+import org.primeframework.transformer.domain.TextNode;
+import org.primeframework.transformer.domain.TransformerException;
+
+import freemarker.template.Template;
 
 /**
  * FreeMarker transformer implementation.
@@ -32,8 +37,14 @@ public class FreeMarkerTransformer implements Transformer {
     private boolean strict;
     private Map<String, Template> templates = new HashMap<>();
 
-    public FreeMarkerTransformer(Map<String, Template> templates) {
+    private String newLine;
+
+    public FreeMarkerTransformer(Map<String, Template> templates, String newLine) {
         this.templates.putAll(templates);
+        this.newLine = newLine;
+    }
+    public FreeMarkerTransformer(Map<String, Template> templates) {
+        this(templates, "<br>");
     }
 
     public FreeMarkerTransformer(Map<String, Template> templates, boolean strict) {
@@ -69,6 +80,10 @@ public class FreeMarkerTransformer implements Transformer {
     private void transformNode(StringBuilder sb, Node node) throws TransformerException {
         if (node instanceof TagNode) {
             TagNode tag = (TagNode) node;
+            if(!tag.transform) {
+              sb.append(tag.getRawString());
+              return;
+            }
             StringBuilder childSB = new StringBuilder();
             for (Node child : tag.children) {
                 transformNode(childSB, child);
@@ -94,7 +109,7 @@ public class FreeMarkerTransformer implements Transformer {
                 }
             }
         } else { // TextNode
-            sb.append(((TextNode) node).getBody().replaceAll("\n", "<br>"));
+            sb.append(((TextNode) node).getBody().replaceAll("\n", newLine));
         }
     }
 }
