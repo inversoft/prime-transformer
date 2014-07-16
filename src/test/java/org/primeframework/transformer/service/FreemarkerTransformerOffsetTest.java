@@ -7,6 +7,7 @@ import java.util.Map;
 
 import org.primeframework.transformer.domain.Document;
 import org.primeframework.transformer.domain.DocumentSource;
+import org.primeframework.transformer.domain.TagNode;
 import org.primeframework.transformer.domain.TransformerException;
 import org.primeframework.transformer.service.Transformer.TransformedResult;
 import org.testng.annotations.BeforeSuite;
@@ -182,6 +183,24 @@ public class FreemarkerTransformerOffsetTest {
     expected.addOffset(6, 5);
     expected.addOffset(12, 9);
     expected.addOffset(16, 5);
+    expected.addOffset(20, 5);
+    expected.addOffset(38, 8);
+    expected.addOffset(45, 5);
+    expected.addOffset(49, 5);
+
+    TransformedResult result = transformer.transform(doc);
+    assertEquals(result, expected);
+  }
+
+  @Test
+  public void testTransformedResultWithEmbeddingAndNonTransformedAndAdjacentTagsAndAttributesAndSingleBBCodeTag() throws TransformerException {
+    Parser parser = new BBCodeParser();
+    Transformer transformer = new FreeMarkerTransformer(templates);
+    //                                                            6     12 16   20                38     45  49
+    Document doc = parser.buildDocument(new DocumentSource("123[b]abc[*][/b] [a]123[d testattr=33]xyz[/d][/a] 456"));
+    ((TagNode)doc.children.get(1)).transform = false;
+
+    TransformedResult expected = new TransformedResult("123[b]abc[*][/b] <aaaaaa>123<dddddd  testattr=\"33\">xyz</dddddd></aaaaaa> 456");
     expected.addOffset(20, 5);
     expected.addOffset(38, 8);
     expected.addOffset(45, 5);
