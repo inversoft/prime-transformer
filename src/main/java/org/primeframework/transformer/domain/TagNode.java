@@ -63,8 +63,9 @@ public class TagNode extends BaseNode {
   public int bodyEnd;
 
   public boolean transform;
+  public boolean hasClosingTag;
 
-  public TagNode(Document document, int tagBegin, int attributesBegin, int bodyBegin, int bodyEnd, int tagEnd, String attribute, Map<String, String> attributes) {
+  public TagNode(Document document, int tagBegin, int attributesBegin, int bodyBegin, int bodyEnd, int tagEnd, String attribute, Map<String, String> attributes, boolean hasClosingTag) {
     this.document = document;
     this.tagBegin = tagBegin;
     this.attributesBegin = attributesBegin;
@@ -74,6 +75,7 @@ public class TagNode extends BaseNode {
     this.attribute = attribute;
     this.attributes = attributes;
     this.transform = true;
+    this.hasClosingTag = hasClosingTag;
   }
 
   public String getName() {
@@ -95,4 +97,8 @@ public class TagNode extends BaseNode {
   }
 
 
+  @Override
+  public int getNodeStart() {
+    return tagBegin;
+  }
 }

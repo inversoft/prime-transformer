@@ -16,14 +16,14 @@
 package org.primeframework.transformer.domain;
 
 /**
- * This class is a simple pair.
+ * This class is a simple comparable pair.
  *
- * @author Brian Pontarelli
+ * @author Seth Musselmant
  */
-public final class Pair<T, U> {
-  public final T first;
+public final class Pair<T extends Comparable<T>, U extends Comparable<U>> implements Comparable<Pair<T, U>> {
+  public T first;
 
-  public final U second;
+  public U second;
 
   public Pair(T first, U second) {
     this.first = first;
@@ -48,5 +48,14 @@ public final class Pair<T, U> {
 
   public String toString() {
     return first + ":" + second;
+  }
+
+  @Override
+  public int compareTo(Pair<T, U> other) {
+    int result = first.compareTo(other.first);
+    if (result != 0) {
+      return result;
+    }
+    return second.compareTo(other.second);
   }
 }

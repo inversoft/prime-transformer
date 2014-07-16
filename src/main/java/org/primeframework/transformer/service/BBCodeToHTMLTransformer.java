@@ -112,7 +112,7 @@ public class BBCodeToHTMLTransformer implements Transformer {
   }
 
   @Override
-  public String transform(Document document) throws TransformerException {
+  public TransformedResult transform(Document document) throws TransformerException {
     if (!readyToTransform) {
       throw new TransformerException("Transformer has not yet been initialized. Run init() prior to transform().");
     }

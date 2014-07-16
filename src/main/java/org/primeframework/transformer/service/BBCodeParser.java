@@ -106,6 +106,7 @@ public class BBCodeParser extends AbstractParser {
       int bodyEnd = indexOfString(document, bodyBegin, endIndex, closeTag);
 
       int tagEnd;
+      boolean closingTag = true;
       // If no closing tag is found
       if (bodyEnd == -1) {
         if (!NO_CLOSING_TAG.contains(tagName)) {
@@ -125,12 +126,13 @@ public class BBCodeParser extends AbstractParser {
           bodyEnd = nextTagIndex;
         }
         tagEnd = bodyEnd;
+        closingTag = false;
       } else {
         tagEnd = bodyEnd + closeTag.length();
       }
 
       // Build tag node
-      TagNode tag = new TagNode(document, tagBegin, attributesBegin, bodyBegin, bodyEnd, tagEnd, attribute, attributes);
+      TagNode tag = new TagNode(document, tagBegin, attributesBegin, bodyBegin, bodyEnd, tagEnd, attribute, attributes, closingTag);
       // A tag such as [code] may not have embedded tags, only a text body.
       if (ESCAPE_TAG.contains(tagName)) {
         TextNode textNode = new TextNode(document, bodyBegin, bodyEnd);

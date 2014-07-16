@@ -40,6 +40,6 @@ public class FullTest {
     Document doc = parser.buildDocument(new DocumentSource("abc[b]bbb[/b]123"));
 
     ((TagNode) doc.children.stream().filter(node -> node instanceof TagNode).findFirst().get()).transform = false;
-    assertEquals(transformer.transform(doc), "abc[b]bbb[/b]123");
+    assertEquals(transformer.transform(doc).result, "abc[b]bbb[/b]123");
   }
 }

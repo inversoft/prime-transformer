@@ -48,4 +48,8 @@ public class Document extends BaseNode {
         "]}";
   }
 
+  @Override
+  public int getNodeStart() {
+    return 0;
+  }
 }

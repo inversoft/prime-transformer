@@ -50,4 +50,9 @@ public class TextNode extends BaseNode {
         "body=" + getBody() +
         "}";
   }
+
+  @Override
+  public int getNodeStart() {
+    return tagBegin;
+  }
 }
