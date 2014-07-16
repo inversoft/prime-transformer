@@ -21,9 +21,9 @@ package org.primeframework.transformer.domain;
  * @author Seth Musselmant
  */
 public final class Pair<T extends Comparable<T>, U extends Comparable<U>> implements Comparable<Pair<T, U>> {
-  public T first;
+  public final T first;
 
-  public U second;
+  public final U second;
 
   public Pair(T first, U second) {
     this.first = first;

@@ -209,4 +209,30 @@ public class FreemarkerTransformerOffsetTest {
     TransformedResult result = transformer.transform(doc);
     assertEquals(result, expected);
   }
+
+  @Test
+  public void testTransformedResultComputedOffset() {
+    TransformedResult tr = new TransformedResult(null);
+    tr.addOffset(0, 1);
+    tr.addOffset(1, 2);
+    tr.addOffset(1, 3);
+    tr.addOffset(10, 5);
+    tr.addOffset(12, 50);
+    assertEquals(tr.computeOffsetFromIndex(0), 1);
+    assertEquals(tr.computeOffsetFromIndex(1), 6);
+    assertEquals(tr.computeOffsetFromIndex(2), 6);
+    assertEquals(tr.computeOffsetFromIndex(10), 11);
+    assertEquals(tr.computeOffsetFromIndex(11), 11);
+    assertEquals(tr.computeOffsetFromIndex(12), 61);
+    assertEquals(tr.computeOffsetFromIndex(13), 61);
+    assertEquals(tr.computeOffsetFromIndex(14), 61);
+  }
+
+  @Test
+  public void testTransformedResultDuplicatePairs() {
+    TransformedResult tr = new TransformedResult(null);
+    tr.addOffset(0, 3);
+    tr.addOffset(0, 3);
+    assertEquals(tr.computeOffsetFromIndex(1), 6);
+  }
 }

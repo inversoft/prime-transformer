@@ -119,7 +119,12 @@ public interface Transformer {
     }
 
     public void addOffset(int oldIndex, int incrementBy) {
-      offsets.add(new Pair<>(oldIndex, incrementBy));
+      Pair<Integer, Integer> pair = new Pair<>(oldIndex, incrementBy);
+      if (offsets.contains(pair)) {
+        offsets.remove(pair);
+        pair = new Pair<>(oldIndex, incrementBy * 2);
+      }
+      offsets.add(pair);
     }
   }
 }
