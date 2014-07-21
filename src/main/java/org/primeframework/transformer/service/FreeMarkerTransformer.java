@@ -16,23 +16,32 @@
 
 package org.primeframework.transformer.service;
 
-import freemarker.template.Template;
-import org.primeframework.transformer.domain.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.StringWriter;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
+
+import org.primeframework.transformer.domain.Document;
+import org.primeframework.transformer.domain.Node;
+import org.primeframework.transformer.domain.Pair;
+import org.primeframework.transformer.domain.TagNode;
+import org.primeframework.transformer.domain.TextNode;
+import org.primeframework.transformer.domain.TransformerException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import freemarker.template.Template;
 
 /**
  * FreeMarker transformer implementation.
  */
 public class FreeMarkerTransformer implements Transformer {
   private final static Logger logger = LoggerFactory.getLogger(FreeMarkerTransformer.class);
+
+  private final static String BodyMarker = "xxx" + UUID.randomUUID() + "xxx";
 
   private boolean strict;
 
@@ -117,9 +126,9 @@ public class FreeMarkerTransformer implements Transformer {
             //      X = the index in the input string of the ${body}
             //      Y = the index in the out string of the childSB
             int x = tag.bodyBegin - tag.tagBegin + offset;
-            int y = transformedNode.indexOf(childSB.toString()); // if failed:  fuck
+            int y = getOffsetOfBody(template, tag);
             if (y == -1) {
-              logger.warn("Offsets are incorrect, couldn't find '" + childSB.toString() + "' in '" + sb.toString() + "'");
+              logger.warn("Offsets are incorrect, couldn't find the body...");
             }
             offsets.add(new Pair<>(x, y - x + offset));  // for the portion after the opening tag
           }
@@ -136,5 +145,15 @@ public class FreeMarkerTransformer implements Transformer {
       sb.append(((TextNode) node).getBody());
     }
     return offsets;
+  }
+
+  private int getOffsetOfBody(Template template, TagNode tag) throws IOException, TemplateException {
+    Map<String, Object> data = new HashMap<>(3);
+    data.put("body", BodyMarker);
+    data.put("attributes", tag.attributes);
+    data.put("attribute", tag.attribute);
+    Writer out = new StringWriter();
+    template.process(data, out);
+    return out.toString().indexOf(BodyMarker);
   }
 }
