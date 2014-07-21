@@ -16,13 +16,13 @@
 
 package org.primeframework.transformer.service;
 
-import java.util.List;
-import java.util.Set;
-import java.util.TreeSet;
-
 import org.primeframework.transformer.domain.Document;
 import org.primeframework.transformer.domain.Pair;
 import org.primeframework.transformer.domain.TransformerException;
+
+import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 
 public interface Transformer {
 
@@ -52,32 +52,26 @@ public interface Transformer {
   TransformedResult transform(Document document) throws TransformerException;
 
   /**
-   * This is 'in work'.....
+   * Transform result object that provides the resulting transformed string and index and offset values that can be used
+   * to understand how the the original string could be reconstructed.
    */
   public static class TransformedResult {
 
+    /**
+     * Set of offsets, first value is the beginning of the tag, the second value is the length. With these
+     * values the original string can be reconstructed.
+     * <p>
+     * <pre>
+     * Example:
+     *    a [b] testing [/b]
+     *      ^           ^
+     *      2,3        14,4
+     * </pre>
+     */
+    public Set<Pair<Integer, Integer>> forwardOffsets = new TreeSet<>();
+
     // e.g. at offset 1, shift right 3; at offset 4, shift right 6, etc...
     private Set<Pair<Integer, Integer>> offsets = new TreeSet<>();
-
-    @Override
-    public boolean equals(Object o) {
-      if (this == o) return true;
-      if (!(o instanceof TransformedResult)) return false;
-
-      final TransformedResult that = (TransformedResult) o;
-
-      if (offsets != null ? !offsets.equals(that.offsets) : that.offsets != null) return false;
-      if (result != null ? !result.equals(that.result) : that.result != null) return false;
-
-      return true;
-    }
-
-    @Override
-    public int hashCode() {
-      int result1 = offsets != null ? offsets.hashCode() : 0;
-      result1 = 31 * result1 + (result != null ? result.hashCode() : 0);
-      return result1;
-    }
 
     public String result;
 
@@ -85,28 +79,57 @@ public interface Transformer {
       this.result = result;
     }
 
-    public TransformedResult(String result, List<Pair<Integer, Integer>> offsets) {
-      this.result = result;
-      this.offsets.addAll(offsets);
+    private TransformedResult(Builder builder) {
+      this.result = builder.result;
+      if (builder.forwardOffsets != null) {
+        this.forwardOffsets.addAll(builder.forwardOffsets);
+      }
+      if (builder.offsets != null) {
+        this.offsets.addAll(builder.offsets);
+      }
     }
 
-    @Override
-    public String toString() {
-      return "TransformedResult{" +
-          "offsets=" + offsets +
-          ", result='" + result + '\'' +
-          '}';
+    public static Builder Builder() {
+      return new Builder();
     }
 
-    /**
-     * @return the number of chars the source string must be moved at oldIndex. e.g. if the source string is A[B]C and
-     * the target is A12345C. Here are sample calls to this method:
-     * @{code computeOffsetFromIndex(0)} => 0
-     * @{code computeOffsetFromIndex(1)} => 1
-     * @{code computeOffsetFromIndex(2)} => 1
-     * @{code computeOffsetFromIndex(3)} => 1
-     * @{code computeOffsetFromIndex(4)} => 6
-     */
+    public static Builder Builder(String result) {
+      return new Builder(result);
+    }
+
+    public static class Builder {
+      private List<Pair<Integer, Integer>> forwardOffsets;
+      private List<Pair<Integer, Integer>> offsets;
+      private String result;
+
+      public Builder() {
+      }
+
+      public Builder(String result) {
+        this.result = result;
+      }
+
+      public Builder forwardOffsets(List<Pair<Integer, Integer>> forwardOffsets) {
+        this.forwardOffsets = forwardOffsets;
+        return this;
+      }
+
+      public Builder offsets(List<Pair<Integer, Integer>> offsets) {
+        this.offsets = offsets;
+        return this;
+      }
+
+      public Builder result(String result) {
+        this.result = result;
+        return this;
+      }
+
+      public TransformedResult build() {
+        return new TransformedResult(this);
+      }
+
+    }
+
     public int computeOffsetFromIndex(int oldIndex) {
       // sample implementation
       int totalOffset = 0;
@@ -125,6 +148,36 @@ public interface Transformer {
         pair = new Pair<>(oldIndex, incrementBy * 2);
       }
       offsets.add(pair);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) return true;
+      if (o == null || getClass() != o.getClass()) return false;
+
+      TransformedResult that = (TransformedResult) o;
+
+      if (!forwardOffsets.equals(that.forwardOffsets)) return false;
+      if (!offsets.equals(that.offsets)) return false;
+      if (result != null ? !result.equals(that.result) : that.result != null) return false;
+
+      return true;
+    }
+
+    @Override
+    public int hashCode() {
+      int result1 = forwardOffsets.hashCode();
+      result1 = 31 * result1 + offsets.hashCode();
+      result1 = 31 * result1 + (result != null ? result.hashCode() : 0);
+      return result1;
+    }
+
+    @Override
+    public String toString() {
+      return "TransformedResult{" +
+          "offsets=" + offsets +
+          ", result='" + result + '\'' +
+          '}';
     }
   }
 }

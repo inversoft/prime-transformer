@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
  * The <code>Document</code> is the top level {@link Node} in the document model built to represent the document
  * source.
  */
-public class Document extends BaseNode {
+public class Document extends BaseTagNode {
 
   public List<Node> children = new ArrayList<>();
 
@@ -34,6 +34,16 @@ public class Document extends BaseNode {
     this.documentSource = documentSource;
     this.tagBegin = 0;
     this.tagEnd = this.documentSource.source.length;
+  }
+
+  @Override
+  public List<Node> getChildren() {
+    return children;
+  }
+
+  @Override
+  public int getNodeStart() {
+    return 0;
   }
 
   public String getString(int start, int end) {
@@ -46,10 +56,5 @@ public class Document extends BaseNode {
         "children=[" +
         String.join(", ", children.stream().map(Object::toString).collect(Collectors.toList())) +
         "]}";
-  }
-
-  @Override
-  public int getNodeStart() {
-    return 0;
   }
 }

@@ -16,23 +16,17 @@
 
 package org.primeframework.transformer.service;
 
+import freemarker.template.Template;
+import org.primeframework.transformer.domain.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.StringWriter;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import org.primeframework.transformer.domain.Document;
-import org.primeframework.transformer.domain.Node;
-import org.primeframework.transformer.domain.Pair;
-import org.primeframework.transformer.domain.TagNode;
-import org.primeframework.transformer.domain.TextNode;
-import org.primeframework.transformer.domain.TransformerException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import freemarker.template.Template;
 
 /**
  * FreeMarker transformer implementation.
@@ -82,7 +76,7 @@ public class FreeMarkerTransformer implements Transformer {
     for (Node node : document.children) {
       offsets.addAll(transformNode(sb, node));
     }
-    return new TransformedResult(sb.toString().trim(), offsets);
+    return TransformedResult.Builder(sb.toString().trim()).offsets(offsets).build();
   }
 
   private List<Pair<Integer, Integer>> transformNode(StringBuilder sb, Node node) throws TransformerException {

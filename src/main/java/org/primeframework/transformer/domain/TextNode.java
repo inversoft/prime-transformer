@@ -41,7 +41,12 @@ public class TextNode extends BaseNode {
   }
 
   public String getBody() {
-    return document.getString(tagBegin, tagEnd).toString();
+    return document.getString(tagBegin, tagEnd);
+  }
+
+  @Override
+  public int getNodeStart() {
+    return tagBegin;
   }
 
   @Override
@@ -49,10 +54,5 @@ public class TextNode extends BaseNode {
     return "TextNode{" +
         "body=" + getBody() +
         "}";
-  }
-
-  @Override
-  public int getNodeStart() {
-    return tagBegin;
   }
 }

@@ -31,7 +31,7 @@ import java.util.stream.Collectors;
  * <pre>
  *     [url=http://foo.com] http://foo.com [/url]
  *     ^   ^                               ^    ^
- *     1   2               <---  body ---> 3    4
+ *     1   2               3 <--  body --> 4    5
  *
  *  Between index 1 and 2 is the opening tag.
  *  Between index 2 and 3 is the tag body.
@@ -40,14 +40,14 @@ import java.util.stream.Collectors;
  *  1. tagBegin
  *  2. attributeBegin
  *  3. bodyBegin
- *  3. bodyEnd
- *  4. tagEnd
+ *  4. bodyEnd
+ *  5. tagEnd
  * </pre>
  * The body of the tag is contained in the children collection. A child may be either another <code>TagNode</code> or a
  * <code>TextNode</code>. The <code>TagNode</code> itself does not have a body, the body will be contained in a child
  * <code>TextNode</code>.
  */
-public class TagNode extends BaseNode {
+public class TagNode extends BaseTagNode {
 
   /**
    * Support for a simple attribute. Example: [tag=foo]bar[/tag]
@@ -78,8 +78,18 @@ public class TagNode extends BaseNode {
     this.hasClosingTag = hasClosingTag;
   }
 
+  @Override
+  public List<Node> getChildren() {
+    return children;
+  }
+
   public String getName() {
     return document.getString(tagBegin + 1, attributesBegin != -1 ? attributesBegin : bodyBegin - 1);
+  }
+
+  @Override
+  public int getNodeStart() {
+    return tagBegin;
   }
 
   @Override
@@ -94,11 +104,5 @@ public class TagNode extends BaseNode {
         "]" +
         ", name=" + getName() +
         "}";
-  }
-
-
-  @Override
-  public int getNodeStart() {
-    return tagBegin;
   }
 }
