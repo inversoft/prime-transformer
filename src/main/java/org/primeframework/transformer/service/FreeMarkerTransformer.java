@@ -16,6 +16,7 @@
 
 package org.primeframework.transformer.service;
 
+import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.util.ArrayList;
@@ -34,6 +35,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import freemarker.template.Template;
+import freemarker.template.TemplateException;
 
 /**
  * FreeMarker transformer implementation.
