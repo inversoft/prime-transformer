@@ -16,14 +16,8 @@
 
 package org.primeframework.transformer.service;
 
-import java.io.StringWriter;
-import java.io.Writer;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-
+import freemarker.template.Template;
+import freemarker.template.TemplateException;
 import org.primeframework.transformer.domain.Document;
 import org.primeframework.transformer.domain.Node;
 import org.primeframework.transformer.domain.Pair;
@@ -33,7 +27,14 @@ import org.primeframework.transformer.domain.TransformerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import freemarker.template.Template;
+import java.io.IOException;
+import java.io.StringWriter;
+import java.io.Writer;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 /**
  * FreeMarker transformer implementation.
@@ -85,7 +86,7 @@ public class FreeMarkerTransformer implements Transformer {
     for (Node node : document.children) {
       offsets.addAll(transformNode(sb, node));
     }
-    return TransformedResult.Builder(sb.toString().trim()).offsets(offsets).build();
+    return new TransformedResult(sb.toString().trim(), offsets);
   }
 
   private List<Pair<Integer, Integer>> transformNode(StringBuilder sb, Node node) throws TransformerException {
@@ -133,9 +134,9 @@ public class FreeMarkerTransformer implements Transformer {
             offsets.add(new Pair<>(x, y - x + offset));  // for the portion after the opening tag
           }
           offsets.add(new Pair<>(tag.tagEnd,
-                                 transformedNode.length()
-                                     - (tag.tagEnd - tag.tagBegin)
-                                     - offsets.stream().mapToInt(p -> p.second).sum()
+             transformedNode.length()
+                - (tag.tagEnd - tag.tagBegin)
+                - offsets.stream().mapToInt(p -> p.second).sum()
           ));
         } catch (Exception e) {
           throw new TransformerException("FreeMarker processing failed for template " + template.getName() + " \n\t Data model: " + data.get("body"), e);

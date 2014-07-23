@@ -18,6 +18,8 @@ package org.primeframework.transformer.domain;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 /**
@@ -29,6 +31,31 @@ public class Document extends BaseTagNode {
   public List<Node> children = new ArrayList<>();
 
   public DocumentSource documentSource;
+
+  /**
+   * Set of offsets, first value is the beginning of the tag, the second value is the length. With these
+   * values the original string can be reconstructed.
+   * <p>
+   * <pre>
+   * Example:
+   *    a [b] testing [/b]
+   *      ^           ^
+   *      2,3        14,4
+   * </pre>
+   */
+  public Set<Pair<Integer, Integer>> offsets = new TreeSet<>();
+
+  /**
+   * Set of attribute offsets, first value is the beginning of the attribute, the second value is the length.
+   * <p>
+   * <pre>
+   * Example:
+   *    a [font size="10" family="verdana"] testing [/font]
+   *                  ^           ^
+   *                  14,2        26,7
+   * </pre>
+   */
+  public Set<Pair<Integer, Integer>> attributeOffsets = new TreeSet<>();
 
   public Document(DocumentSource documentSource) {
     this.documentSource = documentSource;
@@ -55,6 +82,13 @@ public class Document extends BaseTagNode {
     return "Document{" +
         "children=[" +
         String.join(", ", children.stream().map(Object::toString).collect(Collectors.toList())) +
-        "]}";
+        "]" +
+       ", offsets=[" +
+       String.join(", ", offsets.stream().map(o -> o.first + ":" + o.second).collect(Collectors.toList())) +
+       "]" +
+       ", attributeOffsets=[" +
+       String.join(", ", attributeOffsets.stream().map(o -> o.first + ":" + o.second).collect(Collectors.toList())) +
+       "]" +
+       "}";
   }
 }

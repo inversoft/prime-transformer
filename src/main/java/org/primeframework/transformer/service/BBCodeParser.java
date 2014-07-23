@@ -16,19 +16,20 @@
 
 package org.primeframework.transformer.service;
 
+import org.primeframework.transformer.domain.Document;
+import org.primeframework.transformer.domain.DocumentSource;
+import org.primeframework.transformer.domain.Node;
+import org.primeframework.transformer.domain.Pair;
+import org.primeframework.transformer.domain.ParserException;
+import org.primeframework.transformer.domain.TagNode;
+import org.primeframework.transformer.domain.TextNode;
+
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import org.primeframework.transformer.domain.Document;
-import org.primeframework.transformer.domain.DocumentSource;
-import org.primeframework.transformer.domain.Node;
-import org.primeframework.transformer.domain.ParserException;
-import org.primeframework.transformer.domain.TagNode;
-import org.primeframework.transformer.domain.TextNode;
 
 /**
  * BBCode Parser Implementation.
@@ -70,11 +71,13 @@ public class BBCodeParser extends AbstractParser {
       // Tag node
       int openingTagEndIndex = indexOfOpeningTagCloseCharacter(document, tagBegin, endIndex);
 
+      // Parse attributes
       String attribute = null;
       Map<String, String> attributes = new LinkedHashMap<>(3);
       int attributesBegin = indexOfCharacter(document, tagBegin, openingTagEndIndex, ' ');
       int equalsIndex = indexOfCharacter(document, tagBegin, openingTagEndIndex, '=');
       if (attributesBegin != -1 && (equalsIndex == -1 || equalsIndex > attributesBegin)) {
+        // Handle complex attributes
         int attributeIndex = attributesBegin;
         while (attributeIndex < openingTagEndIndex) {
           equalsIndex = indexOfCharacter(document, attributeIndex, openingTagEndIndex, '=');
@@ -90,12 +93,16 @@ public class BBCodeParser extends AbstractParser {
           String key = document.getString(attributeIndex, equalsIndex);
           String value = removeQuotes(document.getString(equalsIndex + 1, endKeyValueIndex));
           attributes.put(key, value);
+
+          addAttributeOffset(document, equalsIndex, value.length());
           attributeIndex = endKeyValueIndex;
         }
       } else {
+        // Handle simple attribute
         attributesBegin = indexOfCharacter(document, tagBegin, openingTagEndIndex, '=');
         if (attributesBegin != -1) {
           attribute = removeQuotes(document.getString(attributesBegin + 1, openingTagEndIndex));
+          addAttributeOffset(document, attributesBegin, attribute.length());
         }
       }
 
@@ -111,13 +118,13 @@ public class BBCodeParser extends AbstractParser {
       if (bodyEnd == -1) {
         if (!NO_CLOSING_TAG.contains(tagName)) {
           throw new ParserException("Malformed markup. No closing tag was found for " + closeTag +
-                                        ". Open tag started at index " + (openingTagEndIndex + 1 - closeTag.length()) + " and ended at " +
-                                        openingTagEndIndex + 1 + ".\n\t" + document.documentSource);
+             ". Open tag started at index " + (openingTagEndIndex + 1 - closeTag.length()) + " and ended at " +
+             openingTagEndIndex + 1 + ".\n\t" + document.documentSource);
         }
-                /*
-                 *  When no closing tag is not required, the next opening tag will indicate the end of this body.
-                 *  If no additional opening tags are found, the endIndex will identify the end of this body.
-                 */
+        /*
+         *  When no closing tag is not required, the next opening tag will indicate the end of this body.
+         *  If no additional opening tags are found, the endIndex will identify the end of this body.
+         */
         String openTag = String.format(OPENING_TAG, tagName);
         int nextTagIndex = indexOfString(document, openingTagEndIndex, endIndex, openTag);
         if (nextTagIndex == -1) {
@@ -133,6 +140,8 @@ public class BBCodeParser extends AbstractParser {
 
       // Build tag node
       TagNode tag = new TagNode(document, tagBegin, attributesBegin, bodyBegin, bodyEnd, tagEnd, attribute, attributes, closingTag);
+      addOpenAndClosingTagOffset(document, tag);
+
       // A tag such as [code] may not have embedded tags, only a text body.
       if (ESCAPE_TAG.contains(tagName)) {
         TextNode textNode = new TextNode(document, bodyBegin, bodyEnd);
@@ -170,6 +179,31 @@ public class BBCodeParser extends AbstractParser {
   @Override
   protected char getTagOpenChar() {
     return '[';
+  }
+
+  /**
+   * Add an offset to the attribute offsets stored in the document.
+   *
+   * @param document
+   * @param attributeStartIndex
+   * @param attributeLength
+   */
+  private void addAttributeOffset(Document document, int attributeStartIndex, int attributeLength) {
+    int adjusted = startsWithQuote(document.documentSource.source, attributeStartIndex + 1) ? 1 : 0;
+    document.attributeOffsets.add(new Pair<>(attributeStartIndex + 1 + adjusted, attributeLength));
+  }
+
+  /**
+   * Add an offset to the tag offsets stored in the document.
+   *
+   * @param document
+   * @param tag
+   */
+  private void addOpenAndClosingTagOffset(Document document, TagNode tag) {
+    document.offsets.add(new Pair<>(tag.tagBegin, tag.bodyBegin - tag.tagBegin));
+    if (tag.tagEnd != tag.bodyEnd) {
+      document.offsets.add(new Pair<>(tag.bodyEnd, tag.tagEnd - tag.bodyEnd));
+    }
   }
 
 }

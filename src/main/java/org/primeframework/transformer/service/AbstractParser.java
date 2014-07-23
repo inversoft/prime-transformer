@@ -131,4 +131,15 @@ public abstract class AbstractParser implements Parser {
   protected String removeQuotes(String string) {
     return string.replaceAll("^\"|\"$", "").replaceAll("^'|'$", "");
   }
+
+  /**
+   * Return true if the character at the provided index is a single or double quote.
+   *
+   * @param source
+   * @param index
+   * @return
+   */
+  protected boolean startsWithQuote(char[] source, int index) {
+    return source[index] == '\'' || source[index] == '\"';
+  }
 }

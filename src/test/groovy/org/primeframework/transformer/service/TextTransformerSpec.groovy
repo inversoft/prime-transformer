@@ -36,7 +36,7 @@ class TextTransformerSpec extends Specification {
 
     and: "offsets are correct"
       def expectedOffsets = [new Pair<>(2, 3), new Pair<>(14, 4), new Pair<>(23, 4), new Pair<>(27, 3), new Pair<>(38, 3), new Pair<>(41, 5)] as TreeSet
-      transFormResult.forwardOffsets == expectedOffsets
+      document.offsets == expectedOffsets;
 
   }
 
