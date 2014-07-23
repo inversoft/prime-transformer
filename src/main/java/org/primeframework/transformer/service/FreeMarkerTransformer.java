@@ -16,8 +16,14 @@
 
 package org.primeframework.transformer.service;
 
-import freemarker.template.Template;
-import freemarker.template.TemplateException;
+import java.io.StringWriter;
+import java.io.Writer;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
 import org.primeframework.transformer.domain.Document;
 import org.primeframework.transformer.domain.Node;
 import org.primeframework.transformer.domain.Pair;
@@ -27,14 +33,7 @@ import org.primeframework.transformer.domain.TransformerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.io.StringWriter;
-import java.io.Writer;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import freemarker.template.Template;
 
 /**
  * FreeMarker transformer implementation.
