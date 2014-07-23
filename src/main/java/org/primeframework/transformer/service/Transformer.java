@@ -23,6 +23,7 @@ import org.primeframework.transformer.domain.TransformerException;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.stream.Collectors;
 
 public interface Transformer {
 
@@ -114,9 +115,10 @@ public interface Transformer {
     @Override
     public String toString() {
       return "TransformedResult{" +
-          "offsets=" + offsets +
-          ", result='" + result + '\'' +
-          '}';
+         "offsets=[" +
+         String.join(", ", offsets.stream().map(o -> o.first + ":" + o.second).collect(Collectors.toList())) +
+         "], result='" + result + "\'" +
+         "}";
     }
   }
 }

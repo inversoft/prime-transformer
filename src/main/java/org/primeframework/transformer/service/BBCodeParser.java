@@ -44,7 +44,7 @@ public class BBCodeParser extends AbstractParser {
   /**
    * The body of an 'escape' tag is not parsed.
    */
-  private static final Set<String> ESCAPE_TAG = new HashSet<>(Arrays.asList("code", "noparse"));
+  private static final Set<String> ESCAPE_TAGS = new HashSet<>(Arrays.asList("code", "noparse"));
 
   /**
    * Find the next node between the start and end index and add to the provided node list.
@@ -143,7 +143,7 @@ public class BBCodeParser extends AbstractParser {
       addOpenAndClosingTagOffset(document, tag);
 
       // A tag such as [code] may not have embedded tags, only a text body.
-      if (ESCAPE_TAG.contains(tagName)) {
+      if (ESCAPE_TAGS.contains(tagName)) {
         TextNode textNode = new TextNode(document, bodyBegin, bodyEnd);
         tag.children.add(textNode);
       } else {

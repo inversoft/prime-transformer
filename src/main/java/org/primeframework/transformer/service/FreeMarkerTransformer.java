@@ -40,9 +40,10 @@ import java.util.UUID;
  * FreeMarker transformer implementation.
  */
 public class FreeMarkerTransformer implements Transformer {
-  private final static Logger logger = LoggerFactory.getLogger(FreeMarkerTransformer.class);
 
-  private final static String BodyMarker = "xxx" + UUID.randomUUID() + "xxx";
+  private final static Logger LOGGER = LoggerFactory.getLogger(FreeMarkerTransformer.class);
+
+  private final static String BDOY_MARKER = "xxx" + UUID.randomUUID() + "xxx";
 
   private boolean strict;
 
@@ -90,71 +91,101 @@ public class FreeMarkerTransformer implements Transformer {
   }
 
   private List<Pair<Integer, Integer>> transformNode(StringBuilder sb, Node node) throws TransformerException {
-    int offset = node.getNodeStart();
+
     List<Pair<Integer, Integer>> offsets = new ArrayList<>();
+
     if (node instanceof TagNode) {
       TagNode tag = (TagNode) node;
-      if (!tag.transform) {
-        sb.append(tag.getRawString());
-        return offsets;
-      }
-      StringBuilder childSB = new StringBuilder();
-      for (Node child : tag.children) {
-        offsets.addAll(transformNode(childSB, child));
-      }
-      Map<String, Object> data = new HashMap<>(3);
-      data.put("body", childSB.toString());
-      data.put("attributes", tag.attributes);
-      data.put("attribute", tag.attribute);
-
-      Template template = templates.get(tag.getName());
-      if (template == null) {
-        if (strict) {
-          throw new TransformerException("No template found for tag [" + tag.getName() + "]");
-        }
-        sb.append(tag.getRawString());
+      if (tag.transform) {
+        doTransform(sb, offsets, tag);
       } else {
-        try {
-          // Get the transformed string
-          Writer out = new StringWriter();
-          template.process(data, out);
-          String transformedNode = out.toString();
-          sb.append(transformedNode);
-
-          // compute the offsets
-          if (tag.hasClosingTag) {
-            // case2) the tag does contain a body
-            //      X = the index in the input string of the ${body}
-            //      Y = the index in the out string of the childSB
-            int x = tag.bodyBegin - tag.tagBegin + offset;
-            int y = getOffsetOfBody(template, tag);
-            if (y == -1) {
-              logger.warn("Offsets are incorrect, couldn't find the body...");
-            }
-            offsets.add(new Pair<>(x, y - x + offset));  // for the portion after the opening tag
-          }
-          offsets.add(new Pair<>(tag.tagEnd,
-             transformedNode.length()
-                - (tag.tagEnd - tag.tagBegin)
-                - offsets.stream().mapToInt(p -> p.second).sum()
-          ));
-        } catch (Exception e) {
-          throw new TransformerException("FreeMarker processing failed for template " + template.getName() + " \n\t Data model: " + data.get("body"), e);
-        }
+        // A flag has indicated that this node should not be transformed.
+        sb.append(tag.getRawString());
       }
     } else { // TextNode
-      sb.append(((TextNode) node).getBody());
+      TextNode tag = (TextNode) node;
+      sb.append(tag.getBody());
     }
+
     return offsets;
+  }
+
+  private void doTransform(StringBuilder sb, List<Pair<Integer, Integer>> offsets, TagNode tag) throws TransformerException {
+
+    int offset = tag.getNodeStart();
+    StringBuilder childSB = new StringBuilder();
+    for (Node child : tag.children) {
+      offsets.addAll(transformNode(childSB, child));
+    }
+
+    Map<String, Object> data = new HashMap<>(3);
+    data.put("body", childSB.toString());
+    data.put("attributes", tag.attributes);
+    data.put("attribute", tag.attribute);
+
+    if (templates.containsKey(tag.getName())) {
+      Template template = templates.get(tag.getName());
+      try {
+        int transformedLength = appendTransformedNodeToBuilder(data, sb, template);
+        addTransformationOffsets(tag, offsets, offset, template, transformedLength);
+      } catch (Exception e) {
+        throw new TransformerException("FreeMarker processing failed for template " + template.getName() + " \n\t Data model: " + data.get("body"), e);
+      }
+    } else {
+      // If strict mode is enabled, throw an exception, else append the raw string from the node
+      if (strict) {
+        throw new TransformerException("No template found for tag [" + tag.getName() + "]");
+      }
+      sb.append(tag.getRawString());
+    }
+
+  }
+
+  /**
+   * Append the transformed node to the {@link StringBuilder} and return the length of the transformed node.
+   *
+   * @param data
+   * @param sb
+   * @param template
+   * @return the length of the transformed node.
+   * @throws IOException
+   * @throws TemplateException
+   */
+  private int appendTransformedNodeToBuilder(Map<String, Object> data, StringBuilder sb, Template template) throws IOException, TemplateException {
+    int length = sb.length();
+    Writer out = new StringWriter();
+    template.process(data, out);
+    sb.append(out.toString());
+    return sb.length() - length;
+  }
+
+  private void addTransformationOffsets(TagNode tag, List<Pair<Integer, Integer>> offsets, int offset, Template template, int transformedNodeLength) throws IOException, TemplateException {
+    // compute the offsets
+    if (tag.hasClosingTag) {
+      // case2) the tag does contain a body
+      //      X = the index in the input string of the ${body}
+      //      Y = the index in the out string of the childSB
+      int x = tag.bodyBegin - tag.tagBegin + offset;
+      int y = getOffsetOfBody(template, tag);
+      if (y == -1) {
+        LOGGER.warn("Offsets are incorrect, couldn't find the body...");
+      }
+      offsets.add(new Pair<>(x, y - x + offset));  // for the portion after the opening tag
+    }
+    offsets.add(new Pair<>(tag.tagEnd,
+       transformedNodeLength
+          - (tag.tagEnd - tag.tagBegin)
+          - offsets.stream().mapToInt(p -> p.second).sum()
+    ));
   }
 
   private int getOffsetOfBody(Template template, TagNode tag) throws IOException, TemplateException {
     Map<String, Object> data = new HashMap<>(3);
-    data.put("body", BodyMarker);
+    data.put("body", BDOY_MARKER);
     data.put("attributes", tag.attributes);
     data.put("attribute", tag.attribute);
     Writer out = new StringWriter();
     template.process(data, out);
-    return out.toString().indexOf(BodyMarker);
+    return out.toString().indexOf(BDOY_MARKER);
   }
 }
