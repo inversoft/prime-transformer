@@ -54,6 +54,24 @@ public class BBCodeParserSpec extends Specification {
       document.attributeOffsets == [new Pair<>(6,21)] as TreeSet
   }
 
+
+  def "Parse BBCode with a complex attribute for a tag that only uses a simple attribute verify offsets"() {
+
+    when: "A document is constructed using the builder with all parameters"
+      def source = "[font foo=\"abc\"] bar [/font]"
+      /*            ^           ^           ^                                         */
+      /* offsets    0,16                   21,7                                       */
+      /* attributes            11,3                                                   */
+
+      def document = ParserFactory.newBBCodeParser().buildDocument(new DocumentSource(source))
+
+    then: "offsets to tags should be correct"
+      document.offsets == [new Pair<>(0,16), new Pair<>(21,7)] as TreeSet
+
+    and: "attribute offsets should be correct"
+      document.attributeOffsets == [new Pair<>(11,3)] as TreeSet
+  }
+
   def "Parse BBCode with complex attributes verify offsets"() {
 
     when: "A document is constructed using the builder with all parameters"
