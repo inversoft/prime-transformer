@@ -3,7 +3,7 @@
  */
 // Project Info
 group = "org.primeframework"
-version = "0.20"
+version = "1.0.00"
 description = "Prime Transformer"
 
 // Plugins
@@ -13,8 +13,6 @@ apply plugin: "groovy"
 apply plugin: "init"
 apply plugin: "testng"
 apply plugin: "release"
-
-releasePlugin.publicRepo = false
 
 // Build script config
 buildscript {
