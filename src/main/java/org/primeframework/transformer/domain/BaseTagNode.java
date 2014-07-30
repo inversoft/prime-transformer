@@ -40,36 +40,31 @@ public abstract class BaseTagNode extends BaseNode {
   }
 
   /**
-   * Walk the document nodes and apply the action to each node.
+   * Walk the document nodes and apply the action to each node of the specified type..
    *
    * @param action
    */
-  public Stream<Node> walkAllNodes(Consumer<? super Node> action) {
+  public <T> Stream<Node> walk(Class<T> consumerType, Consumer<? super T> action) {
 
-    getChildren().forEach(node -> {
-      action.accept(node);
-      if (node instanceof TagNode) {
-        ((TagNode) node).walkAllNodes(action);
+    getChildren().forEach(n -> {
+      if (consumerType.isAssignableFrom(n.getClass())) {
+        T node = (T) n;
+        action.accept((T) n);
+        if (node instanceof TagNode) {
+          ((TagNode) node).walk(consumerType, action);
+        }
       }
     });
     return getChildren().stream();
   }
 
   /**
-   * Walk the document nodes and apply the action to each node of type {@link TagNode}.
+   * Walk the document nodes and apply the action to each node.
    *
    * @param action
    */
-  public Stream<Node> walkTagNodes(Consumer<? super TagNode> action) {
-
-    getChildren().forEach(node -> {
-      if (node instanceof TagNode) {
-        TagNode tagNode = (TagNode) node;
-        action.accept(tagNode);
-        tagNode.walkTagNodes(action);
-      }
-    });
-    return getChildren().stream();
+  public Stream<Node> walk(Consumer<? super Node> action) {
+    return walk(Node.class, action);
   }
 
 }
