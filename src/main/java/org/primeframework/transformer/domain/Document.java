@@ -80,9 +80,9 @@ public class Document extends BaseTagNode {
   @Override
   public String toString() {
     return "Document{" +
-        "children=[" +
-        String.join(", ", children.stream().map(Object::toString).collect(Collectors.toList())) +
-        "]" +
+       "children=[" +
+       String.join(", ", children.stream().map(Object::toString).collect(Collectors.toList())) +
+       "]" +
        ", offsets=[" +
        String.join(", ", offsets.stream().map(o -> o.first + ":" + o.second).collect(Collectors.toList())) +
        "]" +
