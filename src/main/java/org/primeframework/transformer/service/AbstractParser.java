@@ -94,7 +94,7 @@ public abstract class AbstractParser implements Parser {
   }
 
   /**
-   * Return the index of the provided string between the start and end index values.
+   * Return the index of the provided string between the start and end index values. This search is case insensitive.
    *
    * @param document
    * @param startIndex
@@ -107,7 +107,7 @@ public abstract class AbstractParser implements Parser {
     char[] source = document.documentSource.source;
     for (int i = startIndex; i < endIndex; i++) {
       for (int j = 0; j < string.length(); j++) {
-        if (source[i + j] != string.charAt(j)) {
+        if (Character.toLowerCase(source[i + j]) != Character.toLowerCase(string.charAt(j))) {
           break;
         }
         if (j == string.length() - 1) {

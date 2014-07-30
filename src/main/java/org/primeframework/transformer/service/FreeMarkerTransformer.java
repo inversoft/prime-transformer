@@ -43,7 +43,7 @@ public class FreeMarkerTransformer implements Transformer {
 
   private final static Logger LOGGER = LoggerFactory.getLogger(FreeMarkerTransformer.class);
 
-  private final static String BDOY_MARKER = "xxx" + UUID.randomUUID() + "xxx";
+  private final static String BODY_MARKER = "xxx" + UUID.randomUUID() + "xxx";
 
   private boolean strict;
 
@@ -123,8 +123,9 @@ public class FreeMarkerTransformer implements Transformer {
     data.put("attributes", tag.attributes);
     data.put("attribute", tag.attribute);
 
-    if (templates.containsKey(tag.getName())) {
-      Template template = templates.get(tag.getName());
+    String lowerCaseTagName = tag.getName().toLowerCase();
+    if (templates.containsKey(lowerCaseTagName)) {
+      Template template = templates.get(lowerCaseTagName);
       try {
         int transformedLength = appendTransformedNodeToBuilder(data, sb, template);
         addTransformationOffsets(tag, offsets, offset, template, transformedLength);
@@ -181,11 +182,11 @@ public class FreeMarkerTransformer implements Transformer {
 
   private int getOffsetOfBody(Template template, TagNode tag) throws IOException, TemplateException {
     Map<String, Object> data = new HashMap<>(3);
-    data.put("body", BDOY_MARKER);
+    data.put("body", BODY_MARKER);
     data.put("attributes", tag.attributes);
     data.put("attribute", tag.attribute);
     Writer out = new StringWriter();
     template.process(data, out);
-    return out.toString().indexOf(BDOY_MARKER);
+    return out.toString().indexOf(BODY_MARKER);
   }
 }

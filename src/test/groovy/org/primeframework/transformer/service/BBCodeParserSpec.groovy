@@ -24,6 +24,26 @@ public class BBCodeParserSpec extends Specification {
       document.offsets == [new Pair<>(0,3), new Pair<>(7,4)] as TreeSet
   }
 
+  def "Build a new document using BBCode with uppercase tags"() {
+
+    when: "A document is constructed"
+      def source = "[B]Text[/B]"
+      def transFormResult = new BBCodeToHTMLTransformer().init().transform(new BBCodeParser().buildDocument(new DocumentSource(source)))
+
+    then: "the document is transformed properly"
+      transFormResult.result == "<strong>Text</strong>"
+  }
+
+  def "Build a new document using BBCode with mixed case tags"() {
+
+    when: "A document is constructed"
+      def source = "[b]Text[/B] [I]world[/i]"
+      def transFormResult = new BBCodeToHTMLTransformer().init().transform(new BBCodeParser().buildDocument(new DocumentSource(source)))
+
+    then: "the document is transformed properly"
+      transFormResult.result == "<strong>Text</strong> <em>world</em>"
+  }
+
   def "Build a new document using BBCode in a char array"() {
 
     when: "A document is constructed using the builder with all parameters"
