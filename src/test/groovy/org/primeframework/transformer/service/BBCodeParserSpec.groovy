@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) 2014, Inversoft Inc., All Rights Reserved
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific
+ * language governing permissions and limitations under the License.
+ */
+
 package org.primeframework.transformer.service
 
 import org.primeframework.transformer.domain.DocumentSource
@@ -21,7 +37,7 @@ public class BBCodeParserSpec extends Specification {
       document != null
 
     and: "offsets to tags should be correct"
-      document.offsets == [new Pair<>(0,3), new Pair<>(7,4)] as TreeSet
+      document.offsets == [new Pair<>(0, 3), new Pair<>(7, 4)] as TreeSet
   }
 
   def "Build a new document using BBCode with uppercase tags"() {
@@ -48,7 +64,7 @@ public class BBCodeParserSpec extends Specification {
 
     when: "A document is constructed using the builder with all parameters"
       def source = ['[', 'b', ']', 'T', 'e', 'x', 't', '[', '/', 'b', ']'] as char[]
-      def document = ParserFactory.newBBCodeParser().buildDocument(new DocumentSource(source))
+      def document = new BBCodeParser().buildDocument(new DocumentSource(source))
 
     then: "no exceptions thrown"
       notThrown Exception
@@ -64,14 +80,13 @@ public class BBCodeParserSpec extends Specification {
       /*            ^     ^                                             ^       */
       /* offsets    0,29                                                50,6    */
       /* attributes       6,12                                                  */
-
-      def document = ParserFactory.newBBCodeParser().buildDocument(new DocumentSource(source))
+      def document = new BBCodeParser().buildDocument(new DocumentSource(source))
 
     then: "offsets to tags should be correct"
-      document.offsets == [new Pair<>(0,29), new Pair<>(50,6)] as TreeSet
+      document.offsets == [new Pair<>(0, 29), new Pair<>(50, 6)] as TreeSet
 
     and: "attribute offsets should be correct"
-      document.attributeOffsets == [new Pair<>(6,21)] as TreeSet
+      document.attributeOffsets == [new Pair<>(6, 21)] as TreeSet
   }
 
 
@@ -82,14 +97,13 @@ public class BBCodeParserSpec extends Specification {
       /*            ^           ^           ^                                         */
       /* offsets    0,16                   21,7                                       */
       /* attributes            11,3                                                   */
-
-      def document = ParserFactory.newBBCodeParser().buildDocument(new DocumentSource(source))
+      def document = new BBCodeParser().buildDocument(new DocumentSource(source))
 
     then: "offsets to tags should be correct"
-      document.offsets == [new Pair<>(0,16), new Pair<>(21,7)] as TreeSet
+      document.offsets == [new Pair<>(0, 16), new Pair<>(21, 7)] as TreeSet
 
     and: "attribute offsets should be correct"
-      document.attributeOffsets == [new Pair<>(11,3)] as TreeSet
+      document.attributeOffsets == [new Pair<>(11, 3)] as TreeSet
   }
 
   def "Parse BBCode with complex attributes verify offsets"() {
@@ -99,33 +113,12 @@ public class BBCodeParserSpec extends Specification {
       /*                  ^            ^            ^                      ^        */
       /* offsets          6,37                                             51,7     */
       /* attributes                    18,12        30,11                           */
-
-      def document = ParserFactory.newBBCodeParser().buildDocument(new DocumentSource(source))
+      def document = new BBCodeParser().buildDocument(new DocumentSource(source))
 
     then: "offsets to tags should be correct"
-      document.offsets == [new Pair<>(6,37), new Pair<>(51,7)] as TreeSet
+      document.offsets == [new Pair<>(6, 37), new Pair<>(51, 7)] as TreeSet
 
     and: "attribute offsets should be correct"
-      document.attributeOffsets == [new Pair<>(18,2), new Pair<>(30,11)] as TreeSet
-  }
-
-  def "BBCode to Text and verify offsets and attribute offsets with complex attributes"() {
-
-    when: "bbcode is transformed"
-      def document = new BBCodeParser().buildDocument(new DocumentSource("Example [code type=\"see the java oo\" syntax=\"java\"] System.out.println(\"Hello World!\"); [/code] "))
-      /*                                                                          ^            ^                           ^                                            ^            */
-      /*  offsets                                                                 8,43                                                                                  88,7         */
-      /*  attributeOffset                                                                      20,16                       46,4                                                      */
-      def transFormResult = new TextTransformer().transform(document);
-
-    then: "the document is transformed properly"
-      transFormResult.result == "Example  System.out.println(\"Hello World!\");  "
-
-    and: "offsets are correct"
-      document.offsets ==  [new Pair<>(8, 43), new Pair<>(88, 7)] as TreeSet
-
-    and: "attribute offsets are correct"
-      document.attributeOffsets == [new Pair<>(20,15), new Pair<>(45, 4)] as TreeSet
-
+      document.attributeOffsets == [new Pair<>(18, 2), new Pair<>(30, 11)] as TreeSet
   }
 }

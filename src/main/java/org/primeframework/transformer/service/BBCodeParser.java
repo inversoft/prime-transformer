@@ -53,8 +53,9 @@ public class BBCodeParser extends AbstractParser {
    * @param endIndex
    * @param children
    * @return the working source index
+   * @throws ParserException
    */
-  private int addNextNode(Document document, int startIndex, int endIndex, List<Node> children) {
+  private int addNextNode(Document document, int startIndex, int endIndex, List<Node> children) throws ParserException {
 
     int tagBegin = indexOfOpeningTagOpenCharacter(document, startIndex, endIndex);
     // if there is no next opening tag, set it to the source length
@@ -160,7 +161,7 @@ public class BBCodeParser extends AbstractParser {
   }
 
   @Override
-  public Document buildDocument(DocumentSource documentSource) {
+  public Document buildDocument(DocumentSource documentSource) throws ParserException {
     Document document = new Document(documentSource);
     int sourceIndex = 0;
     int sourceLength = documentSource.source.length;

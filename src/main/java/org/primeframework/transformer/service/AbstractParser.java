@@ -67,8 +67,9 @@ public abstract class AbstractParser implements Parser {
    * @param startIndex
    * @param endIndex
    * @return
+   * @throws ParserException
    */
-  protected int indexOfOpeningTagCloseCharacter(Document document, int startIndex, int endIndex) {
+  protected int indexOfOpeningTagCloseCharacter(Document document, int startIndex, int endIndex) throws ParserException {
     int tagEndIndex = indexOfCharacter(document, startIndex, endIndex, getTagCloseChar());
     if (tagEndIndex == -1) {
       throw new ParserException("Malformed markup. Open tag was not closed");

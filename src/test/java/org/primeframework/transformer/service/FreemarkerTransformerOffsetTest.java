@@ -1,34 +1,48 @@
+/*
+ * Copyright (c) 2014, Inversoft Inc., All Rights Reserved
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific
+ * language governing permissions and limitations under the License.
+ */
+
 package org.primeframework.transformer.service;
+
+import freemarker.template.Configuration;
+import freemarker.template.Template;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import org.primeframework.transformer.domain.Document;
+import org.primeframework.transformer.domain.DocumentSource;
+import org.primeframework.transformer.domain.TagNode;
+import org.primeframework.transformer.service.Transformer.TransformedResult;
 
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.primeframework.transformer.domain.Document;
-import org.primeframework.transformer.domain.DocumentSource;
-import org.primeframework.transformer.domain.TagNode;
-import org.primeframework.transformer.domain.TransformerException;
-import org.primeframework.transformer.service.Transformer.TransformedResult;
-import org.testng.annotations.BeforeSuite;
-import org.testng.annotations.Test;
-
-import freemarker.template.Configuration;
-import freemarker.template.Template;
-import static org.testng.Assert.assertEquals;
+import static junit.framework.Assert.assertEquals;
 
 /**
  * Testing the offsets returned from the {@link FreeMarkerTransformer}
  *
  * @author Seth Musselman
  */
-@Test(groups = "unit")
 public class FreemarkerTransformerOffsetTest {
 
   private static final Map<String, Template> templates = new HashMap<>();
 
-  @BeforeSuite
-  public void beforeSuite() throws IOException {
+  @BeforeClass
+  public static void beforeSuite() throws IOException {
     Configuration conf = new Configuration();
     templates.put("a", new Template("a", new StringReader("<aaaaaa>${body}</aaaaaa>"), conf));
     templates.put("b", new Template("b", new StringReader("<bbbbbb>${body}</bbbbbb>"), conf));
@@ -38,7 +52,7 @@ public class FreemarkerTransformerOffsetTest {
   }
 
   @Test
-  public void testTransformedResult() throws TransformerException {
+  public void testTransformedResult() throws Exception {
     Parser parser = new BBCodeParser();
     Transformer transformer = new FreeMarkerTransformer(templates);
     Document doc = parser.buildDocument(new DocumentSource("[b] bbb [/b]"));
@@ -52,7 +66,7 @@ public class FreemarkerTransformerOffsetTest {
   }
 
   @Test
-  public void testTransformedResultPrefixAndSuffix() throws TransformerException {
+  public void testTransformedResultPrefixAndSuffix() throws Exception {
     Parser parser = new BBCodeParser();
     Transformer transformer = new FreeMarkerTransformer(templates);
     Document doc = parser.buildDocument(new DocumentSource("abc[b] bbb [/b]123"));
@@ -66,7 +80,7 @@ public class FreemarkerTransformerOffsetTest {
   }
 
   @Test
-  public void testSimpleOffsets() throws TransformerException {
+  public void testSimpleOffsets() throws Exception {
     Parser parser = new BBCodeParser();
     Transformer transformer = new FreeMarkerTransformer(templates);
     //                                                         3    9       16  20
@@ -83,7 +97,7 @@ public class FreemarkerTransformerOffsetTest {
   }
 
   @Test
-  public void testTransformedResultWithEmbedding() throws TransformerException {
+  public void testTransformedResultWithEmbedding() throws Exception {
     Parser parser = new BBCodeParser();
     Transformer transformer = new FreeMarkerTransformer(templates);
     //                                                         3    9       16  20
@@ -100,7 +114,7 @@ public class FreemarkerTransformerOffsetTest {
   }
 
   @Test
-  public void testTransformedResultWithEmbeddingAndAdjacentTags() throws TransformerException {
+  public void testTransformedResultWithEmbeddingAndAdjacentTags() throws Exception {
     Parser parser = new BBCodeParser();
     Transformer transformer = new FreeMarkerTransformer(templates);
     //                                                            6     13   17    23     30  34
@@ -119,7 +133,7 @@ public class FreemarkerTransformerOffsetTest {
   }
 
   @Test
-  public void testTransformedResultWithManyEmbeddingsAndAdjacentTags() throws TransformerException {
+  public void testTransformedResultWithManyEmbeddingsAndAdjacentTags() throws Exception {
     Parser parser = new BBCodeParser();
     Transformer transformer = new FreeMarkerTransformer(templates);
     //                                                            6     12 15     22  26  30  34    40     47  51
@@ -142,7 +156,7 @@ public class FreemarkerTransformerOffsetTest {
   }
 
   @Test
-  public void testTransformedResultSoloAttributes() throws TransformerException {
+  public void testTransformedResultSoloAttributes() throws Exception {
     Parser parser = new BBCodeParser();
     Transformer transformer = new FreeMarkerTransformer(templates);
     //                                                                     15     22
@@ -156,7 +170,7 @@ public class FreemarkerTransformerOffsetTest {
   }
 
   @Test
-  public void testTransformedResultWithEmbeddingAndAdjacentTagsAndAttributes() throws TransformerException {
+  public void testTransformedResultWithEmbeddingAndAdjacentTagsAndAttributes() throws Exception {
     Parser parser = new BBCodeParser();
     Transformer transformer = new FreeMarkerTransformer(templates);
     //                                                            6     13   17                35     42  46
@@ -174,7 +188,7 @@ public class FreemarkerTransformerOffsetTest {
   }
 
   @Test
-  public void testTransformedResultWithEmbeddingAndAdjacentTagsAndAttributesAndSingleBBCodeTag() throws TransformerException {
+  public void testTransformedResultWithEmbeddingAndAdjacentTagsAndAttributesAndSingleBBCodeTag() throws Exception {
     Parser parser = new BBCodeParser();
     Transformer transformer = new FreeMarkerTransformer(templates);
     //                                                            6     12 16   20                38     45  49
@@ -193,12 +207,12 @@ public class FreemarkerTransformerOffsetTest {
   }
 
   @Test
-  public void testTransformedResultWithEmbeddingAndNonTransformedAndAdjacentTagsAndAttributesAndSingleBBCodeTag() throws TransformerException {
+  public void testTransformedResultWithEmbeddingAndNonTransformedAndAdjacentTagsAndAttributesAndSingleBBCodeTag() throws Exception {
     Parser parser = new BBCodeParser();
     Transformer transformer = new FreeMarkerTransformer(templates);
     //                                                            6     12 16   20                38     45  49
     Document doc = parser.buildDocument(new DocumentSource("123[b]abc[*][/b] [a]123[d testattr=33]xyz[/d][/a] 456"));
-    ((TagNode)doc.children.get(1)).transform = false;
+    ((TagNode) doc.children.get(1)).transform = false;
 
     TransformedResult expected = new TransformedResult("123[b]abc[*][/b] <aaaaaa>123<dddddd  testattr=\"33\">xyz</dddddd></aaaaaa> 456");
     expected.addOffset(20, 5);

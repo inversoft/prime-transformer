@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) 2014, Inversoft Inc., All Rights Reserved
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific
+ * language governing permissions and limitations under the License.
+ */
+
 package org.primeframework.transformer.service
 
 import org.primeframework.transformer.domain.DocumentSource
@@ -14,8 +30,8 @@ public class BBCodeToHTMLTransformerSpec extends Specification {
   def bbCodeToFreeMarkerTransformer;
 
   def setupSpec() {
-    bbCodeParser = ParserFactory.newBBCodeParser()
-    bbCodeToFreeMarkerTransformer = TransformerFactory.newBBCodeToHTMLTransformer()
+    bbCodeParser = new BBCodeParser()
+    bbCodeToFreeMarkerTransformer = new BBCodeToHTMLTransformer()
   }
 
   def "No FreeMarker template for tag with strict mode disabled"() {
@@ -36,10 +52,10 @@ public class BBCodeToHTMLTransformerSpec extends Specification {
       def document = bbCodeParser.buildDocument(new DocumentSource("[unknown]Testing[/unknown]"))
 
     and: "transform is bbCodeTransformer"
-      def html = bbCodeToFreeMarkerTransformer.setStrict(true) transform(document);
+      def html = bbCodeToFreeMarkerTransformer.setStrict(true).transform(document);
 
     then: "an exception should be thrown"
-      thrown TransformerException
+      thrown(TransformerException)
 
     and: "html should be null"
       html == null
@@ -51,13 +67,13 @@ public class BBCodeToHTMLTransformerSpec extends Specification {
       def document = bbCodeParser.buildDocument(new DocumentSource("[b]Testing[/b]"))
 
     and: "transform is bbCodeTransformer without calling init()"
-      def html = bbCodeToFreeMarkerTransformer.transform(document).result;
+      def transformedResult = new BBCodeToHTMLTransformer().transform(document);
 
     then: "an exception should be thrown"
-      thrown TransformerException
+      thrown(TransformerException)
 
-    and: "html should be null"
-      html == null
+    and: "transformedResult should be null"
+      transformedResult == null
   }
 
   def "No FreeMarker template for tag with strict mode enabled in the constructor"() {
@@ -66,7 +82,7 @@ public class BBCodeToHTMLTransformerSpec extends Specification {
       def document = bbCodeParser.buildDocument(new DocumentSource("[unknown]Testing[/unknown]"))
 
     and: "transform is bbCodeTransformer"
-      def html = new BBCodeToHTMLTransformer(true).init().transform(document);
+      def html = new BBCodeToHTMLTransformer(true).init().transform(document).result;
 
     then: "an exception should be thrown"
       thrown TransformerException
