@@ -31,7 +31,7 @@ public class BBCodeToHTMLTransformerSpec extends Specification {
 
   def setupSpec() {
     bbCodeParser = new BBCodeParser()
-    bbCodeToFreeMarkerTransformer = new BBCodeToHTMLTransformer()
+    bbCodeToFreeMarkerTransformer = new BBCodeToHTMLTransformer().init()
   }
 
   def "No FreeMarker template for tag with strict mode disabled"() {
@@ -40,7 +40,7 @@ public class BBCodeToHTMLTransformerSpec extends Specification {
       def document = bbCodeParser.buildDocument(new DocumentSource("[unknown]Testing[/unknown]"))
 
     and: "transform is bbCodeTransformer"
-      def html = bbCodeToFreeMarkerTransformer.init().transform(document).result;
+      def html = bbCodeToFreeMarkerTransformer.transform(document).result;
 
     then: "the output should should equal the input"
       html == "[unknown]Testing[/unknown]"

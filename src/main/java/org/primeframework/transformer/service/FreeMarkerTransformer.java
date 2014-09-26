@@ -99,7 +99,6 @@ public class FreeMarkerTransformer implements Transformer {
       if (tag.transform) {
         doTransform(sb, offsets, tag);
       } else {
-        // A flag has indicated that this node should not be transformed.
         sb.append(tag.getRawString());
       }
     } else { // TextNode
@@ -162,14 +161,14 @@ public class FreeMarkerTransformer implements Transformer {
 
   private void addTransformationOffsets(TagNode tag, List<Pair<Integer, Integer>> offsets, int offset, Template template, int transformedNodeLength) throws IOException, TemplateException {
     // compute the offsets
-    if (tag.hasClosingTag) {
+    if (tag.tagEnd != 0) {
       // case2) the tag does contain a body
       //      X = the index in the input string of the ${body}
       //      Y = the index in the out string of the childSB
       int x = tag.bodyBegin - tag.tagBegin + offset;
-      int y = getOffsetOfBody(template, tag);
+      int y = getBodyOffset(template, tag);
       if (y == -1) {
-        LOGGER.warn("Offsets are incorrect, couldn't find the body...");
+        LOGGER.warn("Offsets are incorrect. Body offset could not be found.");
       }
       offsets.add(new Pair<>(x, y - x + offset));  // for the portion after the opening tag
     }
@@ -180,7 +179,7 @@ public class FreeMarkerTransformer implements Transformer {
     ));
   }
 
-  private int getOffsetOfBody(Template template, TagNode tag) throws IOException, TemplateException {
+  private int getBodyOffset(Template template, TagNode tag) throws IOException, TemplateException {
     Map<String, Object> data = new HashMap<>(3);
     data.put("body", BODY_MARKER);
     data.put("attributes", tag.attributes);

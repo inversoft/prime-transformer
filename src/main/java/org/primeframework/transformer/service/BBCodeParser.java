@@ -23,153 +23,208 @@ import org.primeframework.transformer.domain.Pair;
 import org.primeframework.transformer.domain.ParserException;
 import org.primeframework.transformer.domain.TagNode;
 import org.primeframework.transformer.domain.TextNode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.util.ArrayDeque;
 import java.util.Arrays;
+import java.util.Deque;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.Set;
+import java.util.StringTokenizer;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * BBCode Parser Implementation.
  */
 public class BBCodeParser extends AbstractParser {
 
-  private static final String OPENING_TAG = "[%s]";
+  private static final Logger LOGGER = LoggerFactory.getLogger(BBCodeParser.class);
+
+  private static final Pattern ATTRIBUTES_PATTERN = Pattern.compile("(\\w+)=\"*((?<=\")[^\"]+(?=\")|([^\\s]+))\"*");
 
   private static final String CLOSING_TAG = "[/%s]";
 
   private static final Set<String> NO_CLOSING_TAG = new HashSet<>(Arrays.asList("*"));
+
+  private static final String OPENING_TAG = "[%s]";
+
   /**
    * The body of an 'escape' tag is not parsed.
    */
   private static final Set<String> ESCAPE_TAGS = new HashSet<>(Arrays.asList("code", "noparse"));
 
-  /**
-   * Find the next node between the start and end index and add to the provided node list.
-   *
-   * @param startIndex
-   * @param endIndex
-   * @param children
-   * @return the working source index
-   * @throws ParserException
-   */
-  private int addNextNode(Document document, int startIndex, int endIndex, List<Node> children) throws ParserException {
-
-    int tagBegin = indexOfOpeningTagOpenCharacter(document, startIndex, endIndex);
-    // if there is no next opening tag, set it to the source length
-    if (tagBegin == -1) {
-      tagBegin = endIndex;
-    }
-
-    if (tagBegin > startIndex) {
-      // Text node
-      TextNode textNode = new TextNode(document, startIndex, tagBegin);
-      children.add(textNode);
-      startIndex = tagBegin;
-    } else {
-      // Tag node
-      int openingTagEndIndex = indexOfOpeningTagCloseCharacter(document, tagBegin, endIndex);
-
-      // Parse attributes
-      String attribute = null;
-      Map<String, String> attributes = new LinkedHashMap<>(3);
-      int attributesBegin = indexOfCharacter(document, tagBegin, openingTagEndIndex, ' ');
-      int equalsIndex = indexOfCharacter(document, tagBegin, openingTagEndIndex, '=');
-      if (attributesBegin != -1 && (equalsIndex == -1 || equalsIndex > attributesBegin)) {
-        // Handle complex attributes
-        int attributeIndex = attributesBegin;
-        while (attributeIndex < openingTagEndIndex) {
-          equalsIndex = indexOfCharacter(document, attributeIndex, openingTagEndIndex, '=');
-          int nextEqualsIndex = indexOfCharacter(document, equalsIndex + 1, openingTagEndIndex, '=');
-          int endKeyValueIndex = nextEqualsIndex;
-          if (endKeyValueIndex == -1) {
-            endKeyValueIndex = openingTagEndIndex;
-          } else {
-            while (document.documentSource.source[endKeyValueIndex] != ' ') {
-              endKeyValueIndex--;
-            }
-          }
-          String key = document.getString(attributeIndex, equalsIndex);
-          String value = removeQuotes(document.getString(equalsIndex + 1, endKeyValueIndex));
-          attributes.put(key, value);
-
-          addAttributeOffset(document, equalsIndex, value.length());
-          attributeIndex = endKeyValueIndex;
-        }
-      } else {
-        // Handle simple attribute
-        attributesBegin = indexOfCharacter(document, tagBegin, openingTagEndIndex, '=');
-        if (attributesBegin != -1) {
-          attribute = removeQuotes(document.getString(attributesBegin + 1, openingTagEndIndex));
-          addAttributeOffset(document, attributesBegin, attribute.length());
-        }
-      }
-
-      int tagNameEndIndex = attributesBegin != -1 ? attributesBegin : openingTagEndIndex;
-      int bodyBegin = openingTagEndIndex + 1;
-      String tagName = document.getString(tagBegin + 1, tagNameEndIndex);
-      String closeTag = String.format(CLOSING_TAG, tagName);
-      int bodyEnd = indexOfString(document, bodyBegin, endIndex, closeTag);
-
-      int tagEnd;
-      boolean closingTag = true;
-      // If no closing tag is found
-      if (bodyEnd == -1) {
-        if (!NO_CLOSING_TAG.contains(tagName)) {
-          throw new ParserException("Malformed markup. No closing tag was found for " + closeTag +
-             ". Open tag started at index " + (openingTagEndIndex + 1 - closeTag.length()) + " and ended at " +
-             openingTagEndIndex + 1 + ".\n\t" + document.documentSource);
-        }
-        /*
-         *  When no closing tag is not required, the next opening tag will indicate the end of this body.
-         *  If no additional opening tags are found, the endIndex will identify the end of this body.
-         */
-        String openTag = String.format(OPENING_TAG, tagName);
-        int nextTagIndex = indexOfString(document, openingTagEndIndex, endIndex, openTag);
-        if (nextTagIndex == -1) {
-          bodyEnd = endIndex;
-        } else {
-          bodyEnd = nextTagIndex;
-        }
-        tagEnd = bodyEnd;
-        closingTag = false;
-      } else {
-        tagEnd = bodyEnd + closeTag.length();
-      }
-
-      // Build tag node
-      TagNode tag = new TagNode(document, tagBegin, attributesBegin, bodyBegin, bodyEnd, tagEnd, attribute, attributes, closingTag);
-      addOpenAndClosingTagOffset(document, tag);
-
-      // A tag such as [code] may not have embedded tags, only a text body.
-      if (ESCAPE_TAGS.contains(tagName)) {
-        TextNode textNode = new TextNode(document, bodyBegin, bodyEnd);
-        tag.children.add(textNode);
-      } else {
-        // Add sub-nodes to this tag.
-        int nestedStartIndex = bodyBegin;
-        while (nestedStartIndex < bodyEnd) {
-          nestedStartIndex = addNextNode(document, nestedStartIndex, bodyEnd, tag.children);
-        }
-      }
-      children.add(tag);
-      startIndex = NO_CLOSING_TAG.contains(tagName) ? bodyEnd : bodyEnd + closeTag.length();
-    }
-    return startIndex;
-  }
-
   @Override
   public Document buildDocument(DocumentSource documentSource) throws ParserException {
+
     Document document = new Document(documentSource);
-    int sourceIndex = 0;
-    int sourceLength = documentSource.source.length;
-    // Traverse the source and build nodes
-    while (sourceIndex < sourceLength) {
-      sourceIndex = addNextNode(document, sourceIndex, sourceLength, document.children);
+    Deque<TagNode> nodes = new ArrayDeque<>();
+
+    try {
+      lfParser(document, nodes);
+    } catch (ParserException e) {
+      throw e;
+    } catch (Exception e) {
+      LOGGER.error("Failed to parse document source. The document returned will only contain a single text node.\n\t" + documentSource, e);
+      document.children.add(new TextNode(document, 0, documentSource.source.length));
     }
+
+    // If the nodes stack is not empty, a tag was not closed properly
+    if (!nodes.isEmpty()) {
+      TagNode node = nodes.peek();
+      // Currently only the [*] does not require a closing tag
+      if (NO_CLOSING_TAG.contains(node.getName())) {
+        throw new ParserException("Missing enclosing tag for [" + node.getName() + "] at index " + node.tagBegin + ". This tag does not require a " +
+           "closing tag itself but must be contained within another tag. \n\t For example, the [*] tag must be contained within a [list] or [ol] tag.");
+      } else {
+        throw new ParserException("Missing closing tag for [" + node.getName() + "].");
+
+      }
+    }
+
     return document;
+  }
+
+  private void lfParser(Document document, Deque<TagNode> nodes) throws ParserException {
+    int sourceIndex = 0;
+    int sourceLength = document.documentSource.source.length;
+    boolean transform = true;
+
+    while (sourceIndex < sourceLength) {
+      int tagBegin = indexOfOpeningTagOpenCharacter(document, sourceIndex, sourceLength);
+      if (tagBegin == -1) {
+        if (sourceIndex < sourceLength) {
+          TextNode text = new TextNode(document, sourceIndex, sourceLength);
+          document.children.add(text);
+        }
+        break;
+      } else if (tagBegin > sourceIndex) {
+        addNodeToDocument(document, nodes, new TextNode(document, sourceIndex, tagBegin));
+      }
+
+      int tagEnd = indexOfOpeningTagCloseCharacter(document, tagBegin, sourceLength) + 1;
+      String openingTag = document.getString(tagBegin + 1, tagEnd - 1);
+
+      StringTokenizer tokenizer = new StringTokenizer(openingTag, " =");
+      String tagName = tokenizer.nextToken();
+
+      if (tagName.indexOf('/') == 0) {
+
+        // Found a closing tag
+        if (nodes.peek().getName().equalsIgnoreCase(tagName.substring(1))) {
+          String thisTagName = nodes.peek().getName();
+
+          // Goodwill... poppin' tags... yeah!
+          TagNode popped = nodes.pop();
+          popped.bodyEnd = tagBegin;
+          popped.tagEnd = tagEnd;
+
+          addNodeToDocument(document, nodes, popped);
+
+          // End of an escaped tag, re-enable the transform flag
+          if (ESCAPE_TAGS.contains(thisTagName)) {
+            transform = true;
+          }
+        } else {
+          // If closing tag not required for this tag, handle
+          if (NO_CLOSING_TAG.contains(nodes.peek().getName())) {
+            dequeChildNodesAddParentToDocument(document, nodes, tagBegin, tagEnd);
+          } else {
+            // Expected a closing tag, one was not found.
+            throw new ParserException("Malformed BBCode. A closing tag was expected but not found for tag [" + nodes.peek().getName()
+               + "] starting at index " + nodes.peek().tagBegin + "." );
+          }
+        }
+
+      } else {
+
+        // Build a tag fragment and push it on the stack
+        TagNode tag = new TagNode(document, tagBegin);
+        tag.bodyBegin = tagEnd;
+        tag.nameEnd = tagBegin + 1 + tagName.length();
+        tag.transform = transform;
+
+        // Collect attributes
+        if (tokenizer.hasMoreTokens()) {
+          tag.attributesBegin = tag.nameEnd;
+
+          // Re-initialize the tokenizer for simple attributes
+          tokenizer = new StringTokenizer(openingTag.substring(tagName.length()), "=");
+          if (tokenizer.countTokens() == 1) {
+            // simple attribute
+            tag.attribute = removeQuotes(tokenizer.nextToken());
+            addAttributeOffset(document, tagBegin + tagName.length() + 2, tag.attribute.length());
+
+          } else {
+            // complex attributes
+            String attributes = openingTag.substring(tagName.length()).trim();
+            Matcher matcher = ATTRIBUTES_PATTERN.matcher(attributes);
+            int index = tagBegin + tagName.length() + 1;
+            while (matcher.find()) {
+              String key = matcher.group(1);
+              String value = matcher.group(2);
+              tag.attributes.put(key, value);
+              addAttributeOffset(document, index + matcher.start(2), value.length());
+            }
+          }
+        }
+        nodes.push(tag);
+
+        // When an escape tag is found, sub-sequent nodes will be set to transform false until the tag is closed.
+        if (ESCAPE_TAGS.contains(tagName)) {
+          transform = false;
+        }
+      }
+      sourceIndex = tagEnd;
+    }
+  }
+
+  /**
+   * Pop all of the nodes from the stack that don't require a closing tag, and we then expect to find a parent tag.
+   * <p>For example, <pre>[list][*]Item 1[*]Item 2[/list]</pre></p>
+   *
+   * @param document
+   * @param nodes
+   * @param tagBegin
+   * @param tagEnd
+   */
+  private void dequeChildNodesAddParentToDocument(Document document, Deque<TagNode> nodes, int tagBegin, int tagEnd) {
+
+    Deque<TagNode> children = new ArrayDeque<>();
+    while (NO_CLOSING_TAG.contains(nodes.peek().getName())) {
+      children.push(nodes.pop());
+    }
+    // Add this tag to the parent
+    TagNode popped = nodes.pop();
+    while (!children.isEmpty()) {
+      TagNode child = children.pop();
+      popped.children.add(child);
+      addOpenAndClosingTagOffset(document, child);
+    }
+    popped.bodyEnd = tagBegin;
+    popped.tagEnd = tagEnd;
+    addNodeToDocument(document, nodes, popped);
+  }
+
+  /**
+   * Add the provided node to node on the top of the stack if it isn't closed out yet, otherwise add it directly to the document as a top level node.
+   *
+   * @param document
+   * @param nodes
+   * @param node
+   */
+  private void addNodeToDocument(Document document, Deque<TagNode> nodes, Node node) {
+
+    if (!nodes.isEmpty() && nodes.peek().tagEnd == 0) {
+      nodes.peek().children.add(node);
+    } else {
+      document.children.add(node);
+    }
+
+    if (node instanceof TagNode) {
+      addOpenAndClosingTagOffset(document, (TagNode) node);
+    }
   }
 
   @Override

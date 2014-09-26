@@ -85,6 +85,7 @@ public class BBCodeToHTMLTransformer implements Transformer {
     Map<String, Template> templates = new HashMap<>();
 
     Configuration configuration = new Configuration();
+    configuration.setTagSyntax(Configuration.SQUARE_BRACKET_TAG_SYNTAX);
     configuration.setClassForTemplateLoading(this.getClass(), "/org/primeframework/transformer/templates/bbCode");
 
     for (String template : DEFAULT_TEMPLATES.keySet()) {

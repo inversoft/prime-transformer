@@ -15,9 +15,9 @@
  */
 
 package org.primeframework.transformer.service
-
 import org.primeframework.transformer.domain.DocumentSource
 import org.primeframework.transformer.domain.Pair
+import org.primeframework.transformer.domain.ParserException
 import spock.lang.Specification
 
 public class BBCodeParserSpec extends Specification {
@@ -120,5 +120,70 @@ public class BBCodeParserSpec extends Specification {
 
     and: "attribute offsets should be correct"
       document.attributeOffsets == [new Pair<>(18, 2), new Pair<>(30, 11)] as TreeSet
+  }
+
+  def "Parse BBCode with a single tag that has no closing tag and no parent enclosing tag"() {
+
+    when: "A document is constructed using the builder with all parameters"
+      new BBCodeParser().buildDocument(new DocumentSource("[*] tester"))
+
+    then:
+      thrown ParserException
+  }
+
+  def "Parse BBCode that does not require a closing tag in a parent tag that is not a list"() {
+
+    when: "A document is constructed using the builder with all parameters"
+    def source = "[b][*]test1 [*]test2[/b]"
+      /*          ^  ^        ^       ^                                             */
+      /* offsets  0,3 3,3     12,3    20,4                                          */
+      /* attributes                                                                 */
+      def document = new BBCodeParser().buildDocument(new DocumentSource(source))
+
+    then:
+      document.offsets == [new Pair<>(0, 3), new Pair<>(3, 3), new Pair<>(12,3), new Pair<>(20,4)] as TreeSet
+
+  }
+
+  def "Parse BBCode that does not require a closing tag with no body"() {
+
+    when: "A document is constructed using the builder with all parameters"
+      def source = "[list][*][/list]"
+      /*            ^     ^  ^                                                      */
+      /* offsets    0,6  6,3  9,7                                                   */
+      /* attributes                                                                 */
+      def document = new BBCodeParser().buildDocument(new DocumentSource(source))
+
+    then:
+      document.offsets == [new Pair<>(0, 6), new Pair<>(6, 3), new Pair<>(9,7)] as TreeSet
+
+  }
+
+  def "Parse BBCode that does not require a closing tag with no body and text before bullet tag"() {
+
+    when: "A document is constructed using the builder with all parameters"
+      def source = "[list]test[*][/list]"
+      /*            ^         ^  ^                                                  */
+      /* offsets    0,6       10,3  13,7                                            */
+      /* attributes                                                                 */
+      def document = new BBCodeParser().buildDocument(new DocumentSource(source))
+
+    then:
+      document.offsets == [new Pair<>(0, 6), new Pair<>(10, 3), new Pair<>(13,7)] as TreeSet
+
+  }
+
+  def "Parse BBCode that has embedded tags of the same type"() {
+
+    when: "A document is constructed using the builder with all parameters"
+      def source = "[quote][quote][quote]Hot pocket in a hot pocket[/quote][/quote][/quote]"
+      /*            ^      ^      ^                                ^       ^       ^      */
+      /* offsets    0,7    7,7  14,7                               47,8   55,8     63,8   */
+      /* attributes                                                                       */
+      def document = new BBCodeParser().buildDocument(new DocumentSource(source))
+
+    then:
+      document.offsets == [new Pair<>(0, 7), new Pair<>(7, 7), new Pair<>(14,7), new Pair<>(47,8), new Pair<>(55,8), new Pair<>(63,8)] as TreeSet
+
   }
 }
