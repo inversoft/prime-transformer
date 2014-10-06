@@ -18,20 +18,19 @@ package org.primeframework.transformer.service;
 
 import freemarker.template.Configuration;
 import freemarker.template.Template;
-import org.junit.BeforeClass;
-import org.junit.Ignore;
-import org.junit.Test;
 import org.primeframework.transformer.domain.Document;
 import org.primeframework.transformer.domain.DocumentSource;
 import org.primeframework.transformer.domain.TagNode;
 import org.primeframework.transformer.service.Transformer.TransformedResult;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.Test;
 
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.HashMap;
 import java.util.Map;
 
-import static junit.framework.Assert.assertEquals;
+import static org.testng.AssertJUnit.assertEquals;
 
 /**
  * Testing the offsets returned from the {@link FreeMarkerTransformer}
@@ -190,8 +189,7 @@ public class FreemarkerTransformerOffsetTest {
     assertEquals(expected, result);
   }
 
-  @Test
-  @Ignore
+  @Test(enabled = false)
   public void testTransformedResultWithEmbeddingAndAdjacentTagsAndAttributesAndSingleBBCodeTag() throws Exception {
     Parser parser = new BBCodeParser();
     Transformer transformer = new FreeMarkerTransformer(templates);

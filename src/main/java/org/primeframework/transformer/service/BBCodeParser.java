@@ -37,6 +37,8 @@ import java.util.regex.Pattern;
 
 /**
  * BBCode Parser Implementation.
+ *
+ * @author Daniel DeGroff
  */
 public class BBCodeParser extends AbstractParser {
 
@@ -62,7 +64,7 @@ public class BBCodeParser extends AbstractParser {
     Deque<TagNode> nodes = new ArrayDeque<>();
 
     try {
-      lfParser(document, nodes);
+      lrParser(document, nodes);
     } catch (ParserException e) {
       throw e;
     } catch (Exception e) {
@@ -70,6 +72,11 @@ public class BBCodeParser extends AbstractParser {
       document.children.add(new TextNode(document, 0, documentSource.source.length));
     }
 
+    checkForUnclosedTags(nodes);
+    return document;
+  }
+
+  private void checkForUnclosedTags(Deque<TagNode> nodes) throws ParserException {
     // If the nodes stack is not empty, a tag was not closed properly
     if (!nodes.isEmpty()) {
       TagNode node = nodes.peek();
@@ -79,14 +86,11 @@ public class BBCodeParser extends AbstractParser {
            "closing tag itself but must be contained within another tag. \n\t For example, the [*] tag must be contained within a [list] or [ol] tag.");
       } else {
         throw new ParserException("Missing closing tag for [" + node.getName() + "].");
-
       }
     }
-
-    return document;
   }
 
-  private void lfParser(Document document, Deque<TagNode> nodes) throws ParserException {
+  private void lrParser(Document document, Deque<TagNode> nodes) throws ParserException {
     int sourceIndex = 0;
     int sourceLength = document.documentSource.source.length;
     boolean transform = true;
@@ -133,7 +137,7 @@ public class BBCodeParser extends AbstractParser {
           } else {
             // Expected a closing tag, one was not found.
             throw new ParserException("Malformed BBCode. A closing tag was expected but not found for tag [" + nodes.peek().getName()
-               + "] starting at index " + nodes.peek().tagBegin + "." );
+               + "] starting at index " + nodes.peek().tagBegin + ".");
           }
         }
 

@@ -38,6 +38,8 @@ import java.util.UUID;
 
 /**
  * FreeMarker transformer implementation.
+ *
+ * @author Daniel DeGroff
  */
 public class FreeMarkerTransformer implements Transformer {
 

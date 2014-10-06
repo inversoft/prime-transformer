@@ -21,6 +21,8 @@ import org.primeframework.transformer.domain.ParserException;
 
 /**
  * Base class for Parser implementations.
+ *
+ * @author Daniel DeGroff
  */
 public abstract class AbstractParser implements Parser {
 
@@ -49,7 +51,7 @@ public abstract class AbstractParser implements Parser {
    * @param character
    * @return
    */
-  protected int indexOfCharacter(Document document, int startIndex, int endIndex, char character) {
+  private int indexOfCharacter(Document document, int startIndex, int endIndex, char character) {
     char[] source = document.documentSource.source;
     for (int i = startIndex; i < endIndex; i++) {
       if (source[i] == character) {
@@ -92,32 +94,6 @@ public abstract class AbstractParser implements Parser {
       openTag = indexOfCharacter(document, openTag + 2, endIndex, getTagOpenChar());
     }
     return openTag;
-  }
-
-  /**
-   * Return the index of the provided string between the start and end index values. This search is case insensitive.
-   *
-   * @param document
-   * @param startIndex
-   * @param endIndex
-   * @param string
-   * @return -1 is returned if the string is not found within the provided range.
-   */
-  protected int indexOfString(Document document, int startIndex, int endIndex, String string) {
-
-    char[] source = document.documentSource.source;
-    for (int i = startIndex; i < endIndex; i++) {
-      for (int j = 0; j < string.length(); j++) {
-        if (Character.toLowerCase(source[i + j]) != Character.toLowerCase(string.charAt(j))) {
-          break;
-        }
-        if (j == string.length() - 1) {
-          return i;
-        }
-      }
-
-    }
-    return -1;
   }
 
   /**

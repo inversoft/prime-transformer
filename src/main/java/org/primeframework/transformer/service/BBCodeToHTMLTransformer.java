@@ -32,6 +32,8 @@ import java.util.Map;
  * the caller to provide their own. </p> <p>This a also means the caller has less control over the output. For more
  * control over the generated HTML, provide your own FreeMarker templates and use the {@link FreeMarkerTransformer}
  * class or by using the provided factory. </p>
+ *
+ * @author Daniel DeGroff
  */
 public class BBCodeToHTMLTransformer implements Transformer {
 

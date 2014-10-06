@@ -25,6 +25,11 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
 
+/**
+ * Transformer interface.
+ *
+ * @author Daniel DeGroff
+ */
 public interface Transformer {
 
   /**
