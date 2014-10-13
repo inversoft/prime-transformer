@@ -14,9 +14,10 @@
  * language governing permissions and limitations under the License.
  */
 
-savantVersion = "0.2.0"
+savantVersion = "0.3.0"
 
 project(group: "org.primeframework", name: "prime-transformer", version: "1.0.4", licenses: ["ApacheV2_0"]) {
+
   workflow {
     standard()
   }
@@ -32,11 +33,10 @@ project(group: "org.primeframework", name: "prime-transformer", version: "1.0.4"
     }
     group(name: "test-compile", export: false) {
       dependency(id: "org.testng:testng:6.8.7")
-
-      /* TODO Fix these dependencies, they need to be added to Savant, we can keep omit junit if we get testng to run spock test cases */
-//      dependency(id:  "org.codehaus.groovy:groovy-all:2.3.0")
-//      dependency(id:  "org.spockframework:spock-core:0.7-groovy-2.0")
-//      dependency(id:  "junit:junit:4.11")
+    }
+    /* Dependency is required for the Spock Plugin */
+    group(name: "test-runtime", export: false) {
+      dependency(id:  "org.spockframework:spock-core:0.7.0+groovy2.0")
     }
   }
 
@@ -45,24 +45,43 @@ project(group: "org.primeframework", name: "prime-transformer", version: "1.0.4"
   }
 }
 
-// Plugins
+/*
+ * Define Plugins
+ */
 dependency = loadPlugin(id: "org.savantbuild.plugin:dependency:${savantVersion}")
 java = loadPlugin(id: "org.savantbuild.plugin:java:${savantVersion}")
+groovy = loadPlugin(id: "org.savantbuild.plugin:groovy:${savantVersion}")
 javaTestNG = loadPlugin(id: "org.savantbuild.plugin:java-testng:${savantVersion}")
-
 idea = loadPlugin(id: "org.savantbuild.plugin:idea:${savantVersion}")
 release = loadPlugin(id: "org.savantbuild.plugin:release-git:${savantVersion}")
+spock = loadPlugin(id: "org.savantbuild.plugin:spock:0.1.0-{integration}")
 
-// Plugin settings
+/*
+ * Plugin Settings
+ */
 java.settings.javaVersion = "1.8"
+groovy.settings.javaVersion = "1.8"
+groovy.settings.groovyVersion = "2.2"
+
 javaTestNG.settings.javaVersion = "1.8"
 
+spock.settings.javaVersion = "1.8"
+spock.settings.groovyVersion = "2.2"
+
+/* Debug Tests */
+//javaTestNG.settings.jvmArguments = "-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=8000"
+
+/*
+ * Targets
+ */
 target(name: "clean", description: "Cleans the project") {
   java.clean()
+  groovy.clean()
 }
 
 target(name: "compile", description: "Compiles the project") {
   java.compile()
+//  groovy.compile()
 }
 
 target(name: "jar", description: "JARs the project", dependsOn: ["compile"]) {
@@ -71,10 +90,12 @@ target(name: "jar", description: "JARs the project", dependsOn: ["compile"]) {
 
 target(name: "test", description: "Runs the project's tests", dependsOn: ["jar"]) {
   javaTestNG.test()
+  spock.test()
 }
 
 target(name: "doc", description: "Generate the project's JavaDoc", dependsOn: ["jar"]) {
   java.document()
+  groovy.document()
 }
 
 target(name: "int", description: "Releases a local integration build of the project", dependsOn: ["test"]) {
