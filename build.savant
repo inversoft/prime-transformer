@@ -54,7 +54,7 @@ groovy = loadPlugin(id: "org.savantbuild.plugin:groovy:${savantVersion}")
 javaTestNG = loadPlugin(id: "org.savantbuild.plugin:java-testng:${savantVersion}")
 idea = loadPlugin(id: "org.savantbuild.plugin:idea:${savantVersion}")
 release = loadPlugin(id: "org.savantbuild.plugin:release-git:${savantVersion}")
-spock = loadPlugin(id: "org.savantbuild.plugin:spock:0.1.0-{integration}")
+spock = loadPlugin(id: "org.savantbuild.plugin:spock:0.1.0")
 
 /*
  * Plugin Settings
