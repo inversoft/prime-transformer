@@ -169,7 +169,11 @@ public class BBCodeParser extends AbstractParser {
               String key = matcher.group(1);
               String value = matcher.group(2);
               tag.attributes.put(key, value);
-              addAttributeOffset(document, index + matcher.start(2), value.length());
+              int attributeStart = matcher.start(2);
+              while (Character.isWhitespace(document.documentSource.source[attributeStart])) {
+                attributeStart++;
+              }
+              addAttributeOffset(document, index + attributeStart, value.length());
             }
           }
         }
@@ -249,8 +253,8 @@ public class BBCodeParser extends AbstractParser {
    * @param attributeLength
    */
   private void addAttributeOffset(Document document, int attributeStartIndex, int attributeLength) {
-    int adjusted = startsWithQuote(document.documentSource.source, attributeStartIndex + 1) ? 1 : 0;
-    document.attributeOffsets.add(new Pair<>(attributeStartIndex + 1 + adjusted, attributeLength));
+    int adjusted = startsWithQuote(document.documentSource.source, attributeStartIndex) ? 1 : 0;
+    document.attributeOffsets.add(new Pair<>(attributeStartIndex + adjusted, attributeLength));
   }
 
   /**

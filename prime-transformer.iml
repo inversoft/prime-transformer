@@ -28,6 +28,8 @@
     <orderEntry type="library" scope="TEST" name="Gradle: snakeyaml-1.6" level="project" />
     <orderEntry type="inheritedJdk" />
     <orderEntry type="library" exported="" name="Gradle: slf4j-api-1.7.5" level="project" />
+    <orderEntry type="library" name="Groovy 2.2" level="application" />
+    <orderEntry type="library" name="groovy-2.2.2" level="application" />
     <orderEntry type="module-library">
       <library>
         <CLASSES>
@@ -72,7 +74,39 @@
         </SOURCES>
       </library>
     </orderEntry>
-    <orderEntry type="library" name="Groovy 2.2" level="application" />
+    <orderEntry type="module-library" scope="TEST">
+      <library>
+        <CLASSES>
+          <root url="jar://$USER_HOME$/.savant/cache/org/spockframework/spock-core/0.7.0+groovy2.0/spock-core-0.7.0+groovy2.0.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES>
+          <root url="jar://$USER_HOME$/.savant/cache/org/spockframework/spock-core/0.7.0+groovy2.0/spock-core-0.7.0+groovy2.0-src.jar!/" />
+        </SOURCES>
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library" scope="TEST">
+      <library>
+        <CLASSES>
+          <root url="jar://$USER_HOME$/.savant/cache/org/junit/junit-dep/4.10.0/junit-dep-4.10.0.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES>
+          <root url="jar://$USER_HOME$/.savant/cache/org/junit/junit-dep/4.10.0/junit-dep-4.10.0-src.jar!/" />
+        </SOURCES>
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library" scope="TEST">
+      <library>
+        <CLASSES>
+          <root url="jar://$USER_HOME$/.savant/cache/org/hamcrest/hamcrest-core/1.3.0/hamcrest-core-1.3.0.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES>
+          <root url="jar://$USER_HOME$/.savant/cache/org/hamcrest/hamcrest-core/1.3.0/hamcrest-core-1.3.0-src.jar!/" />
+        </SOURCES>
+      </library>
+    </orderEntry>
   </component>
 </module>
 

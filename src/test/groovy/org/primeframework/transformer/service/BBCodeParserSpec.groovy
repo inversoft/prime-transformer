@@ -112,7 +112,7 @@ public class BBCodeParserSpec extends Specification {
       def source = "Hello [font size=\"10\" family=\"a fucker yo\"] World! [/font]"
       /*                  ^            ^            ^                      ^        */
       /* offsets          6,37                                             51,7     */
-      /* attributes                    18,12        30,11                           */
+      /* attributes                    18,2         30,11                           */
       def document = new BBCodeParser().buildDocument(new DocumentSource(source))
 
     then: "offsets to tags should be correct"
@@ -184,6 +184,74 @@ public class BBCodeParserSpec extends Specification {
 
     then:
       document.offsets == [new Pair<>(0, 7), new Pair<>(7, 7), new Pair<>(14,7), new Pair<>(47,8), new Pair<>(55,8), new Pair<>(63,8)] as TreeSet
+
+  }
+
+  def "Simple attribute"() {
+
+    when: "A document is constructed using the builder with all parameters"
+      def source = "[color=blue]blah[/color]"
+      /*            ^      ^        ^                                                     */
+      /* offsets    0,12            16,8                                                  */
+      /* attributes        7,4                                                              */
+      def document = new BBCodeParser().buildDocument(new DocumentSource(source))
+
+    then:
+      document.offsets == [new Pair<>(0, 12), new Pair<>(16,8)] as TreeSet
+
+    and: "attribute offsets should be correct"
+      document.attributeOffsets == [new Pair<>(7, 4)] as TreeSet
+
+  }
+
+  def "Complex attributes with an extra space"() {
+
+    when: "A document is constructed using the builder with all parameters"
+      def source = "[font  size=5]blah[/font]"
+      /*            ^      ^          ^                                                     */
+      /* offsets    0,14            18,7                                                    */
+      /* attributes             12,1                                                        */
+      def document = new BBCodeParser().buildDocument(new DocumentSource(source))
+
+    then:
+      document.offsets == [new Pair<>(0, 14), new Pair<>(18,7)] as TreeSet
+
+    and: "attribute offsets should be correct"
+      document.attributeOffsets == [new Pair<>(12, 1)] as TreeSet
+
+  }
+
+  def "Complex attributes with an extra space and a single quote"() {
+
+    when: "A document is constructed using the builder with all parameters"
+      def source = "[font  size=\'5\']blah[/font]"
+      /*            ^           ^         ^                                                 */
+      /* offsets    0,16                  18,7                                              */
+      /* attributes             13,1                                                        */
+      def document = new BBCodeParser().buildDocument(new DocumentSource(source))
+
+    then:
+      document.offsets == [new Pair<>(0, 16), new Pair<>(20,7)] as TreeSet
+
+    and: "attribute offsets should be correct"
+      document.attributeOffsets == [new Pair<>(13, 3)] as TreeSet
+
+  }
+
+  def "Complex attributes with lots of extra space"() {
+
+    when: "A document is constructed using the builder with all parameters"
+      def source = "[font      size=5]blah[/font]"
+      /*            ^          ^          ^                                                 */
+      /* offsets    0,18                  22,7                                              */
+      /* attributes            16,1                                                         */
+      def document = new BBCodeParser().buildDocument(new DocumentSource(source))
+
+    then:
+      document.offsets == [new Pair<>(0, 18), new Pair<>(22,7)] as TreeSet
+
+    and: "attribute offsets should be correct"
+      document.attributeOffsets == [new Pair<>(16, 1)] as TreeSet
 
   }
 }

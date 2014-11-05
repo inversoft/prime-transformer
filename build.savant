@@ -16,7 +16,7 @@
 
 savantVersion = "0.3.0"
 
-project(group: "org.primeframework", name: "prime-transformer", version: "1.0.4", licenses: ["ApacheV2_0"]) {
+project(group: "org.primeframework", name: "prime-transformer", version: "1.0.5", licenses: ["ApacheV2_0"]) {
 
   workflow {
     standard()
@@ -54,7 +54,7 @@ groovy = loadPlugin(id: "org.savantbuild.plugin:groovy:${savantVersion}")
 javaTestNG = loadPlugin(id: "org.savantbuild.plugin:java-testng:${savantVersion}")
 idea = loadPlugin(id: "org.savantbuild.plugin:idea:${savantVersion}")
 release = loadPlugin(id: "org.savantbuild.plugin:release-git:${savantVersion}")
-spock = loadPlugin(id: "org.savantbuild.plugin:spock:0.1.1")
+spock = loadPlugin(id: "org.savantbuild.plugin:spock:0.1.1-{integration}")
 
 /*
  * Plugin Settings
@@ -90,6 +90,10 @@ target(name: "jar", description: "JARs the project", dependsOn: ["compile"]) {
 
 target(name: "test", description: "Runs the project's tests", dependsOn: ["jar"]) {
   javaTestNG.test()
+  spock.test()
+}
+
+target(name: "test-spock", description: "Runs the project's Spock specifications", dependsOn: ["jar"]) {
   spock.test()
 }
 
