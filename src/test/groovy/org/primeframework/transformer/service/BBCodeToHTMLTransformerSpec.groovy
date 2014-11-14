@@ -21,6 +21,7 @@ import org.primeframework.transformer.domain.ParserException
 import org.primeframework.transformer.domain.TransformerException
 import spock.lang.Shared
 import spock.lang.Specification
+import spock.lang.Unroll
 
 public class BBCodeToHTMLTransformerSpec extends Specification {
 
@@ -140,10 +141,9 @@ public class BBCodeToHTMLTransformerSpec extends Specification {
       "<div align=\"center\">Center</div>"                                                                                    | "[center]Center[/center]"
       "<div align=\"right\">Right</div>"                                                                                      | "[right]Right[/right]"
       "<span style=\"font-family: monospace\">mono</span>"                                                                    | "[font=monospace]mono[/font]"
-
   }
 
-  //@Unroll("BBCode to HTML : #fileName")
+  @Unroll("BBCode to HTML : #fileName")
   def "BBCode to HTML - complex"() {
 
     expect: "when HTML transformer is called with bbcode properly formatted HTML is returned"

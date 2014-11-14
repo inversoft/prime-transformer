@@ -131,6 +131,19 @@ public class BBCodeParserSpec extends Specification {
       thrown ParserException
   }
 
+  def "Parse BBCode with embedded tags in a no parse tag w/out a closing tag."() {
+
+    when: "We are missing a closing tag w/ embedded non-parsed tags"
+      new BBCodeParser().buildDocument(new DocumentSource("[code] abc123 [baz] xyz456"))
+
+    then: "A ParserException should be thrown"
+      def ParserException parserException = thrown()
+
+    and: "the closing tag should be for [code] and embedded bad tag named [baz] should have been ignored."
+      parserException.message == 'Malformed markup. Missing closing tag for [code].'
+
+  }
+
   def "Parse BBCode that does not require a closing tag in a parent tag that is not a list"() {
 
     when: "A document is constructed using the builder with all parameters"

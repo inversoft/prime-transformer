@@ -3,3 +3,6 @@
 }[/code]
 [code][b]bold text[/b][/code]
 [code]String test = "test";[/code]
+[code]am.getProcessMemoryInfo(new int[]{mySinglePID }); // This one accepts arrays only[/code]
+[code]new <type>[] { <list of values>};[/code]
+[code]am.getProcessMemoryInfo([mySinglePID]);[/code]

@@ -18,6 +18,9 @@ package org.primeframework.transformer.service;
 
 import org.primeframework.transformer.domain.Document;
 import org.primeframework.transformer.domain.ParserException;
+import org.primeframework.transformer.domain.TagNode;
+
+import java.util.Deque;
 
 /**
  * Base class for Parser implementations.
@@ -68,13 +71,14 @@ public abstract class AbstractParser implements Parser {
    * @param document
    * @param startIndex
    * @param endIndex
+   * @param nodes
    * @return
    * @throws ParserException
    */
-  protected int indexOfOpeningTagCloseCharacter(Document document, int startIndex, int endIndex) throws ParserException {
+  protected int indexOfOpeningTagCloseCharacter(Document document, int startIndex, int endIndex, Deque<TagNode> nodes) throws ParserException {
     int tagEndIndex = indexOfCharacter(document, startIndex, endIndex, getTagCloseChar());
     if (tagEndIndex == -1) {
-      throw new ParserException("Malformed markup. Open tag was not closed");
+      throw new ParserException("Malformed markup. Missing closing tag for [" + nodes.peek().getName() + "].");
     }
     return tagEndIndex;
   }

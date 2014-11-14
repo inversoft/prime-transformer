@@ -85,7 +85,7 @@ public class BBCodeParser extends AbstractParser {
         throw new ParserException("Missing enclosing tag for [" + node.getName() + "] at index " + node.tagBegin + ". This tag does not require a " +
            "closing tag itself but must be contained within another tag. \n\t For example, the [*] tag must be contained within a [list] or [ol] tag.");
       } else {
-        throw new ParserException("Missing closing tag for [" + node.getName() + "].");
+        throw new ParserException("Malformed markup. Missing closing tag for [" + node.getName() + "].");
       }
     }
   }
@@ -104,10 +104,13 @@ public class BBCodeParser extends AbstractParser {
         }
         break;
       } else if (tagBegin > sourceIndex) {
+        if (!transform) {
+          tagBegin = getTagBeginOfCurrentNode(document, nodes, sourceLength, tagBegin);
+        }
         addNodeToDocument(document, nodes, new TextNode(document, sourceIndex, tagBegin));
       }
 
-      int tagEnd = indexOfOpeningTagCloseCharacter(document, tagBegin, sourceLength) + 1;
+      int tagEnd = indexOfOpeningTagCloseCharacter(document, tagBegin, sourceLength, nodes) + 1;
       String openingTag = document.getString(tagBegin + 1, tagEnd - 1);
 
       StringTokenizer tokenizer = new StringTokenizer(openingTag, " =");
@@ -186,6 +189,29 @@ public class BBCodeParser extends AbstractParser {
       }
       sourceIndex = tagEnd;
     }
+  }
+
+  /**
+   * Called when transform is set to false. Returns the beginning index of the tag which is currently on the nodes stack.
+   *
+   * @param document
+   * @param nodes
+   * @param sourceLength
+   * @param tagBegin
+   * @return
+   * @throws ParserException
+   */
+  private int getTagBeginOfCurrentNode(Document document, Deque<TagNode> nodes, int sourceLength, int tagBegin) throws ParserException {
+    // When transform is false, find closing tag and treat the body as text.
+    int tempTagBegin = tagBegin;
+    int tempTagEnd = indexOfOpeningTagCloseCharacter(document, tempTagBegin, sourceLength, nodes) + 1;
+    String tempTagName = document.getString(tempTagBegin + 1, tempTagEnd - 1);
+    while (!nodes.peek().getName().equals(tempTagName.substring(1))) {
+      tempTagBegin = indexOfOpeningTagOpenCharacter(document, tempTagEnd, sourceLength);
+      tempTagEnd = indexOfOpeningTagCloseCharacter(document, tempTagBegin, sourceLength, nodes) + 1;
+      tempTagName = document.getString(tempTagBegin + 1, tempTagEnd - 1);
+    }
+    return tempTagBegin;
   }
 
   /**
