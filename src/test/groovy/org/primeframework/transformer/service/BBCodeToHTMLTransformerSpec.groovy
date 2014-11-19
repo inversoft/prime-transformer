@@ -141,6 +141,10 @@ public class BBCodeToHTMLTransformerSpec extends Specification {
       "<div align=\"center\">Center</div>"                                                                                    | "[center]Center[/center]"
       "<div align=\"right\">Right</div>"                                                                                      | "[right]Right[/right]"
       "<span style=\"font-family: monospace\">mono</span>"                                                                    | "[font=monospace]mono[/font]"
+      "<strong>bold</strong> No format. <strong>bold</strong> <strong>bold</strong>"                                          | "[B]bold[/B]No format.[b]bold[/B] [B]bold[/b]"
+      "<em>italic</em> No format. <em>italic</em> <em>italic</em>"                                                            | "[I]italic[/I]No format.[i]italic[/I] [I]italic[/i]"
+      "the <em>XY </em>Trainer"                                                                                               | "the [I]XY [/I]Trainer"
+
   }
 
   @Unroll("BBCode to HTML : #fileName")
