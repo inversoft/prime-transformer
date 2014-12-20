@@ -189,7 +189,7 @@ public class FreemarkerTransformerOffsetTest {
     assertEquals(expected, result);
   }
 
-  @Test(enabled = false)
+  @Test
   public void testTransformedResultWithEmbeddingAndAdjacentTagsAndAttributesAndSingleBBCodeTag() throws Exception {
     Parser parser = new BBCodeParser();
     Transformer transformer = new FreeMarkerTransformer(templates);
@@ -197,7 +197,7 @@ public class FreemarkerTransformerOffsetTest {
     Document doc = parser.buildDocument(new DocumentSource("123[list]abc[*][/list] [a]123[d testattr=33]xyz[/d][/a] 456"));
     TransformedResult expected = new TransformedResult("123<ul>abc<p>smile</p></ul> <aaaaaa>123<dddddd testattr=\"33\">xyz</dddddd></aaaaaa> 456");
     expected.addOffset(9, -2);
-    expected.addOffset(15, 1);
+    expected.addOffset(15, 0);
     expected.addOffset(22, 5);
     expected.addOffset(26, 5);
     expected.addOffset(44, 7);
@@ -207,6 +207,23 @@ public class FreemarkerTransformerOffsetTest {
     TransformedResult result = transformer.transform(doc);
     assertEquals(expected, result);
   }
+
+  @Test
+  public void testTransformedResultWithEmbeddingNoLeadingTextNode() throws Exception {
+    Parser parser = new BBCodeParser();
+    Transformer transformer = new FreeMarkerTransformer(templates);
+    //                                                           6  9       17          29
+    Document doc = parser.buildDocument(new DocumentSource("[list][*]item1[*]item2[/list]"));
+    TransformedResult expected = new TransformedResult("<ul><p>smile</p><p>smile</p></ul>");
+    expected.addOffset(6, -2);
+    expected.addOffset(9, 0);
+    expected.addOffset(17, 0);
+    expected.addOffset(29, 4);
+
+    TransformedResult result = transformer.transform(doc);
+    assertEquals(expected, result);
+  }
+
 
   @Test
   public void testTransformedResultWithEmbeddingAndNonTransformedAndAdjacentTagsAndAttributesAndSingleBBCodeTag() throws Exception {

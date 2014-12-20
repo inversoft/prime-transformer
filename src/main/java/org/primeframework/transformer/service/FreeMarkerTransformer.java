@@ -163,7 +163,7 @@ public class FreeMarkerTransformer implements Transformer {
 
   private void addTransformationOffsets(TagNode tag, List<Pair<Integer, Integer>> offsets, int offset, Template template, int transformedNodeLength) throws IOException, TemplateException {
     // compute the offsets
-    if (tag.tagEnd != 0) {
+    if (tag.hasClosingTag) {
       // case2) the tag does contain a body
       //      X = the index in the input string of the ${body}
       //      Y = the index in the out string of the childSB
@@ -174,11 +174,10 @@ public class FreeMarkerTransformer implements Transformer {
       }
       offsets.add(new Pair<>(x, y - x + offset));  // for the portion after the opening tag
     }
-    offsets.add(new Pair<>(tag.tagEnd,
-       transformedNodeLength
-          - (tag.tagEnd - tag.tagBegin)
-          - offsets.stream().mapToInt(p -> p.second).sum()
-    ));
+    int x = tag.tagEnd;
+    int cumulativeOffsets = offsets.stream().mapToInt(p -> p.second > 0 ? p.second : 0).sum();
+    int y = tag.hasClosingTag ? transformedNodeLength - (tag.tagEnd - tag.tagBegin) - cumulativeOffsets : 0;
+    offsets.add(new Pair<>(x, y));
   }
 
   private int getBodyOffset(Template template, TagNode tag) throws IOException, TemplateException {

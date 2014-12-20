@@ -46,11 +46,7 @@ public class BBCodeParser extends AbstractParser {
 
   private static final Pattern ATTRIBUTES_PATTERN = Pattern.compile("(\\w+)=\"*((?<=\")[^\"]+(?=\")|([^\\s]+))\"*");
 
-  private static final String CLOSING_TAG = "[/%s]";
-
   private static final Set<String> NO_CLOSING_TAG = new HashSet<>(Arrays.asList("*"));
-
-  private static final String OPENING_TAG = "[%s]";
 
   /**
    * The body of an 'escape' tag is not parsed.
@@ -151,6 +147,9 @@ public class BBCodeParser extends AbstractParser {
         tag.bodyBegin = tagEnd;
         tag.nameEnd = tagBegin + 1 + tagName.length();
         tag.transform = transform;
+        tag.hasClosingTag = !NO_CLOSING_TAG.contains(tagName.toLowerCase());
+        // Set the initial value for tagEnd, final value will be set later if it has a closing tag.
+        tag.tagEnd = tag.bodyBegin;
 
         // Collect attributes
         if (tokenizer.hasMoreTokens()) {
@@ -230,15 +229,15 @@ public class BBCodeParser extends AbstractParser {
       children.push(nodes.pop());
     }
     // Add this tag to the parent
-    TagNode popped = nodes.pop();
+    TagNode parent = nodes.pop();
     while (!children.isEmpty()) {
       TagNode child = children.pop();
-      popped.children.add(child);
+      parent.children.add(child);
       addOpenAndClosingTagOffset(document, child);
     }
-    popped.bodyEnd = tagBegin;
-    popped.tagEnd = tagEnd;
-    addNodeToDocument(document, nodes, popped);
+    parent.bodyEnd = tagBegin;
+    parent.tagEnd = tagEnd;
+    addNodeToDocument(document, nodes, parent);
   }
 
   /**
@@ -250,10 +249,10 @@ public class BBCodeParser extends AbstractParser {
    */
   private void addNodeToDocument(Document document, Deque<TagNode> nodes, Node node) {
 
-    if (!nodes.isEmpty() && nodes.peek().tagEnd == 0) {
-      nodes.peek().children.add(node);
-    } else {
+    if (nodes.isEmpty()) {
       document.children.add(node);
+    } else {
+      nodes.peek().children.add(node);
     }
 
     if (node instanceof TagNode) {
@@ -291,7 +290,7 @@ public class BBCodeParser extends AbstractParser {
    */
   private void addOpenAndClosingTagOffset(Document document, TagNode tag) {
     document.offsets.add(new Pair<>(tag.tagBegin, tag.bodyBegin - tag.tagBegin));
-    if (tag.tagEnd != tag.bodyEnd) {
+    if (tag.hasClosingTag) {
       document.offsets.add(new Pair<>(tag.bodyEnd, tag.tagEnd - tag.bodyEnd));
     }
   }

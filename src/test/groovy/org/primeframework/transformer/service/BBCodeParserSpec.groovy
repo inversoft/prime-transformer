@@ -147,14 +147,14 @@ public class BBCodeParserSpec extends Specification {
   def "Parse BBCode that does not require a closing tag in a parent tag that is not a list"() {
 
     when: "A document is constructed using the builder with all parameters"
-    def source = "[b][*]test1 [*]test2[/b]"
+      def source = "[b][*]test1 [*]test2[/b]"
       /*          ^  ^        ^       ^                                             */
       /* offsets  0,3 3,3     12,3    20,4                                          */
       /* attributes                                                                 */
       def document = new BBCodeParser().buildDocument(new DocumentSource(source))
 
     then:
-      document.offsets == [new Pair<>(0, 3), new Pair<>(3, 3), new Pair<>(12,3), new Pair<>(20,4)] as TreeSet
+      document.offsets == [new Pair<>(0, 3), new Pair<>(3, 3), new Pair<>(12, 3), new Pair<>(20, 4)] as TreeSet
 
   }
 
@@ -168,7 +168,7 @@ public class BBCodeParserSpec extends Specification {
       def document = new BBCodeParser().buildDocument(new DocumentSource(source))
 
     then:
-      document.offsets == [new Pair<>(0, 6), new Pair<>(6, 3), new Pair<>(9,7)] as TreeSet
+      document.offsets == [new Pair<>(0, 6), new Pair<>(6, 3), new Pair<>(9, 7)] as TreeSet
 
   }
 
@@ -182,7 +182,7 @@ public class BBCodeParserSpec extends Specification {
       def document = new BBCodeParser().buildDocument(new DocumentSource(source))
 
     then:
-      document.offsets == [new Pair<>(0, 6), new Pair<>(10, 3), new Pair<>(13,7)] as TreeSet
+      document.offsets == [new Pair<>(0, 6), new Pair<>(10, 3), new Pair<>(13, 7)] as TreeSet
 
   }
 
@@ -196,7 +196,7 @@ public class BBCodeParserSpec extends Specification {
       def document = new BBCodeParser().buildDocument(new DocumentSource(source))
 
     then:
-      document.offsets == [new Pair<>(0, 7), new Pair<>(7, 7), new Pair<>(14,7), new Pair<>(47,8), new Pair<>(55,8), new Pair<>(63,8)] as TreeSet
+      document.offsets == [new Pair<>(0, 7), new Pair<>(7, 7), new Pair<>(14, 7), new Pair<>(47, 8), new Pair<>(55, 8), new Pair<>(63, 8)] as TreeSet
 
   }
 
@@ -210,7 +210,7 @@ public class BBCodeParserSpec extends Specification {
       def document = new BBCodeParser().buildDocument(new DocumentSource(source))
 
     then:
-      document.offsets == [new Pair<>(0, 12), new Pair<>(16,8)] as TreeSet
+      document.offsets == [new Pair<>(0, 12), new Pair<>(16, 8)] as TreeSet
 
     and: "attribute offsets should be correct"
       document.attributeOffsets == [new Pair<>(7, 4)] as TreeSet
@@ -227,7 +227,7 @@ public class BBCodeParserSpec extends Specification {
       def document = new BBCodeParser().buildDocument(new DocumentSource(source))
 
     then:
-      document.offsets == [new Pair<>(0, 14), new Pair<>(18,7)] as TreeSet
+      document.offsets == [new Pair<>(0, 14), new Pair<>(18, 7)] as TreeSet
 
     and: "attribute offsets should be correct"
       document.attributeOffsets == [new Pair<>(12, 1)] as TreeSet
@@ -244,7 +244,7 @@ public class BBCodeParserSpec extends Specification {
       def document = new BBCodeParser().buildDocument(new DocumentSource(source))
 
     then:
-      document.offsets == [new Pair<>(0, 16), new Pair<>(20,7)] as TreeSet
+      document.offsets == [new Pair<>(0, 16), new Pair<>(20, 7)] as TreeSet
 
     and: "attribute offsets should be correct"
       document.attributeOffsets == [new Pair<>(13, 3)] as TreeSet
@@ -261,10 +261,25 @@ public class BBCodeParserSpec extends Specification {
       def document = new BBCodeParser().buildDocument(new DocumentSource(source))
 
     then:
-      document.offsets == [new Pair<>(0, 18), new Pair<>(22,7)] as TreeSet
+      document.offsets == [new Pair<>(0, 18), new Pair<>(22, 7)] as TreeSet
 
     and: "attribute offsets should be correct"
       document.attributeOffsets == [new Pair<>(16, 1)] as TreeSet
 
+  }
+
+  def "List with child tags without closing tags"() {
+
+    when:
+      def source = "[list][*]item1[*]item2[/list]";
+      /*            ^     ^        ^      ^                                                 */
+      /* offsets    0,6   6,3     14,3    22,7                                              */
+      def document = new BBCodeParser().buildDocument(new DocumentSource(source))
+
+    then:
+      document.offsets == [new Pair<>(0, 6), new Pair<>(6, 3), new Pair<>(14, 3), new Pair<>(22, 7)] as TreeSet
+
+    and: "attribute offsets should be correct"
+      document.attributeOffsets == [] as TreeSet
   }
 }

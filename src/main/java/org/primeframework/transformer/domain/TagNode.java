@@ -64,6 +64,7 @@ public class TagNode extends BaseTagNode {
   public int nameEnd;
 
   public boolean transform;
+  public boolean hasClosingTag;
 
   public TagNode(Document document, int tagBegin) {
     this.document = document;
@@ -108,6 +109,7 @@ public class TagNode extends BaseTagNode {
        String.join(", ", children.stream().map(Object::toString).collect(Collectors.toList())) +
        "]" +
        ", name=" + getName() +
+       ", hasClosingTag=" + hasClosingTag +
        "}";
   }
 }
