@@ -90,11 +90,11 @@ target(name: "jar", description: "JARs the project", dependsOn: ["compile"]) {
 
 target(name: "test", description: "Runs the project's tests", dependsOn: ["jar"]) {
   javaTestNG.test()
-  spock.test()
+//  spock.test()
 }
 
 target(name: "test-spock", description: "Runs the project's Spock specifications", dependsOn: ["jar"]) {
-  spock.test()
+//  spock.test()
 }
 
 target(name: "doc", description: "Generate the project's JavaDoc", dependsOn: ["jar"]) {
