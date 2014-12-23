@@ -18,11 +18,13 @@ package org.primeframework.transformer.service;
 
 import org.primeframework.transformer.domain.Document;
 import org.primeframework.transformer.domain.Pair;
+import org.primeframework.transformer.domain.TagNode;
 import org.primeframework.transformer.domain.TransformerException;
 
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 /**
@@ -56,6 +58,16 @@ public interface Transformer {
    * @throws TransformerException
    */
   TransformedResult transform(Document document) throws TransformerException;
+
+  /**
+   * Transform the document. The returned string will be defined by the implementation.
+   *
+   * @param document
+   * @param transformPredicate This predicate will be evaluated on each {@link TagNode}. If it evaluates to false, the node will not be transformed.
+   * @return
+   * @throws TransformerException
+   */
+  TransformedResult transform(Document document, Predicate<TagNode> transformPredicate) throws TransformerException;
 
   /**
    * Transform result object that provides the resulting transformed string and index and offset values that can be used

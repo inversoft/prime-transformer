@@ -19,12 +19,14 @@ package org.primeframework.transformer.service;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
 import org.primeframework.transformer.domain.Document;
+import org.primeframework.transformer.domain.TagNode;
 import org.primeframework.transformer.domain.TransformerException;
 import org.primeframework.transformer.domain.TransformerRuntimeException;
 
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Predicate;
 
 
 /**
@@ -115,10 +117,15 @@ public class BBCodeToHTMLTransformer implements Transformer {
 
   @Override
   public TransformedResult transform(Document document) throws TransformerException {
+    return transform(document, null);
+  }
+
+  @Override
+  public TransformedResult transform(Document document, Predicate<TagNode> transformPredicate) throws TransformerException {
     if (!ready) {
       throw new TransformerException("Transformer has not yet been initialized. Run init() prior to transform().");
     }
     transformer.setStrict(strict);
-    return transformer.transform(document);
+    return transformer.transform(document, transformPredicate);
   }
 }

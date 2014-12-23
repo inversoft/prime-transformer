@@ -17,7 +17,10 @@
 package org.primeframework.transformer.service;
 
 import org.primeframework.transformer.domain.Document;
+import org.primeframework.transformer.domain.TagNode;
 import org.primeframework.transformer.domain.TransformerException;
+
+import java.util.function.Predicate;
 
 /**
  * Text only Transformer implementation. The document source is stripped of all tags and only the text remains.
@@ -50,6 +53,11 @@ public class TextTransformer implements Transformer {
     document.getChildTextNodes().stream().forEach(n -> sb.append(n.getBody()));
 
     return new TransformedResult(sb.toString());
+  }
+
+  @Override
+  public TransformedResult transform(Document document, Predicate<TagNode> transformPredicate) throws TransformerException {
+    throw new UnsupportedOperationException("The TextTransformer does not support taking a predicate on the transform() method.");
   }
 
 }

@@ -35,6 +35,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.function.Predicate;
 
 /**
  * FreeMarker transformer implementation.
@@ -84,21 +85,31 @@ public class FreeMarkerTransformer implements Transformer {
 
   @Override
   public TransformedResult transform(Document document) throws TransformerException {
+    return transform(document, null);
+  }
+
+  @Override
+  public TransformedResult transform(Document document, Predicate<TagNode> transformPredicate) throws TransformerException {
     StringBuilder sb = new StringBuilder();
     List<Pair<Integer, Integer>> offsets = new ArrayList<>();
     for (Node node : document.children) {
-      offsets.addAll(transformNode(sb, node));
+      offsets.addAll(transformNode(sb, node, transformPredicate));
     }
-    return new TransformedResult(sb.toString().trim(), offsets);
-  }
+    return new TransformedResult(sb.toString().trim(), offsets);  }
 
   private List<Pair<Integer, Integer>> transformNode(StringBuilder sb, Node node) throws TransformerException {
+    return transformNode(sb, node, null);
+  }
+
+  private List<Pair<Integer, Integer>> transformNode(StringBuilder sb, Node node, Predicate<TagNode> predicate) throws TransformerException {
 
     List<Pair<Integer, Integer>> offsets = new ArrayList<>();
 
     if (node instanceof TagNode) {
       TagNode tag = (TagNode) node;
-      if (tag.transform) {
+      // If tag is marked for transformation, apply the predicate if provided
+      boolean transform = tag.transform ? (predicate == null || predicate.test(tag)) : false;
+      if (transform) {
         doTransform(sb, offsets, tag);
       } else {
         sb.append(tag.getRawString());
