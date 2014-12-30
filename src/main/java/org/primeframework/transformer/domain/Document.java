@@ -30,7 +30,7 @@ public class Document extends BaseTagNode {
 
   public List<Node> children = new ArrayList<>();
 
-  public DocumentSource documentSource;
+  public char[] source;
 
   /**
    * Set of offsets, first value is the beginning of the tag, the second value is the length. With these
@@ -57,10 +57,14 @@ public class Document extends BaseTagNode {
    */
   public Set<Pair<Integer, Integer>> attributeOffsets = new TreeSet<>();
 
-  public Document(DocumentSource documentSource) {
-    this.documentSource = documentSource;
+  public Document(String source) {
+    this(source.toCharArray());
+  }
+
+  public Document(char[] source) {
+    this.source = source;
     this.tagBegin = 0;
-    this.tagEnd = this.documentSource.source.length;
+    this.tagEnd = this.source.length;
   }
 
   @Override
@@ -74,7 +78,7 @@ public class Document extends BaseTagNode {
   }
 
   public String getString(int start, int end) {
-    return new String(documentSource.source, start, end - start);
+    return new String(source, start, end - start);
   }
 
   @Override

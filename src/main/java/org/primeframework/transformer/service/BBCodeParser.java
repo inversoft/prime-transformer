@@ -17,7 +17,6 @@
 package org.primeframework.transformer.service;
 
 import org.primeframework.transformer.domain.Document;
-import org.primeframework.transformer.domain.DocumentSource;
 import org.primeframework.transformer.domain.Node;
 import org.primeframework.transformer.domain.Pair;
 import org.primeframework.transformer.domain.ParserException;
@@ -54,9 +53,14 @@ public class BBCodeParser extends AbstractParser {
   private static final Set<String> ESCAPE_TAGS = new HashSet<>(Arrays.asList("code", "noparse"));
 
   @Override
-  public Document buildDocument(DocumentSource documentSource) throws ParserException {
+  public Document buildDocument(String source) throws ParserException {
+    return buildDocument(source.toCharArray());
+  }
 
-    Document document = new Document(documentSource);
+  @Override
+  public Document buildDocument(char[] source) throws ParserException {
+
+    Document document = new Document(source);
     Deque<TagNode> nodes = new ArrayDeque<>();
 
     try {
@@ -64,8 +68,8 @@ public class BBCodeParser extends AbstractParser {
     } catch (ParserException e) {
       throw e;
     } catch (Exception e) {
-      LOGGER.error("Failed to parse document source. The document returned will only contain a single text node.\n\t" + documentSource, e);
-      document.children.add(new TextNode(document, 0, documentSource.source.length));
+      LOGGER.error("Failed to parse document source. The document returned will only contain a single text node.\n\t" + document.source, e);
+      document.children.add(new TextNode(document, 0, document.source.length));
     }
 
     checkForUnclosedTags(nodes);
@@ -88,7 +92,7 @@ public class BBCodeParser extends AbstractParser {
 
   private void lrParser(Document document, Deque<TagNode> nodes) throws ParserException {
     int sourceIndex = 0;
-    int sourceLength = document.documentSource.source.length;
+    int sourceLength = document.source.length;
     boolean transform = true;
 
     while (sourceIndex < sourceLength) {
@@ -172,7 +176,7 @@ public class BBCodeParser extends AbstractParser {
               String value = matcher.group(2);
               tag.attributes.put(key, value);
               int attributeStart = matcher.start(2);
-              while (Character.isWhitespace(document.documentSource.source[attributeStart])) {
+              while (Character.isWhitespace(document.source[attributeStart])) {
                 attributeStart++;
               }
               addAttributeOffset(document, index + attributeStart, value.length());
@@ -278,7 +282,7 @@ public class BBCodeParser extends AbstractParser {
    * @param attributeLength
    */
   private void addAttributeOffset(Document document, int attributeStartIndex, int attributeLength) {
-    int adjusted = startsWithQuote(document.documentSource.source, attributeStartIndex) ? 1 : 0;
+    int adjusted = startsWithQuote(document.source, attributeStartIndex) ? 1 : 0;
     document.attributeOffsets.add(new Pair<>(attributeStartIndex + adjusted, attributeLength));
   }
 

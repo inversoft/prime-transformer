@@ -17,7 +17,6 @@
 package org.primeframework.transformer;
 
 import org.primeframework.transformer.domain.Document;
-import org.primeframework.transformer.domain.DocumentSource;
 import org.primeframework.transformer.domain.TagNode;
 import org.primeframework.transformer.service.BBCodeParser;
 import org.primeframework.transformer.service.BBCodeToHTMLTransformer;
@@ -36,7 +35,7 @@ public class DocumentTest {
   @Test
   public void testWalk() throws Exception {
 
-    Document document = new BBCodeParser().buildDocument(new DocumentSource("Hello [size=\"14\"][b]World!![/b][/size] Yo."));
+    Document document = new BBCodeParser().buildDocument("Hello [size=\"14\"][b]World!![/b][/size] Yo.");
     document.walk(TagNode.class, node -> node.transform = false);
 
     // assert all tag nodes are set to not transform
@@ -50,7 +49,7 @@ public class DocumentTest {
   @Test
   public void testWalkWithNoType() throws Exception {
 
-    Document document = new BBCodeParser().buildDocument(new DocumentSource("Hello [size=\"14\"][b]World!![/b][/size] Yo."));
+    Document document = new BBCodeParser().buildDocument("Hello [size=\"14\"][b]World!![/b][/size] Yo.");
     document.walk(node -> {
       if (node instanceof TagNode) {
         ((TagNode) node).transform = false;

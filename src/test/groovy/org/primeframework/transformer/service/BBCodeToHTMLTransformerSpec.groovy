@@ -16,7 +16,6 @@
 
 package org.primeframework.transformer.service
 
-import org.primeframework.transformer.domain.DocumentSource
 import org.primeframework.transformer.domain.ParserException
 import org.primeframework.transformer.domain.TransformerException
 import spock.lang.Shared
@@ -38,7 +37,7 @@ public class BBCodeToHTMLTransformerSpec extends Specification {
   def "No FreeMarker template for tag with strict mode disabled"() {
 
     when: "A BBCodeParser is setup and a template has not been provided for a tag"
-      def document = bbCodeParser.buildDocument(new DocumentSource("[unknown]Testing[/unknown]"))
+      def document = bbCodeParser.buildDocument("[unknown]Testing[/unknown]")
 
     and: "transform is bbCodeTransformer"
       def html = bbCodeToFreeMarkerTransformer.transform(document).result;
@@ -50,7 +49,7 @@ public class BBCodeToHTMLTransformerSpec extends Specification {
   def "No FreeMarker template for tag with strict mode enabled"() {
 
     when: "A BBCodeParser is setup and a template has not been provided for a tag"
-      def document = bbCodeParser.buildDocument(new DocumentSource("[unknown]Testing[/unknown]"))
+      def document = bbCodeParser.buildDocument("[unknown]Testing[/unknown]")
 
     and: "transform is bbCodeTransformer"
       def html = bbCodeToFreeMarkerTransformer.setStrict(true).transform(document);
@@ -65,7 +64,7 @@ public class BBCodeToHTMLTransformerSpec extends Specification {
   def "Call transform without calling init"() {
 
     when: "A BBCodeParser is setup with valid BBCode"
-      def document = bbCodeParser.buildDocument(new DocumentSource("[b]Testing[/b]"))
+      def document = bbCodeParser.buildDocument("[b]Testing[/b]")
 
     and: "transform is bbCodeTransformer without calling init()"
       def transformedResult = new BBCodeToHTMLTransformer().transform(document);
@@ -80,7 +79,7 @@ public class BBCodeToHTMLTransformerSpec extends Specification {
   def "No FreeMarker template for tag with strict mode enabled in the constructor"() {
 
     when: "A BBCodeParser is setup and a template has not been provided for a tag"
-      def document = bbCodeParser.buildDocument(new DocumentSource("[unknown]Testing[/unknown]"))
+      def document = bbCodeParser.buildDocument("[unknown]Testing[/unknown]")
 
     and: "transform is bbCodeTransformer"
       def html = new BBCodeToHTMLTransformer(true).init().transform(document).result;
@@ -95,7 +94,7 @@ public class BBCodeToHTMLTransformerSpec extends Specification {
   def "No closing BBCode tag"() {
 
     when: "A BBCode string with a missing closing tag is parsed"
-      def document = bbCodeParser.buildDocument(new DocumentSource("[b]Testing"));
+      def document = bbCodeParser.buildDocument("[b]Testing");
 
     then: "a parse exception is thrown"
       thrown ParserException
@@ -109,7 +108,7 @@ public class BBCodeToHTMLTransformerSpec extends Specification {
   def "BBCode to HTML - simple"() {
 
     expect: "when HTML transformer is called with bbcode properly formatted HTML is returned"
-      def document = bbCodeParser.buildDocument(new DocumentSource(bbCode))
+      def document = bbCodeParser.buildDocument(bbCode)
       bbCodeToFreeMarkerTransformer.transform(document).result.replaceAll(" ", "").replaceAll("<br>", "").replaceAll("&nbsp;", "") == html.replaceAll(" ", "");
 
     where:
@@ -146,6 +145,7 @@ public class BBCodeToHTMLTransformerSpec extends Specification {
       "the <em>XY </em>Trainer"                                                                                               | "the [I]XY [/I]Trainer"
       "<span style=\"font-family: times new roman\">Matthew(not 69) (175) </span>"                                            | "[font=times new roman]Matthew(not 69) (175) [/font]"
       "<u>&lt;script&gt; var inject=true;&lt;/script&gt;</u>"                                                                 | "[u]<script> var inject=true;</script>[/u]"
+//      "<div>Example: [noparse]foo[/noparse]</div>"                                                                            | "[noparse]Example: [noparse]foo[/noparse][/noparse]"
 
   }
 
@@ -157,7 +157,7 @@ public class BBCodeToHTMLTransformerSpec extends Specification {
       def bbCode = this.getClass().getResourceAsStream("/org/primeframework/transformer/bbcode/" + fileName).getText();
       def html = this.getClass().getResourceAsStream("/org/primeframework/transformer/html/" + fileName).getText();
 
-      def document = bbCodeParser.buildDocument(new DocumentSource(bbCode))
+      def document = bbCodeParser.buildDocument(bbCode)
       bbCodeToFreeMarkerTransformer.transform(document).result.replaceAll("<br>", "").replaceAll("\\s+", "") == html.replaceAll("\\s+", "")
 
     where:

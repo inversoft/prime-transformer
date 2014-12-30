@@ -16,7 +16,6 @@
 
 package org.primeframework.transformer.service
 
-import org.primeframework.transformer.domain.DocumentSource
 import org.primeframework.transformer.domain.Pair
 import org.primeframework.transformer.domain.TagNode
 import spock.lang.Specification
@@ -29,7 +28,7 @@ class TextTransformerSpec extends Specification {
   def "BBCode to Text - simple"() {
 
     expect: "when Text transformer is called with bbcode only text is returned"
-      def document = new BBCodeParser().buildDocument(new DocumentSource(bbCode))
+      def document = new BBCodeParser().buildDocument(bbCode)
       new TextTransformer().transform(document).result == text;
 
     where:
@@ -43,7 +42,7 @@ class TextTransformerSpec extends Specification {
   def "BBCode to Text and verify offsets"() {
 
     when: "bbcode is transformed"
-      def document = new BBCodeParser().buildDocument(new DocumentSource("z [b]abc defg [/b]hijk [ul][*]lmn opqr[*][/ul]"))
+      def document = new BBCodeParser().buildDocument("z [b]abc defg [/b]hijk [ul][*]lmn opqr[*][/ul]")
       /*                                                                    ^           ^        ^   ^          ^  ^       */
       /*                                                                    2          14       23  27         38 41       */
       def transFormResult = new TextTransformer().transform(document);
@@ -60,7 +59,7 @@ class TextTransformerSpec extends Specification {
   def "BBCode to Text and verify offsets and attribute offsets with complex attributes"() {
 
     when: "bbcode is transformed"
-      def document = new BBCodeParser().buildDocument(new DocumentSource("Example [code type=\"see the java oo\" syntax=\"java\"] System.out.println(\"Hello World!\"); [/code] "))
+      def document = new BBCodeParser().buildDocument("Example [code type=\"see the java oo\" syntax=\"java\"] System.out.println(\"Hello World!\"); [/code] ")
       /*                                                                          ^            ^                           ^                                            ^            */
       /*  offsets                                                                 8,43                                                                                  88,7         */
       /*  attributeOffset                                                                      20,16                       46,4                                                      */
@@ -79,7 +78,7 @@ class TextTransformerSpec extends Specification {
   def "BBCode to Text with a tag node that is set to transform false"() {
 
     when: "bbcode is parsed"
-      def document = new BBCodeParser().buildDocument(new DocumentSource("[foo bar=\"blah blah\"]Some ordinary text.[/foo] [font=\"verdana\"]Hello[/font]"))
+      def document = new BBCodeParser().buildDocument("[foo bar=\"blah blah\"]Some ordinary text.[/foo] [font=\"verdana\"]Hello[/font]")
 
     and: "you set one of the tag nodes not to transform"
       ((TagNode) document.children.get(0)).transform = false;

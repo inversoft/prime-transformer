@@ -55,7 +55,7 @@ public abstract class AbstractParser implements Parser {
    * @return
    */
   private int indexOfCharacter(Document document, int startIndex, int endIndex, char character) {
-    char[] source = document.documentSource.source;
+    char[] source = document.source;
     for (int i = startIndex; i < endIndex; i++) {
       if (source[i] == character) {
         return i;
@@ -94,7 +94,7 @@ public abstract class AbstractParser implements Parser {
    */
   protected int indexOfOpeningTagOpenCharacter(Document document, int startIndex, int endIndex) {
     int openTag = indexOfCharacter(document, startIndex, endIndex, getTagOpenChar());
-    if (document.documentSource.source[openTag + 1] == getTagCloseChar()) {
+    if (document.source[openTag + 1] == getTagCloseChar()) {
       openTag = indexOfCharacter(document, openTag + 2, endIndex, getTagOpenChar());
     }
     return openTag;

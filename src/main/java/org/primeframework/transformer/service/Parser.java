@@ -17,7 +17,6 @@
 package org.primeframework.transformer.service;
 
 import org.primeframework.transformer.domain.Document;
-import org.primeframework.transformer.domain.DocumentSource;
 import org.primeframework.transformer.domain.ParserException;
 
 /**
@@ -34,9 +33,20 @@ public interface Parser {
    * part of building the document.</p><p>The returned document may then be passed into any transformer
    * implementation.</p>
    *
-   * @param documentSource
+   * @param source
    * @return
    * @throws ParserException
    */
-  Document buildDocument(DocumentSource documentSource) throws ParserException;
+  Document buildDocument(String source) throws ParserException;
+
+  /**
+   * Return a constructed <code>Document</code> representation of the document source.<p>No transformation is done as a
+   * part of building the document.</p><p>The returned document may then be passed into any transformer
+   * implementation.</p>
+   *
+   * @param source
+   * @return
+   * @throws ParserException
+   */
+  Document buildDocument(char[] source) throws ParserException;
 }

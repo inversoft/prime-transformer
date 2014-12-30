@@ -11,11 +11,10 @@ source markup -> DocumentSource -> Parser.buildDocument() -> Document -> Transfo
 Example:
 
 ```java
-// DocumentSource object can be passed to any parser.
-DocumentSource documentSource = new DocumentSource("[b]Hello World![/b]");
+String source = "[b]Hello World![/b]";
 
 // Document contains source markup and can be passed to any transformer.
-Document document = new BBCodeParser().buildDocument(documentSource);
+Document document = new BBCodeParser().buildDocument(source);
 
 // A transformer will take a Document and return a TransformedResult that contains the transformed markup in string form.
 String html = new BBCodeToHTMLTransformer().transform(document).result;

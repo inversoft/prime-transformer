@@ -19,7 +19,6 @@ package org.primeframework.transformer.service;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
 import org.primeframework.transformer.domain.Document;
-import org.primeframework.transformer.domain.DocumentSource;
 import org.primeframework.transformer.domain.TagNode;
 import org.primeframework.transformer.service.Transformer.TransformedResult;
 import org.testng.annotations.BeforeClass;
@@ -57,7 +56,7 @@ public class FreemarkerTransformerOffsetTest {
   public void testTransformedResult() throws Exception {
     Parser parser = new BBCodeParser();
     Transformer transformer = new FreeMarkerTransformer(templates);
-    Document doc = parser.buildDocument(new DocumentSource("[b] bbb [/b]"));
+    Document doc = parser.buildDocument("[b] bbb [/b]");
 
     TransformedResult expected = new TransformedResult("<bbbbbb> bbb </bbbbbb>");
     expected.addOffset(3, 5);
@@ -71,7 +70,7 @@ public class FreemarkerTransformerOffsetTest {
   public void testTransformedResultPrefixAndSuffix() throws Exception {
     Parser parser = new BBCodeParser();
     Transformer transformer = new FreeMarkerTransformer(templates);
-    Document doc = parser.buildDocument(new DocumentSource("abc[b] bbb [/b]123"));
+    Document doc = parser.buildDocument("abc[b] bbb [/b]123");
 
     TransformedResult expected = new TransformedResult("abc<bbbbbb> bbb </bbbbbb>123");
     expected.addOffset(6, 5);
@@ -86,7 +85,7 @@ public class FreemarkerTransformerOffsetTest {
     Parser parser = new BBCodeParser();
     Transformer transformer = new FreeMarkerTransformer(templates);
     //                                                         3    9       16  20
-    Document doc = parser.buildDocument(new DocumentSource("1[a]2[b]3[/b]4[/a]5"));
+    Document doc = parser.buildDocument("1[a]2[b]3[/b]4[/a]5");
 
     TransformedResult expected = new TransformedResult("1<aaaaaa>2<bbbbbb>3</bbbbbb>4</aaaaaa>5");
     expected.addOffset(4, 5);
@@ -103,7 +102,7 @@ public class FreemarkerTransformerOffsetTest {
     Parser parser = new BBCodeParser();
     Transformer transformer = new FreeMarkerTransformer(templates);
     //                                                         3    9       16  20
-    Document doc = parser.buildDocument(new DocumentSource("[a]123[c]xyz[/c][/a]"));
+    Document doc = parser.buildDocument("[a]123[c]xyz[/c][/a]");
 
     TransformedResult expected = new TransformedResult("<aaaaaa>123<cccccc>xyz</cccccc></aaaaaa>");
     expected.addOffset(3, 5);
@@ -120,7 +119,7 @@ public class FreemarkerTransformerOffsetTest {
     Parser parser = new BBCodeParser();
     Transformer transformer = new FreeMarkerTransformer(templates);
     //                                                            6     13   17    23     30  34
-    Document doc = parser.buildDocument(new DocumentSource("123[b]abc[/b] [a]123[c]xyz[/c][/a] 456"));
+    Document doc = parser.buildDocument("123[b]abc[/b] [a]123[c]xyz[/c][/a] 456");
 
     TransformedResult expected = new TransformedResult("123<bbbbbb>abc</bbbbbb> <aaaaaa>123<cccccc>xyz</cccccc></aaaaaa> 456");
     expected.addOffset(6, 5);
@@ -139,7 +138,7 @@ public class FreemarkerTransformerOffsetTest {
     Parser parser = new BBCodeParser();
     Transformer transformer = new FreeMarkerTransformer(templates);
     //                                                            6     12 15     22  26  30  34    40     47  51
-    Document doc = parser.buildDocument(new DocumentSource("123[b]abc[a][c]wow[/c][/a][/b] [a]123[c]xyz[/c][/a] 456"));
+    Document doc = parser.buildDocument("123[b]abc[a][c]wow[/c][/a][/b] [a]123[c]xyz[/c][/a] 456");
 
     TransformedResult expected = new TransformedResult("123<bbbbbb>abc<aaaaaa><cccccc>wow</cccccc></aaaaaa></bbbbbb> <aaaaaa>123<cccccc>xyz</cccccc></aaaaaa> 456");
     expected.addOffset(6, 5);
@@ -162,7 +161,7 @@ public class FreemarkerTransformerOffsetTest {
     Parser parser = new BBCodeParser();
     Transformer transformer = new FreeMarkerTransformer(templates);
     //                                                                     15     22
-    Document doc = parser.buildDocument(new DocumentSource("[d testattr=33]xyz[/d]"));
+    Document doc = parser.buildDocument("[d testattr=33]xyz[/d]");
     TransformedResult expected = new TransformedResult("<dddddd testattr=\"33\">xyz</dddddd>");
     expected.addOffset(15, 7);
     expected.addOffset(22, 5);
@@ -176,7 +175,7 @@ public class FreemarkerTransformerOffsetTest {
     Parser parser = new BBCodeParser();
     Transformer transformer = new FreeMarkerTransformer(templates);
     //                                                            6     13   17                35     42  46
-    Document doc = parser.buildDocument(new DocumentSource("123[b]abc[/b] [a]123[d testattr=33]xyz[/d][/a] 456"));
+    Document doc = parser.buildDocument("123[b]abc[/b] [a]123[d testattr=33]xyz[/d][/a] 456");
     TransformedResult expected = new TransformedResult("123<bbbbbb>abc</bbbbbb> <aaaaaa>123<dddddd testattr=\"33\">xyz</dddddd></aaaaaa> 456");
     expected.addOffset(6, 5);
     expected.addOffset(13, 5);
@@ -194,7 +193,7 @@ public class FreemarkerTransformerOffsetTest {
     Parser parser = new BBCodeParser();
     Transformer transformer = new FreeMarkerTransformer(templates);
     //                                                              9     15    22  26                44     51  55
-    Document doc = parser.buildDocument(new DocumentSource("123[list]abc[*][/list] [a]123[d testattr=33]xyz[/d][/a] 456"));
+    Document doc = parser.buildDocument("123[list]abc[*][/list] [a]123[d testattr=33]xyz[/d][/a] 456");
     TransformedResult expected = new TransformedResult("123<ul>abc<p>smile</p></ul> <aaaaaa>123<dddddd testattr=\"33\">xyz</dddddd></aaaaaa> 456");
     expected.addOffset(9, -2);
     expected.addOffset(15, 0);
@@ -213,7 +212,7 @@ public class FreemarkerTransformerOffsetTest {
     Parser parser = new BBCodeParser();
     Transformer transformer = new FreeMarkerTransformer(templates);
     //                                                           6  9       17          29
-    Document doc = parser.buildDocument(new DocumentSource("[list][*]item1[*]item2[/list]"));
+    Document doc = parser.buildDocument("[list][*]item1[*]item2[/list]");
     TransformedResult expected = new TransformedResult("<ul><p>smile</p><p>smile</p></ul>");
     expected.addOffset(6, -2);
     expected.addOffset(9, 0);
@@ -230,7 +229,7 @@ public class FreemarkerTransformerOffsetTest {
     Parser parser = new BBCodeParser();
     Transformer transformer = new FreeMarkerTransformer(templates);
     //                                                            6     12 16   20                38     45  49
-    Document doc = parser.buildDocument(new DocumentSource("123[b]abc[*][/b] [a]123[d testattr=33]xyz[/d][/a] 456"));
+    Document doc = parser.buildDocument("123[b]abc[*][/b] [a]123[d testattr=33]xyz[/d][/a] 456");
     ((TagNode) doc.children.get(1)).transform = false;
 
     TransformedResult expected = new TransformedResult("123[b]abc[*][/b] <aaaaaa>123<dddddd testattr=\"33\">xyz</dddddd></aaaaaa> 456");
