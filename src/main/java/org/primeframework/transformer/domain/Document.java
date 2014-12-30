@@ -72,11 +72,6 @@ public class Document extends BaseTagNode {
     return children;
   }
 
-  @Override
-  public int getNodeStart() {
-    return 0;
-  }
-
   public String getString(int start, int end) {
     return new String(source, start, end - start);
   }

@@ -16,19 +16,19 @@
 
 package org.primeframework.transformer.service;
 
-import freemarker.template.Configuration;
-import freemarker.template.Template;
-import org.primeframework.transformer.domain.Document;
-import org.primeframework.transformer.domain.TagNode;
-import org.primeframework.transformer.service.Transformer.TransformedResult;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Test;
-
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.HashMap;
 import java.util.Map;
 
+import freemarker.template.Configuration;
+import freemarker.template.Template;
+import org.primeframework.transformer.domain.Document;
+import org.primeframework.transformer.domain.FreeMarkerTemplateDefinition;
+import org.primeframework.transformer.domain.TagNode;
+import org.primeframework.transformer.service.Transformer.TransformedResult;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.Test;
 import static org.testng.AssertJUnit.assertEquals;
 
 /**
@@ -38,17 +38,17 @@ import static org.testng.AssertJUnit.assertEquals;
  */
 public class FreemarkerTransformerOffsetTest {
 
-  private static final Map<String, Template> templates = new HashMap<>();
+  private static final Map<String, FreeMarkerTemplateDefinition> templates = new HashMap<>();
 
   @BeforeClass
   public static void beforeSuite() throws IOException {
     Configuration conf = new Configuration();
-    templates.put("a", new Template("a", new StringReader("<aaaaaa>${body}</aaaaaa>"), conf));
-    templates.put("b", new Template("b", new StringReader("<bbbbbb>${body}</bbbbbb>"), conf));
-    templates.put("c", new Template("c", new StringReader("<cccccc>${body}</cccccc>"), conf));
-    templates.put("d", new Template("d", new StringReader("[#ftl/][#macro attrMacro attrs][#if attrs??][#list attrs?keys as attr]${attr}=\"${attrs[attr]}\"[/#list][/#if][/#macro]<dddddd [@attrMacro attributes/]>${body}</dddddd>"), conf));
-    templates.put("*", new Template("*", new StringReader("<p>smile</p>"), conf));
-    templates.put("list", new Template("list", new StringReader("<ul>${body}</ul>"), conf));
+    templates.put("a", new FreeMarkerTemplateDefinition(new Template("a", new StringReader("<aaaaaa>${body}</aaaaaa>"), conf)));
+    templates.put("b", new FreeMarkerTemplateDefinition(new Template("b", new StringReader("<bbbbbb>${body}</bbbbbb>"), conf)));
+    templates.put("c", new FreeMarkerTemplateDefinition(new Template("c", new StringReader("<cccccc>${body}</cccccc>"), conf)));
+    templates.put("d", new FreeMarkerTemplateDefinition(new Template("d", new StringReader("[#ftl/][#macro attrMacro attrs][#if attrs??][#list attrs?keys as attr]${attr}=\"${attrs[attr]}\"[/#list][/#if][/#macro]<dddddd [@attrMacro attributes/]>${body}</dddddd>"), conf)));
+    templates.put("*", new FreeMarkerTemplateDefinition(new Template("*", new StringReader("<p>smile</p>"), conf)));
+    templates.put("list", new FreeMarkerTemplateDefinition(new Template("list", new StringReader("<ul>${body}</ul>"), conf)));
 
   }
 

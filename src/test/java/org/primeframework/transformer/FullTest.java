@@ -16,9 +16,15 @@
 
 package org.primeframework.transformer;
 
+import java.io.IOException;
+import java.io.StringReader;
+import java.util.HashMap;
+import java.util.Map;
+
 import freemarker.template.Configuration;
 import freemarker.template.Template;
 import org.primeframework.transformer.domain.Document;
+import org.primeframework.transformer.domain.FreeMarkerTemplateDefinition;
 import org.primeframework.transformer.domain.TagNode;
 import org.primeframework.transformer.service.BBCodeParser;
 import org.primeframework.transformer.service.FreeMarkerTransformer;
@@ -26,12 +32,6 @@ import org.primeframework.transformer.service.Parser;
 import org.primeframework.transformer.service.Transformer;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
-
-import java.io.IOException;
-import java.io.StringReader;
-import java.util.HashMap;
-import java.util.Map;
-
 import static org.testng.AssertJUnit.assertEquals;
 
 /**
@@ -39,11 +39,11 @@ import static org.testng.AssertJUnit.assertEquals;
  */
 public class FullTest {
 
-  private static final Map<String, Template> templates = new HashMap<>();
+  private static final Map<String, FreeMarkerTemplateDefinition> templates = new HashMap<>();
 
   @BeforeClass
   public static void beforeSuite() throws IOException {
-    templates.put("b", new Template("b", new StringReader("<strong>${body}</strong>"), new Configuration()));
+    templates.put("b", new FreeMarkerTemplateDefinition(new Template("b", new StringReader("<strong>${body}</strong>"), new Configuration())));
   }
 
   @Test

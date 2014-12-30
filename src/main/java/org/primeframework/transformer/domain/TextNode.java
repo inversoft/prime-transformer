@@ -45,11 +45,6 @@ public class TextNode extends BaseNode {
   }
 
   @Override
-  public int getNodeStart() {
-    return tagBegin;
-  }
-
-  @Override
   public String toString() {
     return "TextNode{" +
         "body=" + getBody() +

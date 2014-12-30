@@ -16,17 +16,6 @@
 
 package org.primeframework.transformer.service;
 
-import freemarker.template.Template;
-import freemarker.template.TemplateException;
-import org.primeframework.transformer.domain.Document;
-import org.primeframework.transformer.domain.Node;
-import org.primeframework.transformer.domain.Pair;
-import org.primeframework.transformer.domain.TagNode;
-import org.primeframework.transformer.domain.TextNode;
-import org.primeframework.transformer.domain.TransformerException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
@@ -36,6 +25,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.function.Predicate;
+
+import freemarker.template.TemplateException;
+import org.primeframework.transformer.domain.Document;
+import org.primeframework.transformer.domain.FreeMarkerTemplateDefinition;
+import org.primeframework.transformer.domain.Node;
+import org.primeframework.transformer.domain.Pair;
+import org.primeframework.transformer.domain.TagNode;
+import org.primeframework.transformer.domain.TextNode;
+import org.primeframework.transformer.domain.TransformerException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * FreeMarker transformer implementation.
@@ -59,14 +59,14 @@ public class FreeMarkerTransformer implements Transformer {
 
   private boolean strict;
 
-  private Map<String, Template> templates = new HashMap<>();
+  private Map<String, FreeMarkerTemplateDefinition> templates = new HashMap<>();
 
   /**
    * Constructor takes the FreeMarker templates.
    *
    * @param templates
    */
-  public FreeMarkerTransformer(Map<String, Template> templates) {
+  public FreeMarkerTransformer(Map<String, FreeMarkerTemplateDefinition> templates) {
     this.templates.putAll(templates);
   }
 
@@ -77,7 +77,7 @@ public class FreeMarkerTransformer implements Transformer {
    * @param escapeHtml
    * @param strict
    */
-  public FreeMarkerTransformer(Map<String, Template> templates, boolean strict, boolean escapeHtml) {
+  public FreeMarkerTransformer(Map<String, FreeMarkerTemplateDefinition> templates, boolean strict, boolean escapeHtml) {
     this.escapeHtml = escapeHtml;
     this.strict = strict;
     this.templates.putAll(templates);
@@ -89,7 +89,7 @@ public class FreeMarkerTransformer implements Transformer {
    * @param templates
    * @param strict
    */
-  public FreeMarkerTransformer(Map<String, Template> templates, boolean strict) {
+  public FreeMarkerTransformer(Map<String, FreeMarkerTemplateDefinition> templates, boolean strict) {
     this.strict = strict;
     this.templates.putAll(templates);
   }
@@ -181,7 +181,7 @@ public class FreeMarkerTransformer implements Transformer {
 
   private void doTransform(StringBuilder sb, List<Pair<Integer, Integer>> offsets, TagNode tag) throws TransformerException {
 
-    int offset = tag.getNodeStart();
+    int offset = tag.tagBegin;
     StringBuilder childSB = new StringBuilder();
     for (Node child : tag.children) {
       offsets.addAll(transformNode(childSB, child));
@@ -194,12 +194,12 @@ public class FreeMarkerTransformer implements Transformer {
 
     String lowerCaseTagName = tag.getName().toLowerCase();
     if (templates.containsKey(lowerCaseTagName)) {
-      Template template = templates.get(lowerCaseTagName);
+      FreeMarkerTemplateDefinition definition = templates.get(lowerCaseTagName);
       try {
-        int transformedLength = appendTransformedNodeToBuilder(data, sb, template);
-        addTransformationOffsets(tag, offsets, offset, template, transformedLength);
+        int transformedLength = appendTransformedNodeToBuilder(data, sb, definition);
+        addTransformationOffsets(tag, offsets, offset, definition, transformedLength);
       } catch (Exception e) {
-        throw new TransformerException("FreeMarker processing failed for template " + template.getName() + " \n\t Data model: " + data.get("body"), e);
+        throw new TransformerException("FreeMarker processing failed for template " + definition.template.getName() + " \n\t Data model: " + data.get("body"), e);
       }
     } else {
       // If strict mode is enabled, throw an exception, else append the raw string from the node
@@ -216,20 +216,20 @@ public class FreeMarkerTransformer implements Transformer {
    *
    * @param data
    * @param sb
-   * @param template
+   * @param definition
    * @return the length of the transformed node.
    * @throws IOException
    * @throws TemplateException
    */
-  private int appendTransformedNodeToBuilder(Map<String, Object> data, StringBuilder sb, Template template) throws IOException, TemplateException {
+  private int appendTransformedNodeToBuilder(Map<String, Object> data, StringBuilder sb, FreeMarkerTemplateDefinition definition) throws IOException, TemplateException {
     int length = sb.length();
     Writer out = new StringWriter();
-    template.process(data, out);
+    definition.template.process(data, out);
     sb.append(out.toString());
     return sb.length() - length;
   }
 
-  private void addTransformationOffsets(TagNode tag, List<Pair<Integer, Integer>> offsets, int offset, Template template, int transformedNodeLength) throws IOException, TemplateException {
+  private void addTransformationOffsets(TagNode tag, List<Pair<Integer, Integer>> offsets, int offset, FreeMarkerTemplateDefinition template, int transformedNodeLength) throws IOException, TemplateException {
     // compute the offsets
     if (tag.hasClosingTag) {
       // case2) the tag does contain a body
@@ -248,13 +248,13 @@ public class FreeMarkerTransformer implements Transformer {
     offsets.add(new Pair<>(x, y));
   }
 
-  private int getBodyOffset(Template template, TagNode tag) throws IOException, TemplateException {
+  private int getBodyOffset(FreeMarkerTemplateDefinition definition, TagNode tag) throws IOException, TemplateException {
     Map<String, Object> data = new HashMap<>(3);
     data.put("body", BODY_MARKER);
     data.put("attributes", tag.attributes);
     data.put("attribute", tag.attribute);
     Writer out = new StringWriter();
-    template.process(data, out);
+    definition.template.process(data, out);
     return out.toString().indexOf(BODY_MARKER);
   }
 }

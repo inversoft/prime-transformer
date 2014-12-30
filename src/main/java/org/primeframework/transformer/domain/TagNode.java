@@ -64,7 +64,22 @@ public class TagNode extends BaseTagNode {
   public int nameEnd;
 
   public boolean transform;
+
+  /**
+   * These two boolean states indicate what was found when the BBCode was parsed, not necessarily what is required for a specific TagNode.<br>
+   * <p>
+   * Expected Variations of these two boolean states:
+   * <p>
+   * <ol>
+   * <li>Has closing tag and a body: <pre>[b]foo[/b]</pre></li>
+   * <li>Has closing tag and no body: <pre>[gameCard][/gameCard]</pre></li>
+   * <li>Has no closing tag and a body: <pre>[*]foo</pre></li>
+   * <li>Has no closing tag and no body: <pre>[:)]</pre> (emoticons)</li>
+   * </ol>
+   */
+
   public boolean hasClosingTag;
+  public boolean hasBody;
 
   public TagNode(Document document, int tagBegin) {
     this.document = document;
@@ -91,11 +106,6 @@ public class TagNode extends BaseTagNode {
 
   public String getName() {
     return document.getString(tagBegin + 1, nameEnd);
-  }
-
-  @Override
-  public int getNodeStart() {
-    return tagBegin;
   }
 
   @Override

@@ -26,9 +26,4 @@ public interface Node {
    * @return
    */
   String getRawString();
-
-  /**
-   * @return the index of the first character in this node
-   */
-  int getNodeStart();
 }

@@ -20,7 +20,26 @@ public abstract class BaseNode implements Node {
 
   public Document document;
 
+  /**
+   * Document source index of the beginning of this node.
+   * Example:
+   * <pre>
+   *   foo [b] bar [/b]
+   *       ^
+   *       4
+   * </pre>
+   */
   public int tagBegin;
+
+  /**
+   * Document source index of the end of this node.
+   * Example:
+   * <pre>
+   *   foo [b] bar [/b]
+   *                  ^
+   *                  16
+   * </pre>
+   */
   public int tagEnd;
 
   @Override

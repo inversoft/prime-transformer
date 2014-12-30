@@ -16,15 +16,6 @@
 
 package org.primeframework.transformer.service;
 
-import org.primeframework.transformer.domain.Document;
-import org.primeframework.transformer.domain.Node;
-import org.primeframework.transformer.domain.Pair;
-import org.primeframework.transformer.domain.ParserException;
-import org.primeframework.transformer.domain.TagNode;
-import org.primeframework.transformer.domain.TextNode;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.ArrayDeque;
 import java.util.Arrays;
 import java.util.Deque;
@@ -33,6 +24,15 @@ import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import org.primeframework.transformer.domain.Document;
+import org.primeframework.transformer.domain.Node;
+import org.primeframework.transformer.domain.Pair;
+import org.primeframework.transformer.domain.ParserException;
+import org.primeframework.transformer.domain.TagNode;
+import org.primeframework.transformer.domain.TextNode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * BBCode Parser Implementation.
@@ -64,7 +64,8 @@ public class BBCodeParser extends AbstractParser {
     Deque<TagNode> nodes = new ArrayDeque<>();
 
     try {
-      lrParser(document, nodes);
+//      lrParser(document, nodes);
+      fsmParser(document, nodes);
     } catch (ParserException e) {
       throw e;
     } catch (Exception e) {
@@ -88,6 +89,145 @@ public class BBCodeParser extends AbstractParser {
         throw new ParserException("Malformed markup. Missing closing tag for [" + node.getName() + "].");
       }
     }
+  }
+
+  private void fsmParser(Document document, Deque<TagNode> nodes) throws ParserException {
+
+
+    // abc[def
+    //    ^
+    // TextNode[abc[def]
+    // TextNode[  [def  ]
+
+    // [foo][dcf
+    // TagNode[foo]
+    //   |
+    //   --> TagNode[dcf
+    //   <--
+    //  TextNode[dcf]
+
+    // [b]foo[/b] abc[def
+    // TagNode[b] [foo]
+    // goodIndex = 10
+    //
+    // TextNode[ abc]
+    // goodIndex = 14
+
+    // abc[ def
+    // TextNode[abc] --> add to parent node
+    // TagNode
+    //      -> illegal state
+    //       ? previous node text?
+    //           --> Remove previous sibling from parent and make current node
+    //           --> Add borked text to current node
+    //       :
+    //           --> Create new TextNode with borked chraracters and make current
+    //           --> TextNode[[ def]
+    //
+    // char[] ca = new char[1024];
+    //
+    // foo[bar] = "Hello World";
+    //
+    // [noparse]abc[def[/noparse]
+    int index = 0;
+    State state = State.INITIAL;
+    while (index > document.source.length) {
+      switch (state) {
+        case INITIAL:
+          state = State.INITIAL.nextState(document.source[index]);
+          index++;
+          break;
+        case TAG_OPEN:
+          state = state.nextState(document.source[index]);
+          if (state == State.TEXT) {
+//            errorObserver.handleError(ErrorState.BAD_TAG, currentNode, index);
+//            fixIt();
+          }
+          break;
+        case TAG_NAME:
+          break;
+        case TAG_CLOSE:
+          break;
+        case TEXT:
+          break;
+        case END:
+          break;
+        default:
+          throw new IllegalStateException("Illegal parser state : " + state);
+      }
+    }
+
+  }
+
+  /**
+   * <pre>
+   *
+   *           ---------------< TAG_BODY <----------------
+   *           |                                         |
+   *           ------------------- < ---------------------
+   *           |                                         ^
+   *           |                                         |
+   *   INITIAL --> TAG_OPEN --> TAG_NAME --> TAG_CLOSE ---> END
+   *            \                                       /
+   *             \ -------------> TEXT --------------->/
+   * </pre>
+   */
+  private enum State {
+
+    INITIAL {
+      @Override
+      public State nextState(char c) {
+        if (c == '[') {
+          return TAG_OPEN;
+        } else {
+          return TEXT;
+        }
+      }
+    },
+    TAG_OPEN {
+      @Override
+      public State nextState(char c) {
+        // inside tag.
+        // if '/' then this is a closing tag ? (unless this is escaped?)
+        // if ']' then this tag is being closed ? Is this valid '[]'
+        return TEXT;
+      }
+    },
+    TAG_NAME {
+      @Override
+      public State nextState(char c) {
+        // if ' ' (space) attributes to follow
+        // if ']' then this tag is being closed
+        // else part of the name
+        return TEXT;
+      }
+    },
+    TAG_CLOSE {
+      @Override
+      public State nextState(char c) {
+        // if '[' then TAG_OPEN
+        // if end of source then END
+        // else TEXT
+        return TEXT;
+      }
+    },
+    TEXT {
+      @Override
+      public State nextState(char c) {
+        // if '[' then TAG_OPEN
+        // if end of source then END
+        // else TEXT
+        return TEXT;
+      }
+    },
+    END {
+      @Override
+      public State nextState(char c) {
+        return END;
+      }
+    };
+
+    public abstract State nextState(char c);
   }
 
   private void lrParser(Document document, Deque<TagNode> nodes) throws ParserException {
@@ -122,12 +262,11 @@ public class BBCodeParser extends AbstractParser {
         if (nodes.peek().getName().equalsIgnoreCase(tagName.substring(1))) {
           String thisTagName = nodes.peek().getName();
 
-          // Goodwill... poppin' tags... yeah!
-          TagNode popped = nodes.pop();
-          popped.bodyEnd = tagBegin;
-          popped.tagEnd = tagEnd;
+          TagNode tagNode = nodes.pop();
+          tagNode.bodyEnd = tagBegin;
+          tagNode.tagEnd = tagEnd;
 
-          addNodeToDocument(document, nodes, popped);
+          addNodeToDocument(document, nodes, tagNode);
 
           // End of an escaped tag, re-enable the transform flag
           if (ESCAPE_TAGS.contains(thisTagName)) {
