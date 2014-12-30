@@ -1,10 +1,11 @@
 <pre style="margin: 5px 15px 5px 15px; border: 1px dashed #2f6fab; font-family: monospace; padding: 3px 5px 3px 5px; background-color: #f9f9f9;">
 public void main(String[] args) {
-    System.out.println("Hello World!");
+    System.out.println(&quot;Hello World!&quot;);
 }
 </pre>
 <pre style="margin: 5px 15px 5px 15px; border: 1px dashed #2f6fab; font-family: monospace; padding: 3px 5px 3px 5px; background-color: #f9f9f9;">[b] bold text [/b]</pre>
-<pre style="margin: 5px 15px 5px 15px; border: 1px dashed #2f6fab; font-family: monospace; padding: 3px 5px 3px 5px; background-color: #f9f9f9;">String test = "test";</pre>
+<pre style="margin: 5px 15px 5px 15px; border: 1px dashed #2f6fab; font-family: monospace; padding: 3px 5px 3px 5px; background-color: #f9f9f9;">String test = &quot;test&quot;;</pre>
 <pre style="margin: 5px 15px 5px 15px; border: 1px dashed #2f6fab; font-family: monospace; padding: 3px 5px 3px 5px; background-color: #f9f9f9;">am.getProcessMemoryInfo(new int[]{mySinglePID }); // This one accepts arrays only</pre>
-<pre style="margin: 5px 15px 5px 15px; border: 1px dashed #2f6fab; font-family: monospace; padding: 3px 5px 3px 5px; background-color: #f9f9f9;">new <type>[] { <list of values>};</pre>
+<pre style="margin: 5px 15px 5px 15px; border: 1px dashed #2f6fab; font-family: monospace; padding: 3px 5px 3px 5px; background-color: #f9f9f9;">new &lt;type&gt;[] { &lt;list of values&gt;};</pre>
 <pre style="margin: 5px 15px 5px 15px; border: 1px dashed #2f6fab; font-family: monospace; padding: 3px 5px 3px 5px; background-color: #f9f9f9;">am.getProcessMemoryInfo([mySinglePID]);</pre>
+<pre style="margin: 5px 15px 5px 15px; border: 1px dashed #2f6fab; font-family: monospace; padding: 3px 5px 3px 5px; background-color: #f9f9f9;">&lt;script&gt; window.location.replace(&quot;http://foo.bar&quot;); &lt;/script&gt;</pre>

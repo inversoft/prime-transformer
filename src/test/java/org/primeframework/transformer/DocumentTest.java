@@ -43,7 +43,7 @@ public class DocumentTest {
     document.walk(TagNode.class, node -> assertFalse(node.transform));
 
     Transformer.TransformedResult transformedResult = new BBCodeToHTMLTransformer().init().transform(document);
-    assertEquals(transformedResult.result, "Hello [size=\"14\"][b]World!![/b][/size] Yo.");
+    assertEquals("Hello [size=&quot;14&quot;][b]World!![/b][/size] Yo.", transformedResult.result);
 
   }
 
@@ -65,7 +65,7 @@ public class DocumentTest {
     });
 
     Transformer.TransformedResult transformedResult = new BBCodeToHTMLTransformer().init().transform(document);
-    assertEquals(transformedResult.result, "Hello [size=\"14\"][b]World!![/b][/size] Yo.");
+    assertEquals("Hello [size=&quot;14&quot;][b]World!![/b][/size] Yo.", transformedResult.result);
   }
 
 }

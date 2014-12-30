@@ -144,6 +144,8 @@ public class BBCodeToHTMLTransformerSpec extends Specification {
       "<strong>bold</strong> No format. <strong>bold</strong> <strong>bold</strong>"                                          | "[B]bold[/B]No format.[b]bold[/B] [B]bold[/b]"
       "<em>italic</em> No format. <em>italic</em> <em>italic</em>"                                                            | "[I]italic[/I]No format.[i]italic[/I] [I]italic[/i]"
       "the <em>XY </em>Trainer"                                                                                               | "the [I]XY [/I]Trainer"
+      "<span style=\"font-family: times new roman\">Matthew(not 69) (175) </span>"                                            | "[font=times new roman]Matthew(not 69) (175) [/font]"
+      "<u>&lt;script&gt; var inject=true;&lt;/script&gt;</u>"                                                                 | "[u]<script> var inject=true;</script>[/u]"
 
   }
 
@@ -152,21 +154,20 @@ public class BBCodeToHTMLTransformerSpec extends Specification {
 
     expect: "when HTML transformer is called with bbcode properly formatted HTML is returned"
 
-      def bbcode = this.getClass().getResourceAsStream("/org/primeframework/transformer/bbcode/" + fileName).getText();
+      def bbCode = this.getClass().getResourceAsStream("/org/primeframework/transformer/bbcode/" + fileName).getText();
       def html = this.getClass().getResourceAsStream("/org/primeframework/transformer/html/" + fileName).getText();
 
-      def document = bbCodeParser.buildDocument(new DocumentSource(bbcode))
+      def document = bbCodeParser.buildDocument(new DocumentSource(bbCode))
       bbCodeToFreeMarkerTransformer.transform(document).result.replaceAll("<br>", "").replaceAll("\\s+", "") == html.replaceAll("\\s+", "")
 
     where:
-      fileName | _
-      "other"  | _
-      "code"   | _
-      "image"  | _
-      "size"   | _
-      "quote"  | _
-
-
+      fileName   | _
+      "other"    | _
+      "code"     | _
+      "image"    | _
+      "size"     | _
+      "quote"    | _
+      "customer" | _
   }
 
 }

@@ -48,6 +48,15 @@ public class FreeMarkerTransformer implements Transformer {
 
   private final static String BODY_MARKER = "xxx" + UUID.randomUUID() + "xxx";
 
+  /**
+   * This makes an assumption that the FreeMarker templates contain HTML. For now this is a safe assumption.
+   * <p>We don't want to allow something like
+   * <pre>
+   *   [b]&lt;script&gt; window.location.replace("http://foo.bar"); &lt;/script&gt;[/b]
+   * </pre></p>
+   */
+  private boolean escapeHtml = true;
+
   private boolean strict;
 
   private Map<String, Template> templates = new HashMap<>();
@@ -58,6 +67,19 @@ public class FreeMarkerTransformer implements Transformer {
    * @param templates
    */
   public FreeMarkerTransformer(Map<String, Template> templates) {
+    this.templates.putAll(templates);
+  }
+
+  /**
+   * Constructor takes the FreeMarker templates and strict mode.
+   *
+   * @param templates
+   * @param escapeHtml
+   * @param strict
+   */
+  public FreeMarkerTransformer(Map<String, Template> templates, boolean strict, boolean escapeHtml) {
+    this.escapeHtml = escapeHtml;
+    this.strict = strict;
     this.templates.putAll(templates);
   }
 
@@ -95,7 +117,8 @@ public class FreeMarkerTransformer implements Transformer {
     for (Node node : document.children) {
       offsets.addAll(transformNode(sb, node, transformPredicate));
     }
-    return new TransformedResult(sb.toString().trim(), offsets);  }
+    return new TransformedResult(sb.toString().trim(), offsets);
+  }
 
   private List<Pair<Integer, Integer>> transformNode(StringBuilder sb, Node node) throws TransformerException {
     return transformNode(sb, node, null);
@@ -112,14 +135,48 @@ public class FreeMarkerTransformer implements Transformer {
       if (transform) {
         doTransform(sb, offsets, tag);
       } else {
-        sb.append(tag.getRawString());
+        if (escapeHtml) {
+          String raw = tag.getRawString();
+          sb.append(escapeHtml(raw));
+        } else {
+          sb.append(tag.getRawString());
+        }
       }
     } else { // TextNode
       TextNode tag = (TextNode) node;
-      sb.append(tag.getBody());
+      if (escapeHtml) {
+        String body = tag.getBody();
+        sb.append(escapeHtml(body));
+      } else {
+        sb.append(tag.getBody());
+      }
     }
 
     return offsets;
+  }
+
+  private StringBuilder escapeHtml(String input) {
+
+    StringBuilder escaped = new StringBuilder(input.length() * 2);
+    for (int i = 0; i < input.length(); i++) {
+      switch (input.charAt(i)) {
+        case '&':
+          escaped.append("&amp;");
+          break;
+        case '<':
+          escaped.append("&lt;");
+          break;
+        case '>':
+          escaped.append("&gt;");
+          break;
+        case '"':
+          escaped.append("&quot;");
+          break;
+        default:
+          escaped.append(input.charAt(i));
+      }
+    }
+    return escaped;
   }
 
   private void doTransform(StringBuilder sb, List<Pair<Integer, Integer>> offsets, TagNode tag) throws TransformerException {

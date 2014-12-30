@@ -16,7 +16,7 @@
 
 savantVersion = "0.3.0"
 
-project(group: "org.primeframework", name: "prime-transformer", version: "1.0.8", licenses: ["ApacheV2_0"]) {
+project(group: "org.primeframework", name: "prime-transformer", version: "1.0.9", licenses: ["ApacheV2_0"]) {
 
   workflow {
     standard()
@@ -50,11 +50,11 @@ project(group: "org.primeframework", name: "prime-transformer", version: "1.0.8"
  */
 dependency = loadPlugin(id: "org.savantbuild.plugin:dependency:${savantVersion}")
 java = loadPlugin(id: "org.savantbuild.plugin:java:${savantVersion}")
-groovy = loadPlugin(id: "org.savantbuild.plugin:groovy:${savantVersion}")
+groovy = loadPlugin(id: "org.savantbuild.plugin:groovy:0.3.2-{integration}")
 javaTestNG = loadPlugin(id: "org.savantbuild.plugin:java-testng:${savantVersion}")
 idea = loadPlugin(id: "org.savantbuild.plugin:idea:${savantVersion}")
 release = loadPlugin(id: "org.savantbuild.plugin:release-git:${savantVersion}")
-spock = loadPlugin(id: "org.savantbuild.plugin:spock:0.1.1")
+spock = loadPlugin(id: "org.savantbuild.plugin:spock:0.1.2")
 
 /*
  * Plugin Settings
@@ -90,11 +90,11 @@ target(name: "jar", description: "JARs the project", dependsOn: ["compile"]) {
 
 target(name: "test", description: "Runs the project's tests", dependsOn: ["jar"]) {
   javaTestNG.test()
-//  spock.test()
+  spock.test()
 }
 
 target(name: "test-spock", description: "Runs the project's Spock specifications", dependsOn: ["jar"]) {
-//  spock.test()
+  spock.test()
 }
 
 target(name: "doc", description: "Generate the project's JavaDoc", dependsOn: ["jar"]) {

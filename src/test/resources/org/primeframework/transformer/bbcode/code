@@ -6,3 +6,4 @@
 [code]am.getProcessMemoryInfo(new int[]{mySinglePID }); // This one accepts arrays only[/code]
 [code]new <type>[] { <list of values>};[/code]
 [code]am.getProcessMemoryInfo([mySinglePID]);[/code]
+[code]<script> window.location.replace("http://foo.bar"); </script> [/code]
