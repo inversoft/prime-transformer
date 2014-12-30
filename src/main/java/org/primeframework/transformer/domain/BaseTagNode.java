@@ -25,8 +25,6 @@ import java.util.stream.Stream;
  * @author Daniel DeGroff
  */
 public abstract class BaseTagNode extends BaseNode {
-
-
   /**
    * Return the child nodes.
    *
@@ -35,8 +33,8 @@ public abstract class BaseTagNode extends BaseNode {
   public abstract List<Node> getChildren();
 
   /**
-   * Return a {@link List} of TextNode objects. A {@link TagNode} that is set to transform false
-   * will be returned in this list as a <code>TextNode</code>.
+   * Return a {@link List} of TextNode objects. A {@link TagNode} that is set to transform false will be returned in
+   * this list as a <code>TextNode</code>.
    *
    * @return
    */
@@ -82,7 +80,6 @@ public abstract class BaseTagNode extends BaseNode {
    * @return {@link Stream}
    */
   public <T> Stream<Node> walk(Class<T> consumerType, Consumer<? super T> action) {
-
     getChildren().forEach(n -> {
       if (consumerType.isAssignableFrom(n.getClass())) {
         action.accept((T) n);
@@ -103,5 +100,4 @@ public abstract class BaseTagNode extends BaseNode {
   public Stream<Node> walk(Consumer<? super Node> action) {
     return walk(Node.class, action);
   }
-
 }
