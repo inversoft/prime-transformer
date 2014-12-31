@@ -30,15 +30,16 @@ import org.primeframework.transformer.domain.TransformerRuntimeException;
 
 
 /**
- * BBCode to HTML Transformer. <p> This implementation utilizes the provided FreeMarker templates and does not require
- * the caller to provide their own. </p> <p>This a also means the caller has less control over the output. For more
- * control over the generated HTML, provide your own FreeMarker templates and use the {@link FreeMarkerTransformer}
- * class or by using the provided factory. </p>
+ * BBCode to HTML Transformer.
+ * <p>
+ * This implementation utilizes the provided FreeMarker templates and does not require the caller to provide their own.
+ * <p>
+ * This a also means the caller has less control over the output. For more control over the generated HTML, provide your
+ * own FreeMarker templates and use the {@link FreeMarkerTransformer} class or by using the provided factory.
  *
  * @author Daniel DeGroff
  */
 public class BBCodeToHTMLTransformer implements Transformer {
-
   private static final Map<String, FreeMarkerTemplateDefinition> DEFAULT_TEMPLATES = new HashMap<>();
 
   private boolean ready;
@@ -117,17 +118,17 @@ public class BBCodeToHTMLTransformer implements Transformer {
     return this;
   }
 
-  @Override
-  public TransformedResult transform(Document document) throws TransformerException {
-    return transform(document, null);
-  }
+//  @Override
+//  public String transform(Document document) throws TransformerException {
+//    return transform(document, null);
+//  }
 
   @Override
-  public TransformedResult transform(Document document, Predicate<TagNode> transformPredicate) throws TransformerException {
+  public String transform(Document document, Predicate<TagNode> transformPredicate, TransformFunction transformFunction) throws TransformerException {
     if (!ready) {
       throw new TransformerException("Transformer has not yet been initialized. Run init() prior to transform().");
     }
     transformer.setStrict(strict);
-    return transformer.transform(document, transformPredicate);
+    return transformer.transform(document, transformPredicate, null);
   }
 }

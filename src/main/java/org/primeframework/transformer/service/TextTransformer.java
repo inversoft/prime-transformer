@@ -13,14 +13,13 @@
  * either express or implied. See the License for the specific
  * language governing permissions and limitations under the License.
  */
-
 package org.primeframework.transformer.service;
+
+import java.util.function.Predicate;
 
 import org.primeframework.transformer.domain.Document;
 import org.primeframework.transformer.domain.TagNode;
 import org.primeframework.transformer.domain.TransformerException;
-
-import java.util.function.Predicate;
 
 /**
  * Text only Transformer implementation. The document source is stripped of all tags and only the text remains.
@@ -34,7 +33,6 @@ import java.util.function.Predicate;
  * @author Daniel DeGroff
  */
 public class TextTransformer implements Transformer {
-
   @Override
   public boolean isStrict() {
     return false;
@@ -45,19 +43,15 @@ public class TextTransformer implements Transformer {
     throw new UnsupportedOperationException(this.getClass().getSimpleName() + " does not support strict mode.");
   }
 
-  @Override
-  public TransformedResult transform(Document document) throws TransformerException {
+//  @Override
+//  public String transform(Document document) throws TransformerException {
+//  }
 
+  @Override
+  public String transform(Document document, Predicate<TagNode> transformPredicate, TransformFunction transformFunction) throws TransformerException {
     // Build the plain text version of the document
     StringBuilder sb = new StringBuilder();
     document.getChildTextNodes().stream().forEach(n -> sb.append(n.getBody()));
-
-    return new TransformedResult(sb.toString());
+    return sb.toString();
   }
-
-  @Override
-  public TransformedResult transform(Document document, Predicate<TagNode> transformPredicate) throws TransformerException {
-    throw new UnsupportedOperationException("The TextTransformer does not support taking a predicate on the transform() method.");
-  }
-
 }

@@ -25,7 +25,6 @@ import freemarker.template.Configuration;
 import freemarker.template.Template;
 import org.primeframework.transformer.domain.Document;
 import org.primeframework.transformer.domain.FreeMarkerTemplateDefinition;
-import org.primeframework.transformer.domain.TagNode;
 import org.primeframework.transformer.service.BBCodeParser;
 import org.primeframework.transformer.service.FreeMarkerTransformer;
 import org.primeframework.transformer.service.Parser;
@@ -52,7 +51,7 @@ public class FullTest {
     Transformer transformer = new FreeMarkerTransformer(templates);
     Document doc = parser.buildDocument("abc[b]bbb[/b]123");
 
-    ((TagNode) doc.children.stream().filter(node -> node instanceof TagNode).findFirst().get()).transform = false;
-    assertEquals(transformer.transform(doc).result, "abc[b]bbb[/b]123");
+//    ((TagNode) doc.children.stream().filter(node -> node instanceof TagNode).findFirst().get()).transform = false;
+    assertEquals(transformer.transform(doc, (node) -> false, null), "abc[b]bbb[/b]123");
   }
 }

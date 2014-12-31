@@ -111,15 +111,17 @@ public class TagNode extends BaseTagNode {
   @Override
   public String toString() {
     return "TagNode{" +
-       "attribute=" + attribute +
-       ",attributes={" +
-       String.join(", ", attributes.keySet().stream().map((attribute) -> attribute + ":" + attributes.get(attribute)).collect(Collectors.toList())) +
-       "}" +
-       ", children=[" +
-       String.join(", ", children.stream().map(Object::toString).collect(Collectors.toList())) +
-       "]" +
-       ", name=" + getName() +
-       ", hasClosingTag=" + hasClosingTag +
-       "}";
+        "attribute='" + attribute + '\'' +
+        ", tagBegin=" + tagBegin +
+        ", tagEnd=" + tagEnd +
+        ", bodyBegin=" + bodyBegin +
+        ", bodyEnd=" + bodyEnd +
+        ", nameEnd=" + nameEnd +
+        ", attributesBegin=" + attributesBegin +
+        ", attributes=" + attributes +
+        ", children=" + children +
+        ", transform=" + transform +
+        ", hasClosingTag=" + hasClosingTag +
+        '}';
   }
 }

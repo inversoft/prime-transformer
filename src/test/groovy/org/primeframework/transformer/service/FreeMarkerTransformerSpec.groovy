@@ -18,7 +18,7 @@ class FreeMarkerTransformerSpec extends Specification {
         public boolean test(TagNode tag) {
           return false;
         }
-      })
+      }, null)
 
     then: "the transformed result is not transformed"
        transformedResult.result == "[b]bold[/b]No format.[b]bold[/b]"

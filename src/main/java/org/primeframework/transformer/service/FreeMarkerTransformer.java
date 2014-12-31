@@ -19,18 +19,17 @@ package org.primeframework.transformer.service;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.function.Predicate;
 
+import freemarker.template.Template;
 import freemarker.template.TemplateException;
 import org.primeframework.transformer.domain.Document;
 import org.primeframework.transformer.domain.FreeMarkerTemplateDefinition;
 import org.primeframework.transformer.domain.Node;
-import org.primeframework.transformer.domain.Pair;
 import org.primeframework.transformer.domain.TagNode;
 import org.primeframework.transformer.domain.TextNode;
 import org.primeframework.transformer.domain.TransformerException;
@@ -43,17 +42,18 @@ import org.slf4j.LoggerFactory;
  * @author Daniel DeGroff
  */
 public class FreeMarkerTransformer implements Transformer {
-
   private final static Logger LOGGER = LoggerFactory.getLogger(FreeMarkerTransformer.class);
 
   private final static String BODY_MARKER = "xxx" + UUID.randomUUID() + "xxx";
 
   /**
    * This makes an assumption that the FreeMarker templates contain HTML. For now this is a safe assumption.
-   * <p>We don't want to allow something like
+   * <p>
+   * We don't want to allow something like
+   * <p>
    * <pre>
    *   [b]&lt;script&gt; window.location.replace("http://foo.bar"); &lt;/script&gt;[/b]
-   * </pre></p>
+   * </pre>
    */
   private boolean escapeHtml = true;
 
@@ -64,7 +64,7 @@ public class FreeMarkerTransformer implements Transformer {
   /**
    * Constructor takes the FreeMarker templates.
    *
-   * @param templates
+   * @param templates The FreeMarker templates used to do the transformation.
    */
   public FreeMarkerTransformer(Map<String, FreeMarkerTemplateDefinition> templates) {
     this.templates.putAll(templates);
@@ -73,9 +73,10 @@ public class FreeMarkerTransformer implements Transformer {
   /**
    * Constructor takes the FreeMarker templates and strict mode.
    *
-   * @param templates
-   * @param escapeHtml
-   * @param strict
+   * @param templates  The FreeMarker templates used to do the transformation.
+   * @param strict     Determines if the transformer is strict and throws exceptions if a FreeMarker template isn't
+   *                   found for a specific tag.
+   * @param escapeHtml Determines if the HTML inside text nodes and tag bodies is escaped.
    */
   public FreeMarkerTransformer(Map<String, FreeMarkerTemplateDefinition> templates, boolean strict, boolean escapeHtml) {
     this.escapeHtml = escapeHtml;
@@ -86,8 +87,9 @@ public class FreeMarkerTransformer implements Transformer {
   /**
    * Constructor takes the FreeMarker templates and strict mode.
    *
-   * @param templates
-   * @param strict
+   * @param templates The FreeMarker templates used to do the transformation.
+   * @param strict    Determines if the transformer is strict and throws exceptions if a FreeMarker template isn't found
+   *                  for a specific tag.
    */
   public FreeMarkerTransformer(Map<String, FreeMarkerTemplateDefinition> templates, boolean strict) {
     this.strict = strict;
@@ -105,147 +107,69 @@ public class FreeMarkerTransformer implements Transformer {
     return this;
   }
 
-  @Override
-  public TransformedResult transform(Document document) throws TransformerException {
-    return transform(document, null);
-  }
+//  @Override
+//  public String transform(Document document) throws TransformerException {
+//    return transform(document, null);
+//  }
 
   @Override
-  public TransformedResult transform(Document document, Predicate<TagNode> transformPredicate) throws TransformerException {
-    StringBuilder sb = new StringBuilder();
-    List<Pair<Integer, Integer>> offsets = new ArrayList<>();
-    for (Node node : document.children) {
-      offsets.addAll(transformNode(sb, node, transformPredicate));
-    }
-    return new TransformedResult(sb.toString().trim(), offsets);
+  public String transform(Document document, Predicate<TagNode> transformPredicate, TransformFunction transformFunction)
+      throws TransformerException {
+    Objects.requireNonNull(transformPredicate, "A transform predicate is required");
+    return recurse(document, transformPredicate, transformFunction);
   }
 
-  private List<Pair<Integer, Integer>> transformNode(StringBuilder sb, Node node) throws TransformerException {
-    return transformNode(sb, node, null);
-  }
+  private String recurse(Node node, Predicate<TagNode> transformPredicate, TransformFunction transformFunction)
+      throws TransformerException {
+    StringBuilder build = new StringBuilder();
+    if (node instanceof TextNode) {
+      TextNode textNode = (TextNode) node;
+      String text = textNode.getBody();
+      if (transformFunction != null) {
+        text = transformFunction.transform(textNode, text);
+      }
 
-  private List<Pair<Integer, Integer>> transformNode(StringBuilder sb, Node node, Predicate<TagNode> predicate) throws TransformerException {
+      build.append(text);
+    } else if (node instanceof Document) {
+      Document document = (Document) node;
+      for (Node child : document.children) {
+        build.append(recurse(child, transformPredicate, transformFunction));
+      }
+    } else if (node instanceof TagNode) {
+      StringBuilder childBuild = new StringBuilder();
+      TagNode tagNode = (TagNode) node;
+      for (Node child : tagNode.children) {
+        childBuild.append(recurse(child, transformPredicate, transformFunction));
+      }
 
-    List<Pair<Integer, Integer>> offsets = new ArrayList<>();
+      String tagName = tagNode.getName().toLowerCase();
+      if (templates.containsKey(tagName) && transformPredicate.test(tagNode)) {
+        Map<String, Object> data = new HashMap<>();
+        data.put("body", childBuild.toString());
+        data.put("attributes", tagNode.attributes);
+        data.put("attribute", tagNode.attribute);
 
-    if (node instanceof TagNode) {
-      TagNode tag = (TagNode) node;
-      // If tag is marked for transformation, apply the predicate if provided
-      boolean transform = tag.transform ? (predicate == null || predicate.test(tag)) : false;
-      if (transform) {
-        doTransform(sb, offsets, tag);
-      } else {
-        if (escapeHtml) {
-          String raw = tag.getRawString();
-          sb.append(escapeHtml(raw));
-        } else {
-          sb.append(tag.getRawString());
+        Template template = templates.get(tagName).template;
+        try {
+          Writer out = new StringWriter();
+          template.process(data, out);
+          String result = out.toString();
+          build.append(result);
+        } catch (Exception e) {
+          throw new TransformerException("FreeMarker processing failed for template " + template.getName() + "\n\t Data model: " + data, e);
         }
-      }
-    } else { // TextNode
-      TextNode tag = (TextNode) node;
-      if (escapeHtml) {
-        String body = tag.getBody();
-        sb.append(escapeHtml(body));
       } else {
-        sb.append(tag.getBody());
-      }
-    }
+        // If strict mode is enabled, throw an exception, else append the raw string from the node
+        if (strict) {
+          throw new TransformerException("No template found for tag [" + tagNode.getName() + "]");
+        }
 
-    return offsets;
-  }
-
-  private StringBuilder escapeHtml(String input) {
-
-    StringBuilder escaped = new StringBuilder(input.length() * 2);
-    for (int i = 0; i < input.length(); i++) {
-      switch (input.charAt(i)) {
-        case '&':
-          escaped.append("&amp;");
-          break;
-        case '<':
-          escaped.append("&lt;");
-          break;
-        case '>':
-          escaped.append("&gt;");
-          break;
-        case '"':
-          escaped.append("&quot;");
-          break;
-        default:
-          escaped.append(input.charAt(i));
-      }
-    }
-    return escaped;
-  }
-
-  private void doTransform(StringBuilder sb, List<Pair<Integer, Integer>> offsets, TagNode tag) throws TransformerException {
-
-    int offset = tag.tagBegin;
-    StringBuilder childSB = new StringBuilder();
-    for (Node child : tag.children) {
-      offsets.addAll(transformNode(childSB, child));
-    }
-
-    Map<String, Object> data = new HashMap<>(3);
-    data.put("body", childSB.toString());
-    data.put("attributes", tag.attributes);
-    data.put("attribute", tag.attribute);
-
-    String lowerCaseTagName = tag.getName().toLowerCase();
-    if (templates.containsKey(lowerCaseTagName)) {
-      FreeMarkerTemplateDefinition definition = templates.get(lowerCaseTagName);
-      try {
-        int transformedLength = appendTransformedNodeToBuilder(data, sb, definition);
-        addTransformationOffsets(tag, offsets, offset, definition, transformedLength);
-      } catch (Exception e) {
-        throw new TransformerException("FreeMarker processing failed for template " + definition.template.getName() + " \n\t Data model: " + data.get("body"), e);
+        build.append(tagNode.getRawString());
       }
     } else {
-      // If strict mode is enabled, throw an exception, else append the raw string from the node
-      if (strict) {
-        throw new TransformerException("No template found for tag [" + tag.getName() + "]");
-      }
-      sb.append(tag.getRawString());
+      throw new TransformerException("Invalid node class [" + node.getClass() + "]");
     }
-
-  }
-
-  /**
-   * Append the transformed node to the {@link StringBuilder} and return the length of the transformed node.
-   *
-   * @param data
-   * @param sb
-   * @param definition
-   * @return the length of the transformed node.
-   * @throws IOException
-   * @throws TemplateException
-   */
-  private int appendTransformedNodeToBuilder(Map<String, Object> data, StringBuilder sb, FreeMarkerTemplateDefinition definition) throws IOException, TemplateException {
-    int length = sb.length();
-    Writer out = new StringWriter();
-    definition.template.process(data, out);
-    sb.append(out.toString());
-    return sb.length() - length;
-  }
-
-  private void addTransformationOffsets(TagNode tag, List<Pair<Integer, Integer>> offsets, int offset, FreeMarkerTemplateDefinition template, int transformedNodeLength) throws IOException, TemplateException {
-    // compute the offsets
-    if (tag.hasClosingTag) {
-      // case2) the tag does contain a body
-      //      X = the index in the input string of the ${body}
-      //      Y = the index in the out string of the childSB
-      int x = tag.bodyBegin - tag.tagBegin + offset;
-      int y = getBodyOffset(template, tag);
-      if (y == -1) {
-        LOGGER.warn("Offsets are incorrect. Body offset could not be found.");
-      }
-      offsets.add(new Pair<>(x, y - x + offset));  // for the portion after the opening tag
-    }
-    int x = tag.tagEnd;
-    int cumulativeOffsets = offsets.stream().mapToInt(p -> p.second > 0 ? p.second : 0).sum();
-    int y = tag.hasClosingTag ? transformedNodeLength - (tag.tagEnd - tag.tagBegin) - cumulativeOffsets : 0;
-    offsets.add(new Pair<>(x, y));
+    return build.toString();
   }
 
   private int getBodyOffset(FreeMarkerTemplateDefinition definition, TagNode tag) throws IOException, TemplateException {
