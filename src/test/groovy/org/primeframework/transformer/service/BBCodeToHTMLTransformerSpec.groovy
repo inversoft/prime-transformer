@@ -19,6 +19,7 @@ package org.primeframework.transformer.service
 import org.primeframework.transformer.domain.Document
 import org.primeframework.transformer.domain.ParserException
 import org.primeframework.transformer.domain.TagNode
+import org.primeframework.transformer.domain.TextNode
 import org.primeframework.transformer.domain.TransformerException
 import spock.lang.Shared
 import spock.lang.Specification
@@ -111,11 +112,19 @@ public class BBCodeToHTMLTransformerSpec extends Specification {
     when: "A BBCode string with a missing closing tag is parsed"
       def document = bbCodeParser.buildDocument("[b]Testing");
 
-    then: "a parse exception is thrown"
-      thrown ParserException
+    then: "a parse exception is not thrown"
+      notThrown ParserException
 
-    and: "document is null"
-      document == null
+    and: "document is not null"
+      document != null
+
+    and: "a single text node should exist in the document"
+      document.children.size() == 1
+      document.children.get(0) instanceof TextNode
+      def text = (TextNode) document.children.get(0)
+      text.tagBegin == 0
+      text.tagEnd == 10
+      text.getBody() == "[b]Testing"
 
   }
 
