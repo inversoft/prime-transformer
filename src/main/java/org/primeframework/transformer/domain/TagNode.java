@@ -21,7 +21,6 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * The <code>TagNode</code> holds index values to the document source to outline the start and end of the tag and the
@@ -97,6 +96,11 @@ public class TagNode extends BaseTagNode {
     this.attribute = attribute;
     this.attributes = attributes;
     this.transform = true;
+  }
+
+  @Override
+  public boolean addChild(Node node) {
+    return children.add(node);
   }
 
   @Override

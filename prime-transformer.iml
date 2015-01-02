@@ -40,28 +40,6 @@
     <orderEntry type="module-library" scope="TEST">
       <library>
         <CLASSES>
-          <root url="jar://$USER_HOME$/.savant/cache/org/testng/testng/6.8.7/testng-6.8.7.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES>
-          <root url="jar://$USER_HOME$/.savant/cache/org/testng/testng/6.8.7/testng-6.8.7-src.jar!/" />
-        </SOURCES>
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library" scope="TEST">
-      <library>
-        <CLASSES>
-          <root url="jar://$USER_HOME$/.savant/cache/com/beust/jcommander/1.27.0/jcommander-1.27.0.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES>
-          <root url="jar://$USER_HOME$/.savant/cache/com/beust/jcommander/1.27.0/jcommander-1.27.0-src.jar!/" />
-        </SOURCES>
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library" scope="TEST">
-      <library>
-        <CLASSES>
           <root url="jar://$USER_HOME$/.savant/cache/org/spockframework/spock-core/0.7.0+groovy2.0/spock-core-0.7.0+groovy2.0.jar!/" />
         </CLASSES>
         <JAVADOC />
@@ -92,6 +70,29 @@
         </SOURCES>
       </library>
     </orderEntry>
+    <orderEntry type="module-library" scope="TEST">
+      <library>
+        <CLASSES>
+          <root url="jar://$USER_HOME$/.savant/cache/org/testng/testng/6.8.7/testng-6.8.7.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES>
+          <root url="jar://$USER_HOME$/.savant/cache/org/testng/testng/6.8.7/testng-6.8.7-src.jar!/" />
+        </SOURCES>
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library" scope="TEST">
+      <library>
+        <CLASSES>
+          <root url="jar://$USER_HOME$/.savant/cache/com/beust/jcommander/1.27.0/jcommander-1.27.0.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES>
+          <root url="jar://$USER_HOME$/.savant/cache/com/beust/jcommander/1.27.0/jcommander-1.27.0-src.jar!/" />
+        </SOURCES>
+      </library>
+    </orderEntry>
     <orderEntry type="library" name="Groovy 2.2" level="application" />
+    <orderEntry type="library" name="groovy-2.2.2" level="application" />
   </component>
 </module>

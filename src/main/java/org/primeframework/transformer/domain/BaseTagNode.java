@@ -32,6 +32,8 @@ public abstract class BaseTagNode extends BaseNode {
    */
   public abstract List<Node> getChildren();
 
+  public abstract boolean addChild(Node node);
+
   /**
    * Return a {@link List} of TextNode objects. A {@link TagNode} that is set to transform false will be returned in
    * this list as a <code>TextNode</code>.

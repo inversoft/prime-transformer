@@ -73,7 +73,7 @@ public class BBCodeParser extends AbstractParser {
       document.children.add(new TextNode(document, 0, document.source.length));
     }
 
-    checkForUnclosedTags(nodes);
+//    checkForUnclosedTags(nodes);
     return document;
   }
 
@@ -84,7 +84,7 @@ public class BBCodeParser extends AbstractParser {
       // Currently only the [*] does not require a closing tag
       if (NO_CLOSING_TAG.contains(node.getName())) {
         throw new ParserException("Missing enclosing tag for [" + node.getName() + "] at index " + node.tagBegin + ". This tag does not require a " +
-           "closing tag itself but must be contained within another tag. \n\t For example, the [*] tag must be contained within a [list] or [ol] tag.");
+            "closing tag itself but must be contained within another tag. \n\t For example, the [*] tag must be contained within a [list] or [ol] tag.");
       } else {
         throw new ParserException("Malformed markup. Missing closing tag for [" + node.getName() + "].");
       }
@@ -129,101 +129,234 @@ public class BBCodeParser extends AbstractParser {
     // foo[bar] = "Hello World";
     //
     // [noparse]abc[def[/noparse]
+
+
     int index = 0;
-    State state = State.INITIAL;
-    while (index > document.source.length) {
+    State state = State.initial;
+    TextNode textNode = null;
+    char[] source = document.source;
+
+    while (index < source.length) {
       switch (state) {
-        case INITIAL:
-          state = State.INITIAL.nextState(document.source[index]);
+
+        case initial:
+          state = state.nextState(source[index]);
           index++;
           break;
-        case TAG_OPEN:
-          state = state.nextState(document.source[index]);
-          if (state == State.TEXT) {
+
+        case tagBegin:
+          state = state.nextState(source[index]);
+          if (state == State.closingTagBegin) {
+            // Expecting a tagNode, set bodyEnd
+            nodes.peek().bodyEnd = index - 1;
+          } else if (state == State.tagName) {
+            // Start of a new tag
+            nodes.push(new TagNode(document, index - 1));
+          } else if (state == State.text) {
 //            errorObserver.handleError(ErrorState.BAD_TAG, currentNode, index);
 //            fixIt();
           }
+          index++;
           break;
-        case TAG_NAME:
+
+        case tagName:
+          state = state.nextState(source[index]);
+          if (state != State.tagName) {
+            nodes.peek().nameEnd = index;
+          }
+          // TODO identify the state transition to attributes.
+          index++;
           break;
-        case TAG_CLOSE:
+
+        case openingTagEnd:
+          state = state.nextState(source[index]);
+          // Set initial tagEnd to bodyBegin, if a closing tag exists this will be set again
+          nodes.peek().tagEnd = index;
+          nodes.peek().bodyBegin = index;
+          index++;
           break;
-        case TEXT:
+
+        case closingTagBegin:
+          state = state.nextState(source[index]);
+          index++;
           break;
-        case END:
+
+        case closingTagName:
+          state = state.nextState(source[index]);
+          index++;
+
+          if (state == State.closingTagEnd) {
+            // Close out this tag and add to the document
+            TagNode tagNode = nodes.pop();
+            tagNode.tagEnd = index;
+            addNode(document, nodes, tagNode);
+          }
           break;
+
+        case closingTagEnd:
+          state = state.nextState(source[index]);
+          index++;
+          break;
+
+        case text:
+          state = state.nextState(source[index]);
+          if (textNode == null) {
+            // Start a new text node
+            textNode = new TextNode(document, index - 1, index);
+          }
+          if (state != State.text) {
+            // Close out this text node
+            textNode.tagEnd = index;
+            addNode(document, nodes, textNode);
+            textNode = null;
+          }
+          index++;
+          break;
+
         default:
           throw new IllegalStateException("Illegal parser state : " + state);
       }
     }
-
   }
 
   /**
+   * Finite States of this parser. Each defined state has one or more state transitions based upon the character at the
+   * current index.
    * <pre>
    *
-   *           ---------------< TAG_BODY <----------------
-   *           |                                         |
-   *           ------------------- < ---------------------
-   *           |                                         ^
-   *           |                                         |
-   *   INITIAL --> TAG_OPEN --> TAG_NAME --> TAG_CLOSE ---> END
-   *            \                                       /
-   *             \ -------------> TEXT --------------->/
+   *          ---------------< tagBody <----------------
+   *          |                                         |
+   *          ------------------- < ---------------------
+   *          |                                         ^
+   *           \                                        |
+   *   initial --> tagBegin --> tagName --> openingTagEnd --->
+   *             \                                       /
+   *              \ -------------> text --------------->/
+   *               \        ^                          |
+   *                 \      |                          |
+   *                  \- < ---------- < ---------------
+   *
    * </pre>
    */
   private enum State {
 
-    INITIAL {
+    /**
+     * Initial state of the parser.
+     */
+    initial {
       @Override
       public State nextState(char c) {
         if (c == '[') {
-          return TAG_OPEN;
+          return tagBegin;
         } else {
-          return TEXT;
+          return text;
         }
       }
     },
-    TAG_OPEN {
+
+    /**
+     * An opening tag character was found: '<code>[</code>' <br> <p>This state does not imply an opening or a closing
+     * tag, the subsequent character will identify if this is an opening or closing tag.</p>
+     */
+    tagBegin {
       @Override
       public State nextState(char c) {
-        // inside tag.
-        // if '/' then this is a closing tag ? (unless this is escaped?)
-        // if ']' then this tag is being closed ? Is this valid '[]'
-        return TEXT;
+        if (c == '/') {
+          return closingTagBegin;
+        } else {
+          return tagName;
+        }
       }
     },
-    TAG_NAME {
+
+    tagName {
       @Override
       public State nextState(char c) {
-        // if ' ' (space) attributes to follow
-        // if ']' then this tag is being closed
-        // else part of the name
-        return TEXT;
+        if (c == '=') {
+          return simpleAttribute;
+        } else if (c == ']') {
+          return openingTagEnd;
+        } else {
+          return tagName;
+        }
       }
     },
-    TAG_CLOSE {
+
+    simpleAttribute {
       @Override
       public State nextState(char c) {
-        // if '[' then TAG_OPEN
-        // if end of source then END
-        // else TEXT
-        return TEXT;
+        if (c == ']') {
+          return openingTagEnd;
+        } else {
+          return simpleAttribute;
+        }
       }
     },
-    TEXT {
+
+    openingTagEnd {
       @Override
       public State nextState(char c) {
-        // if '[' then TAG_OPEN
-        // if end of source then END
-        // else TEXT
-        return TEXT;
+        if (c == '[') {
+          return tagBegin;
+        } else {
+          return text;
+        }
       }
     },
-    END {
+
+    closingTagBegin {
       @Override
       public State nextState(char c) {
-        return END;
+        if (c == ']') {
+          // TODO Error condition - no name of closing tag
+          return closingTagEnd;
+        } else {
+          return closingTagName;
+        }
+      }
+    },
+
+    closingTagName {
+      @Override
+      public State nextState(char c) {
+        if (c == ']') {
+          return closingTagEnd;
+        } else {
+          return closingTagName;
+        }
+      }
+    },
+
+    closingTagEnd {
+      @Override
+      public State nextState(char c) {
+        if (c == '[') {
+          return tagBegin;
+        } else {
+          return text;
+        }
+      }
+    },
+
+    tagBody {
+      @Override
+      public State nextState(char c) {
+        if (c == '[') {
+          return tagBegin;
+        } else {
+          return tagBody;
+        }
+      }
+    },
+
+    text {
+      @Override
+      public State nextState(char c) {
+        if (c == '[') {
+          return tagBegin;
+        } else {
+          return text;
+        }
       }
     };
 
@@ -247,7 +380,7 @@ public class BBCodeParser extends AbstractParser {
         if (!transform) {
           tagBegin = getTagBeginOfCurrentNode(document, nodes, sourceLength, tagBegin);
         }
-        addNodeToDocument(document, nodes, new TextNode(document, sourceIndex, tagBegin));
+        addNode(document, nodes, new TextNode(document, sourceIndex, tagBegin));
       }
 
       int tagEnd = indexOfOpeningTagCloseCharacter(document, tagBegin, sourceLength, nodes) + 1;
@@ -266,7 +399,7 @@ public class BBCodeParser extends AbstractParser {
           tagNode.bodyEnd = tagBegin;
           tagNode.tagEnd = tagEnd;
 
-          addNodeToDocument(document, nodes, tagNode);
+          addNode(document, nodes, tagNode);
 
           // End of an escaped tag, re-enable the transform flag
           if (ESCAPE_TAGS.contains(thisTagName)) {
@@ -279,7 +412,7 @@ public class BBCodeParser extends AbstractParser {
           } else {
             // Expected a closing tag, one was not found.
             throw new ParserException("Malformed BBCode. A closing tag was expected but not found for tag [" + nodes.peek().getName()
-               + "] starting at index " + nodes.peek().tagBegin + ".");
+                + "] starting at index " + nodes.peek().tagBegin + ".");
           }
         }
 
@@ -334,7 +467,8 @@ public class BBCodeParser extends AbstractParser {
   }
 
   /**
-   * Called when transform is set to false. Returns the beginning index of the tag which is currently on the nodes stack.
+   * Called when transform is set to false. Returns the beginning index of the tag which is currently on the nodes
+   * stack.
    *
    * @param document
    * @param nodes
@@ -343,7 +477,8 @@ public class BBCodeParser extends AbstractParser {
    * @return
    * @throws ParserException
    */
-  private int getTagBeginOfCurrentNode(Document document, Deque<TagNode> nodes, int sourceLength, int tagBegin) throws ParserException {
+  private int getTagBeginOfCurrentNode(Document document, Deque<TagNode> nodes, int sourceLength, int tagBegin)
+      throws ParserException {
     // When transform is false, find closing tag and treat the body as text.
     int tempTagBegin = tagBegin;
     int tempTagEnd = indexOfOpeningTagCloseCharacter(document, tempTagBegin, sourceLength, nodes) + 1;
@@ -380,26 +515,28 @@ public class BBCodeParser extends AbstractParser {
     }
     parent.bodyEnd = tagBegin;
     parent.tagEnd = tagEnd;
-    addNodeToDocument(document, nodes, parent);
+    addNode(document, nodes, parent);
   }
 
   /**
-   * Add the provided node to node on the top of the stack if it isn't closed out yet, otherwise add it directly to the document as a top level node.
+   * Add the provided node to node on the top of the stack if it isn't closed out yet, otherwise add it directly to the
+   * document as a top level node.
    *
    * @param document
    * @param nodes
    * @param node
    */
-  private void addNodeToDocument(Document document, Deque<TagNode> nodes, Node node) {
+  private void addNode(Document document, Deque<TagNode> nodes, Node node) {
 
     if (nodes.isEmpty()) {
-      document.children.add(node);
+      document.addChild(node);
     } else {
-      nodes.peek().children.add(node);
+      nodes.peek().addChild(node);
     }
 
     if (node instanceof TagNode) {
-      addOpenAndClosingTagOffset(document, (TagNode) node);
+// uncomment if switching back to lrParser
+//      addOpenAndClosingTagOffset(document, (TagNode) node);
     }
   }
 

@@ -33,8 +33,8 @@ public class Document extends BaseTagNode {
   public char[] source;
 
   /**
-   * Set of offsets, first value is the beginning of the tag, the second value is the length. With these
-   * values the original string can be reconstructed.
+   * Set of offsets, first value is the beginning of the tag, the second value is the length. With these values the
+   * original string can be reconstructed.
    * <p>
    * <pre>
    * Example:
@@ -68,6 +68,11 @@ public class Document extends BaseTagNode {
   }
 
   @Override
+  public boolean addChild(Node node) {
+    return children.add(node);
+  }
+
+  @Override
   public List<Node> getChildren() {
     return children;
   }
@@ -79,15 +84,15 @@ public class Document extends BaseTagNode {
   @Override
   public String toString() {
     return "Document{" +
-       "children=[" +
-       String.join(", ", children.stream().map(Object::toString).collect(Collectors.toList())) +
-       "]" +
-       ", offsets=[" +
-       String.join(", ", offsets.stream().map(o -> o.first + ":" + o.second).collect(Collectors.toList())) +
-       "]" +
-       ", attributeOffsets=[" +
-       String.join(", ", attributeOffsets.stream().map(o -> o.first + ":" + o.second).collect(Collectors.toList())) +
-       "]" +
-       "}";
+        "children=[" +
+        String.join(", ", children.stream().map(Object::toString).collect(Collectors.toList())) +
+        "]" +
+        ", offsets=[" +
+        String.join(", ", offsets.stream().map(o -> o.first + ":" + o.second).collect(Collectors.toList())) +
+        "]" +
+        ", attributeOffsets=[" +
+        String.join(", ", attributeOffsets.stream().map(o -> o.first + ":" + o.second).collect(Collectors.toList())) +
+        "]" +
+        "}";
   }
 }

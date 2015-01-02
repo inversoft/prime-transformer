@@ -17,11 +17,27 @@
 package org.primeframework.transformer.service
 import org.primeframework.transformer.domain.Pair
 import org.primeframework.transformer.domain.ParserException
+import org.primeframework.transformer.domain.TagNode
+import org.primeframework.transformer.domain.TextNode
+import spock.lang.Shared
 import spock.lang.Specification
+
+import java.util.function.Predicate
 
 public class BBCodeParserSpec extends Specification {
 
-  def "Build a new document using BBCode"() {
+  /**
+   * Shame I can't use lambdas until Groovy v3. :-(
+   */
+  @Shared
+  def transformPredicate = new Predicate<TagNode>() {
+    @Override
+    public boolean test(TagNode tag) {
+      return true;
+    }
+  }
+
+  def "Build a new document using BBCode - 1 Tag"() {
 
     when: "A document is constructed"
       def source = "[b]Text[/b]"
@@ -35,28 +51,134 @@ public class BBCodeParserSpec extends Specification {
     and: "result should not be null"
       document != null
 
-    and: "offsets to tags should be correct"
-      document.offsets == [new Pair<>(0, 3), new Pair<>(7, 4)] as TreeSet
+    and:
+      document.children.size() == 1
+      ((TagNode) document.children.get(0)).children.size() == 1
+
+
+//    and: "offsets to tags should be correct"
+//      document.offsets == [new Pair<>(0, 3), new Pair<>(7, 4)] as TreeSet
+  }
+
+  def "Build a new document using BBCode - Two Tags"() {
+
+    when: "A document is constructed"
+    def source = "[b]Bold[/b][i]Italic[/i]"
+    /*            ^      ^      */
+    /*            0,3    7,4    */
+    def document = new BBCodeParser().buildDocument(source)
+
+    then: "no exceptions thrown"
+    notThrown Exception
+
+    and: "result should not be null"
+    document != null
+
+    and:
+    document.children.size() == 2
+    ((TagNode) document.children.get(0)).children.size() == 1
+    ((TagNode) document.children.get(1)).children.size() == 1
+
+
+//    and: "offsets to tags should be correct"
+//      document.offsets == [new Pair<>(0, 3), new Pair<>(7, 4)] as TreeSet
+  }
+
+  def "Build a new document using BBCode - 1 Tag with nested Tag"() {
+
+    when: "A document is constructed"
+    def source = "[b][i]Italic[/i][/b]"
+    /*            ^      ^      */
+    /*            0,3    7,4    */
+    def document = new BBCodeParser().buildDocument(source)
+
+    then: "no exceptions thrown"
+      notThrown Exception
+
+    and: "result should not be null"
+      document != null
+
+    and: "only a single child node should exist on the document"
+      document.children.size() == 1
+
+    and: "the first child should be a bold tag with a single child with correct name and offsets"
+      def bold = (TagNode) document.children.get(0)
+
+      bold.tagBegin == 0
+      bold.nameEnd == 2
+      bold.bodyBegin == 3
+      bold.bodyEnd == 16
+      bold.tagEnd == 20
+
+      bold.getName() == "b"
+      bold.children.size() == 1
+
+    and: "the bold child node should be italic with a single text node, correct offsets and name"
+      def italic = (TagNode) bold.children.get(0)
+
+      italic.tagBegin == 3
+      italic.nameEnd == 5
+      italic.bodyBegin == 6
+      italic.bodyEnd == 12
+      italic.tagEnd == 16
+
+      italic.getName() == "i"
+      italic.children.size() == 1
+
+      italic.children.get(0) instanceof TextNode
+      def text = (TextNode) italic.children.get(0)
+      text.getBody() == "Italic"
+
+//    and: "offsets to tags should be correct"
+//      document.offsets == [new Pair<>(0, 3), new Pair<>(7, 4)] as TreeSet
   }
 
   def "Build a new document using BBCode with uppercase tags"() {
 
     when: "A document is constructed"
       def source = "[B]Text[/B]"
-      def transFormResult = new BBCodeToHTMLTransformer().init().transform(new BBCodeParser().buildDocument(source))
+      def document = new BBCodeParser().buildDocument(source)
+      def result = new BBCodeToHTMLTransformer().init().transform(document, transformPredicate, null)
 
-    then: "the document is transformed properly"
-      transFormResult.result == "<strong>Text</strong>"
+    then: "basic offsets are correct"
+      def tag = document.childTagNodes.get(0)
+      tag.tagBegin == 0
+      tag.nameEnd == 2
+      tag.bodyBegin == 3
+      tag.bodyEnd == 7
+      tag.tagEnd == 11
+
+    and: "the document is transformed properly"
+      result == "<strong>Text</strong>"
   }
 
-  def "Build a new document using BBCode with mixed case tags"() {
+  def "Build a new document using BBCode with two tags and mixed case"() {
 
     when: "A document is constructed"
-      def source = "[b]Text[/B] [I]world[/i]"
-      def transFormResult = new BBCodeToHTMLTransformer().init().transform(new BBCodeParser().buildDocument(source))
+      def source = "[b]Hello[/B] [I]World[/i]"
+      def document = new BBCodeParser().buildDocument(source)
 
-    then: "the document is transformed properly"
-      transFormResult.result == "<strong>Text</strong> <em>world</em>"
+    then: "number of nodes is correct"
+      document.children.size() == 3
+
+    then: "basic offsets are correct"
+      def bold = document.childTagNodes.get(0)
+      bold.tagBegin == 0
+      bold.nameEnd == 2
+      bold.bodyBegin == 3
+      bold.bodyEnd == 8
+      bold.tagEnd == 12
+
+      def italic = document.childTagNodes.get(1)
+      italic.tagBegin == 13
+      italic.nameEnd == 15
+      italic.bodyBegin == 16
+      italic.bodyEnd == 21
+      italic.tagEnd == 25
+
+    and: "the document is transformed properly"
+      def result = new BBCodeToHTMLTransformer().init().transform(document, transformPredicate, null)
+      result == "<strong>Hello</strong> <em>World</em>"
   }
 
   def "Build a new document using BBCode in a char array"() {
