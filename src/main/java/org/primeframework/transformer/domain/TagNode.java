@@ -115,7 +115,8 @@ public class TagNode extends BaseTagNode {
   @Override
   public String toString() {
     return "TagNode{" +
-        "attribute='" + attribute + '\'' +
+        "name=" + getName() +
+        ", attribute='" + attribute + "'" +
         ", tagBegin=" + tagBegin +
         ", tagEnd=" + tagEnd +
         ", bodyBegin=" + bodyBegin +

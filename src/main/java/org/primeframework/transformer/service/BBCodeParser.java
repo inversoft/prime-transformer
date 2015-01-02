@@ -146,11 +146,11 @@ public class BBCodeParser extends AbstractParser {
 
         case tagBegin:
           state = state.nextState(source[index]);
+          handleExpectedUnclosedTag(document, nodes, index);
           if (state == State.closingTagBegin) {
             // Expecting a tagNode, set bodyEnd
             nodes.peek().bodyEnd = index - 1;
           } else if (state == State.tagName) {
-            // Start of a new tag
             nodes.push(new TagNode(document, index - 1));
           } else if (state == State.text) {
 //            errorObserver.handleError(ErrorState.BAD_TAG, currentNode, index);
@@ -186,10 +186,7 @@ public class BBCodeParser extends AbstractParser {
           index++;
 
           if (state == State.closingTagEnd) {
-            // Close out this tag and add to the document
-            TagNode tagNode = nodes.pop();
-            tagNode.tagEnd = index;
-            addNode(document, nodes, tagNode);
+            handleCompletedTagNode(document, nodes, index);
           }
           break;
 
@@ -198,10 +195,14 @@ public class BBCodeParser extends AbstractParser {
           index++;
           break;
 
+        case simpleAttribute:
+          state = state.nextState(source[index]);
+          index++;
+          break;
+
         case text:
           state = state.nextState(source[index]);
           if (textNode == null) {
-            // Start a new text node
             textNode = new TextNode(document, index - 1, index);
           }
           if (state != State.text) {
@@ -215,6 +216,26 @@ public class BBCodeParser extends AbstractParser {
 
         default:
           throw new IllegalStateException("Illegal parser state : " + state);
+      }
+    }
+  }
+
+  private void handleCompletedTagNode(Document document, Deque<TagNode> nodes, int index) {
+    TagNode tagNode = nodes.pop();
+    tagNode.tagEnd = index;
+    tagNode.hasClosingTag = true;
+    addNode(document, nodes, tagNode);
+  }
+
+  private void handleExpectedUnclosedTag(Document document, Deque<TagNode> nodes, int index) {
+    // check for tags that don't require a closing tag
+    if (!nodes.isEmpty()) {
+      if (NO_CLOSING_TAG.contains(nodes.peek().getName())) {
+        TagNode tagNode = nodes.pop();
+        tagNode.bodyEnd = index - 1;
+        tagNode.tagEnd = index - 1;
+        tagNode.hasClosingTag = false;
+        addNode(document, nodes, tagNode);
       }
     }
   }
@@ -535,8 +556,7 @@ public class BBCodeParser extends AbstractParser {
     }
 
     if (node instanceof TagNode) {
-// uncomment if switching back to lrParser
-//      addOpenAndClosingTagOffset(document, (TagNode) node);
+      addOpenAndClosingTagOffset(document, (TagNode) node);
     }
   }
 
