@@ -206,8 +206,10 @@ public class BBCodeParserSpec extends Specification {
     then: "offsets to tags should be correct"
       document.offsets == [new Pair<>(0, 29), new Pair<>(50, 6)] as TreeSet
 
-//    and: "attribute offsets should be correct"
-//      document.attributeOffsets == [new Pair<>(6, 21)] as TreeSet
+    and: "attribute and the offsets should be correct"
+      document.attributeOffsets == [new Pair<>(6, 21)] as TreeSet
+      def url = (TagNode) document.children.get(0)
+      url.attribute == "http://www.google.com"
   }
 
 
@@ -350,8 +352,8 @@ public class BBCodeParserSpec extends Specification {
     then:
       document.offsets == [new Pair<>(0, 12), new Pair<>(16, 8)] as TreeSet
 
-//    and: "attribute offsets should be correct"
-//      document.attributeOffsets == [new Pair<>(7, 4)] as TreeSet
+    and: "attribute offsets should be correct"
+      document.attributeOffsets == [new Pair<>(7, 4)] as TreeSet
 
   }
 
@@ -417,7 +419,7 @@ public class BBCodeParserSpec extends Specification {
     then:
       document.offsets == [new Pair<>(0, 6), new Pair<>(6, 3), new Pair<>(14, 3), new Pair<>(22, 7)] as TreeSet
 
-//    and: "attribute offsets should be correct"
-//      document.attributeOffsets == [] as TreeSet
+    and: "attribute offsets should be correct"
+      document.attributeOffsets == [] as TreeSet
   }
 }

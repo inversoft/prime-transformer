@@ -135,6 +135,7 @@ public class BBCodeParser extends AbstractParser {
     int index = 0;
     State state = State.initial;
     TextNode textNode = null;
+    TagNode current = null;
     char[] source = document.source;
 
     while (index <= source.length) {
@@ -169,15 +170,15 @@ public class BBCodeParser extends AbstractParser {
           if (state != State.tagName) {
             nodes.peek().nameEnd = index;
           }
-          // TODO identify the state transition to attributes.
           index++;
           break;
 
         case openingTagEnd:
           state = state.nextState(source[index]);
           // Set initial tagEnd to bodyBegin, if a closing tag exists this will be set again
-          nodes.peek().tagEnd = index;
-          nodes.peek().bodyBegin = index;
+          current = nodes.peek();
+          current.tagEnd = index;
+          current.bodyBegin = index;
           index++;
           break;
 
@@ -205,9 +206,31 @@ public class BBCodeParser extends AbstractParser {
           index++;
           break;
 
+        case complexAttribute:
+          state = state.nextState(source[index]);
+          index++;
+          break;
+
         case simpleAttribute:
           state = state.nextState(source[index]);
-          // TODO Handle attribute offsets and parse them to add to the node.
+          if (state == State.simpleAttributeBody) {
+            nodes.peek().attributesBegin = index;
+          }
+          index++;
+          break;
+
+        case simpleAttributeBody:
+          state = state.nextState(source[index]);
+          if (state != State.simpleAttributeBody) {
+            current = nodes.peek();
+            document.attributeOffsets.add(new Pair<>(current.attributesBegin, index - current.attributesBegin));
+            current.attribute = document.getString(current.attributesBegin, index);
+          }
+          index++;
+          break;
+
+        case simpleAttributeEnd:
+          state = state.nextState(source[index]);
           index++;
           break;
 
@@ -341,6 +364,8 @@ public class BBCodeParser extends AbstractParser {
       public State nextState(char c) {
         if (c == '=') {
           return simpleAttribute;
+        } else if (c == ' ') {
+          return complexAttribute;
         } else if (c == ']') {
           return openingTagEnd;
         } else {
@@ -349,13 +374,51 @@ public class BBCodeParser extends AbstractParser {
       }
     },
 
-    simpleAttribute {
+    complexAttribute {
       @Override
       public State nextState(char c) {
         if (c == ']') {
           return openingTagEnd;
         } else {
+          return complexAttribute;
+        }
+      }
+    },
+
+    simpleAttribute {
+      @Override
+      public State nextState(char c) {
+        if (c == '"' || c == '\'') {
           return simpleAttribute;
+        } else if (c == ']') {
+          return openingTagEnd;
+        } else {
+          return simpleAttributeBody;
+        }
+      }
+    },
+
+    simpleAttributeBody {
+      @Override
+      public State nextState(char c) {
+        if (c == '"' || c == '\'') {
+          return simpleAttributeEnd;
+        } else if (c == ']') {
+          return openingTagEnd;
+        } else {
+          return simpleAttributeBody;
+        }
+      }
+    },
+
+    simpleAttributeEnd {
+      @Override
+      public State nextState(char c) {
+        if (c == ']') {
+          return openingTagEnd;
+        } else {
+          // TODO Error - unexpected
+          return text;
         }
       }
     },
