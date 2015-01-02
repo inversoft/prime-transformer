@@ -16,6 +16,7 @@
 
 package org.primeframework.transformer.service
 
+import org.primeframework.transformer.domain.Document
 import org.primeframework.transformer.domain.ParserException
 import org.primeframework.transformer.domain.TagNode
 import org.primeframework.transformer.domain.TransformerException
@@ -54,7 +55,7 @@ public class BBCodeToHTMLTransformerSpec extends Specification {
       def document = bbCodeParser.buildDocument("[unknown]Testing[/unknown]")
 
     and: "transform is bbCodeTransformer"
-      def html = bbCodeToFreeMarkerTransformer.transform(document).result;
+      def html = bbCodeToFreeMarkerTransformer.transform(document, transformPredicate, null)
 
     then: "the output should should equal the input"
       html == "[unknown]Testing[/unknown]"
@@ -66,7 +67,7 @@ public class BBCodeToHTMLTransformerSpec extends Specification {
       def document = bbCodeParser.buildDocument("[unknown]Testing[/unknown]")
 
     and: "transform is bbCodeTransformer"
-      def html = bbCodeToFreeMarkerTransformer.setStrict(true).transform(document);
+      def html = bbCodeToFreeMarkerTransformer.setStrict(true).transform(document, transformPredicate, null)
 
     then: "an exception should be thrown"
       thrown(TransformerException)
@@ -78,25 +79,25 @@ public class BBCodeToHTMLTransformerSpec extends Specification {
   def "Call transform without calling init"() {
 
     when: "A BBCodeParser is setup with valid BBCode"
-      def document = bbCodeParser.buildDocument("[b]Testing[/b]")
+    Document document = bbCodeParser.buildDocument("[b]Testing[/b]")
 
     and: "transform is bbCodeTransformer without calling init()"
-      def transformedResult = new BBCodeToHTMLTransformer().transform(document);
+      def result = new BBCodeToHTMLTransformer().transform(document, transformPredicate, null)
 
     then: "an exception should be thrown"
       thrown(TransformerException)
 
-    and: "transformedResult should be null"
-      transformedResult == null
+    and: "result should be null"
+      result == null
   }
 
   def "No FreeMarker template for tag with strict mode enabled in the constructor"() {
 
     when: "A BBCodeParser is setup and a template has not been provided for a tag"
-      def document = bbCodeParser.buildDocument("[unknown]Testing[/unknown]")
+      Document document = bbCodeParser.buildDocument("[unknown]Testing[/unknown]")
 
     and: "transform is bbCodeTransformer"
-      def html = new BBCodeToHTMLTransformer(true).init().transform(document).result;
+      def html = new BBCodeToHTMLTransformer(true).init().transform(document, transformPredicate, null)
 
     then: "an exception should be thrown"
       thrown TransformerException
@@ -134,29 +135,29 @@ public class BBCodeToHTMLTransformerSpec extends Specification {
       "<ul><li>item1</li><li>item2</li></ul>"                                                                                 | "[list][li]item1[/li][li]item2[/li][/list]"
       "<ul><li>1</li><li>2</li></ul>"                                                                                         | "[list][*]1[*]2[/list]"
 //      "<ul><li><strong><em>1</em></strong></li><li><strong><em>2</em></strong></li></ul>"                                     | "[list][*][b][i]1[/i][/b][*][b][i]2[/i][/b][/list]"
-//      "<table><tr><td>Row1 Column1</td><td>Row1 Column2</td></tr><tr><td>Row2 Column1</td><td>Row2 Column2</td></tr></table>" | "[table][tr][td]Row1 Column1[/td][td]Row1 Column2[/td][/tr][tr][td]Row2 Column1[/td][td]Row2 Column2[/td][/tr][/table]"
-//      "<table><tr><th>Header 1</th></tr><tr><td>Row1 Column1</td></tr></table>"                                               | "[table][tr][th]Header 1[/th][/tr][tr][td]Row1 Column1[/td][/tr][/table]"
-//      "<ol><li>item 1</li></ol>"                                                                                              | "[ol][li]item 1[/li][/ol]"
-//      "<span style=\"text-decoration: line-through\">Strike</span>"                                                           | "[s]Strike[/s]"
-//      "<u>Underline</u>"                                                                                                      | "[u]Underline[/u]"
+      "<table><tr><td>Row1 Column1</td><td>Row1 Column2</td></tr><tr><td>Row2 Column1</td><td>Row2 Column2</td></tr></table>" | "[table][tr][td]Row1 Column1[/td][td]Row1 Column2[/td][/tr][tr][td]Row2 Column1[/td][td]Row2 Column2[/td][/tr][/table]"
+      "<table><tr><th>Header 1</th></tr><tr><td>Row1 Column1</td></tr></table>"                                               | "[table][tr][th]Header 1[/th][/tr][tr][td]Row1 Column1[/td][/tr][/table]"
+      "<ol><li>item 1</li></ol>"                                                                                              | "[ol][li]item 1[/li][/ol]"
+      "<span style=\"text-decoration: line-through\">Strike</span>"                                                           | "[s]Strike[/s]"
+      "<u>Underline</u>"                                                                                                      | "[u]Underline[/u]"
 //      "<a href=\"http://foo.com\">http://foo.com</a>"                                                                         | "[url=http://foo.com]http://foo.com[/url]"
 //      "<a href=\"http://foo.com\">foo.com</a>"                                                                                | "[url=http://foo.com]foo.com[/url]"
 //      "Testing []"                                                                                                            | "Testing []"
 //      "<a href=\"mailto:barney@rubble.com\">barney</a>"                                                                       | "[email=barney@rubble.com]barney[/email]"
 //      "<a href=\"mailto:barney@rubble.com\">barney@rubble.com</a>"                                                            | "[email=barney@rubble.com]barney@rubble.com[/email]"
-//      "Text <sub>subscript</sub> Other text"                                                                                  | "Text [sub]subscript[/sub] Other text"
-//      "Text <sup>superscript</sup> Other text"                                                                                | "Text [sup]superscript[/sup] Other text"
+      "Text <sub>subscript</sub> Other text"                                                                                  | "Text [sub]subscript[/sub] Other text"
+      "Text <sup>superscript</sup> Other text"                                                                                | "Text [sup]superscript[/sup] Other text"
 //      "Testing <div>[b] Testing [/b] [url]http://www.google.com[/url]</div> Text"                                             | "Testing [noparse][b] Testing [/b] [url]http://www.google.com[/url][/noparse] Text"
 //      "Test color is <span style=\"color: red\">red</span>."                                                                  | "Test color is [color=red]red[/color]."
 //      "Test color is <span style=\"color: #FFF\">white</span>."                                                               | "Test color is [color=\"#FFF\"]white[/color]."
 //      "Test color is <span style=\"color: black\">black</span>."                                                              | "Test color is [color=\"black\"]black[/color]."
-//      "<div align=\"left\">Left</div>"                                                                                        | "[left]Left[/left]"
-//      "<div align=\"center\">Center</div>"                                                                                    | "[center]Center[/center]"
-//      "<div align=\"right\">Right</div>"                                                                                      | "[right]Right[/right]"
+      "<div align=\"left\">Left</div>"                                                                                        | "[left]Left[/left]"
+      "<div align=\"center\">Center</div>"                                                                                    | "[center]Center[/center]"
+      "<div align=\"right\">Right</div>"                                                                                      | "[right]Right[/right]"
 //      "<span style=\"font-family: monospace\">mono</span>"                                                                    | "[font=monospace]mono[/font]"
-//      "<strong>bold</strong> No format. <strong>bold</strong> <strong>bold</strong>"                                          | "[B]bold[/B]No format.[b]bold[/B] [B]bold[/b]"
-//      "<em>italic</em> No format. <em>italic</em> <em>italic</em>"                                                            | "[I]italic[/I]No format.[i]italic[/I] [I]italic[/i]"
-//      "the <em>XY </em>Trainer"                                                                                               | "the [I]XY [/I]Trainer"
+      "<strong>bold</strong> No format. <strong>bold</strong> <strong>bold</strong>"                                          | "[B]bold[/B]No format.[b]bold[/B] [B]bold[/b]"
+      "<em>italic</em> No format. <em>italic</em> <em>italic</em>"                                                            | "[I]italic[/I]No format.[i]italic[/I] [I]italic[/i]"
+      "the <em>XY </em>Trainer"                                                                                               | "the [I]XY [/I]Trainer"
 //      "<span style=\"font-family: times new roman\">Matthew(not 69) (175) </span>"                                            | "[font=times new roman]Matthew(not 69) (175) [/font]"
 //      "<u>&lt;script&gt; var inject=true;&lt;/script&gt;</u>"                                                                 | "[u]<script> var inject=true;</script>[/u]"
 //      "<div>Example: [noparse]foo[/noparse]</div>"                                                                            | "[noparse]Example: [noparse]foo[/noparse][/noparse]"
@@ -172,7 +173,7 @@ public class BBCodeToHTMLTransformerSpec extends Specification {
       def html = this.getClass().getResourceAsStream("/org/primeframework/transformer/html/" + fileName).getText();
 
       def document = bbCodeParser.buildDocument(bbCode)
-      bbCodeToFreeMarkerTransformer.transform(document).result.replaceAll("<br>", "").replaceAll("\\s+", "") == html.replaceAll("\\s+", "")
+      bbCodeToFreeMarkerTransformer.transform(document, transformPredicate, null).replaceAll("<br>", "").replaceAll("\\s+", "") == html.replaceAll("\\s+", "")
 
     where:
       fileName   | _

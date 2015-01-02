@@ -112,6 +112,10 @@ public class TagNode extends BaseTagNode {
     return document.getString(tagBegin + 1, nameEnd);
   }
 
+  public TextNode toTextNode() {
+    return new TextNode(document, tagBegin, tagEnd);
+  }
+
   @Override
   public String toString() {
     return "TagNode{" +

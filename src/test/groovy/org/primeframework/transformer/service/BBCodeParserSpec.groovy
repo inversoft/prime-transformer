@@ -246,23 +246,40 @@ public class BBCodeParserSpec extends Specification {
   def "Parse BBCode with a single tag that has no closing tag and no parent enclosing tag"() {
 
     when: "A document is constructed using the builder with all parameters"
-      new BBCodeParser().buildDocument("[*] tester")
+      def document = new BBCodeParser().buildDocument("[*] tester")
 
-    then:
-      thrown ParserException
+    then: "no exception should be thrown"
+      notThrown ParserException
+
+    and: "the document should contain a single child tagNode"
+      document.children.size() == 1
+      document.children.get(0) instanceof TagNode
+      def tag = (TagNode) document.children.get(0)
+      tag.getName() == "*"
+      tag.hasClosingTag == false
+      tag.children.size() == 1
+
+    and: "the tagNode should have a single child textNode"
+      tag.children.get(0) instanceof TextNode
+      def text = (TextNode) tag.children.get(0)
+      text.getBody() == " tester"
   }
 
   def "Parse BBCode with embedded tags in a no parse tag w/out a closing tag."() {
 
     when: "We are missing a closing tag w/ embedded non-parsed tags"
-      new BBCodeParser().buildDocument("[code] abc123 [baz] xyz456")
+      def document = new BBCodeParser().buildDocument("[code] abc123 [baz] xyz456")
 
-    then: "A ParserException should be thrown"
-      def ParserException parserException = thrown()
+    then: "no exception should be thrown"
+      notThrown ParserException
 
-    and: "the closing tag should be for [code] and embedded bad tag named [baz] should have been ignored."
-      parserException.message == 'Malformed markup. Missing closing tag for [code].'
-
+    and: "the document should have a single child text"
+      document.children.size() == 1
+      document.children.get(0) instanceof TextNode
+      def text = (TextNode) document.children.get(0)
+      text.tagBegin == 0
+      text.tagEnd == 26
+      text.getBody() == "[code] abc123 [baz] xyz456"
   }
 
   def "Parse BBCode that does not require a closing tag in a parent tag that is not a list"() {

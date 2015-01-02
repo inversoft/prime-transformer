@@ -26,8 +26,8 @@ import org.primeframework.transformer.domain.TransformerException;
  * <p>
  * Example:
  * <pre>
- *     Document document = new Document(new DocumentSource("[b] Hello World![/b]"))
- *     new TextTransformer().transform(document).result == " Hello World! "
+ *     Document document = new Document("[b] Hello World![/b]")
+ *     new TextTransformer().transform(document) == " Hello World! "
  * </pre>
  *
  * @author Daniel DeGroff

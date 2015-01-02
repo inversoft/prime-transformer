@@ -25,6 +25,7 @@ import java.util.StringTokenizer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.primeframework.transformer.domain.BaseNode;
 import org.primeframework.transformer.domain.Document;
 import org.primeframework.transformer.domain.Node;
 import org.primeframework.transformer.domain.Pair;
@@ -136,7 +137,11 @@ public class BBCodeParser extends AbstractParser {
     TextNode textNode = null;
     char[] source = document.source;
 
-    while (index < source.length) {
+    while (index <= source.length) {
+      if (index == source.length) {
+        state = State.complete;
+      }
+
       switch (state) {
 
         case initial:
@@ -192,11 +197,17 @@ public class BBCodeParser extends AbstractParser {
 
         case closingTagEnd:
           state = state.nextState(source[index]);
+          if (state == State.text) {
+            if (textNode == null) {
+              textNode = new TextNode(document, index, index + 1);
+            }
+          }
           index++;
           break;
 
         case simpleAttribute:
           state = state.nextState(source[index]);
+          // TODO Handle attribute offsets and parse them to add to the node.
           index++;
           break;
 
@@ -206,11 +217,14 @@ public class BBCodeParser extends AbstractParser {
             textNode = new TextNode(document, index - 1, index);
           }
           if (state != State.text) {
-            // Close out this text node
-            textNode.tagEnd = index;
-            addNode(document, nodes, textNode);
+            handleCompletedTextNode(document, nodes, textNode, index);
             textNode = null;
           }
+          index++;
+          break;
+
+        case complete:
+          handleDanglingNodes(document, nodes, textNode, index);
           index++;
           break;
 
@@ -220,16 +234,34 @@ public class BBCodeParser extends AbstractParser {
     }
   }
 
+  private void handleDanglingNodes(Document document, Deque<TagNode> nodes, TextNode textNode, int index) {
+    if (textNode != null) {
+      handleCompletedTextNode(document, nodes, textNode, index);
+    }
+    handleExpectedUnclosedTag(document, nodes, index);
+    handleUnExpectedUnclosedTag(document, nodes, index);
+    handleCompletedTagNode(document, nodes, index);
+  }
+
+  private void handleCompletedTextNode(Document document, Deque<TagNode> nodes, TextNode textNode, int index) {
+    if (textNode != null) {
+      textNode.tagEnd = index;
+      addNode(document, nodes, textNode);
+    }
+  }
+
   private void handleCompletedTagNode(Document document, Deque<TagNode> nodes, int index) {
-    TagNode tagNode = nodes.pop();
-    tagNode.tagEnd = index;
-    tagNode.hasClosingTag = true;
-    addNode(document, nodes, tagNode);
+    if (!nodes.isEmpty()) {
+      TagNode tagNode = nodes.pop();
+      tagNode.tagEnd = index;
+      tagNode.hasClosingTag = true;
+      addNode(document, nodes, tagNode);
+    }
   }
 
   private void handleExpectedUnclosedTag(Document document, Deque<TagNode> nodes, int index) {
-    // check for tags that don't require a closing tag
     if (!nodes.isEmpty()) {
+      // check for tags that don't require a closing tag
       if (NO_CLOSING_TAG.contains(nodes.peek().getName())) {
         TagNode tagNode = nodes.pop();
         tagNode.bodyEnd = index - 1;
@@ -237,6 +269,20 @@ public class BBCodeParser extends AbstractParser {
         tagNode.hasClosingTag = false;
         addNode(document, nodes, tagNode);
       }
+    }
+  }
+
+  private void handleUnExpectedUnclosedTag(Document document, Deque<TagNode> nodes, int index) {
+    while (!nodes.isEmpty()) {
+      TagNode tagNode = nodes.pop();
+      TextNode textNode = tagNode.toTextNode();
+      // If tagNode has children, find the last tagEnd
+      if (!tagNode.children.isEmpty()) {
+        Node last = tagNode.children.get(tagNode.children.size() - 1);
+        int tagEnd = ((BaseNode) last).tagEnd;
+        textNode.tagEnd = tagEnd;
+      }
+      addNode(document, nodes, textNode);
     }
   }
 
@@ -250,7 +296,7 @@ public class BBCodeParser extends AbstractParser {
    *          ------------------- < ---------------------
    *          |                                         ^
    *           \                                        |
-   *   initial --> tagBegin --> tagName --> openingTagEnd --->
+   *   initial --> tagBegin --> tagName --> openingTagEnd ---> complete
    *             \                                       /
    *              \ -------------> text --------------->/
    *               \        ^                          |
@@ -378,6 +424,13 @@ public class BBCodeParser extends AbstractParser {
         } else {
           return text;
         }
+      }
+    },
+
+    complete {
+      @Override
+      public State nextState(char c) {
+        return complete;
       }
     };
 
