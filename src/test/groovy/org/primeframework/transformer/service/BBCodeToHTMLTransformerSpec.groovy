@@ -13,7 +13,6 @@
  * either express or implied. See the License for the specific
  * language governing permissions and limitations under the License.
  */
-
 package org.primeframework.transformer.service
 
 import org.primeframework.transformer.domain.Document
@@ -50,6 +49,7 @@ public class BBCodeToHTMLTransformerSpec extends Specification {
     bbCodeToFreeMarkerTransformer = new BBCodeToHTMLTransformer().init()
   }
 
+  // Covered in the Java test
   def "No FreeMarker template for tag with strict mode disabled"() {
 
     when: "A BBCodeParser is setup and a template has not been provided for a tag"
@@ -62,6 +62,7 @@ public class BBCodeToHTMLTransformerSpec extends Specification {
       html == "[unknown]Testing[/unknown]"
   }
 
+  // Covered in the Java test
   def "No FreeMarker template for tag with strict mode enabled"() {
 
     when: "A BBCodeParser is setup and a template has not been provided for a tag"
@@ -77,28 +78,14 @@ public class BBCodeToHTMLTransformerSpec extends Specification {
       html == null
   }
 
-  def "Call transform without calling init"() {
-
-    when: "A BBCodeParser is setup with valid BBCode"
-    Document document = bbCodeParser.buildDocument("[b]Testing[/b]")
-
-    and: "transform is bbCodeTransformer without calling init()"
-      def result = new BBCodeToHTMLTransformer().transform(document, transformPredicate, null)
-
-    then: "an exception should be thrown"
-      thrown(TransformerException)
-
-    and: "result should be null"
-      result == null
-  }
-
+  // Covered in the Java test
   def "No FreeMarker template for tag with strict mode enabled in the constructor"() {
 
     when: "A BBCodeParser is setup and a template has not been provided for a tag"
       Document document = bbCodeParser.buildDocument("[unknown]Testing[/unknown]")
 
     and: "transform is bbCodeTransformer"
-      def html = new BBCodeToHTMLTransformer(true).init().transform(document, transformPredicate, null)
+      def html = new BBCodeToHTMLTransformer(true).transform(document, transformPredicate, null)
 
     then: "an exception should be thrown"
       thrown TransformerException
@@ -107,6 +94,7 @@ public class BBCodeToHTMLTransformerSpec extends Specification {
       html == null
   }
 
+  // This is a parser tests not a transformer test
   def "No closing BBCode tag"() {
 
     when: "A BBCode string with a missing closing tag is parsed"
@@ -128,6 +116,7 @@ public class BBCodeToHTMLTransformerSpec extends Specification {
 
   }
 
+  // This test seems solid. Though it isn't using the transform function for HTML replacement, so it is a bit light.
   //@Unroll("BBCode to HTML : #html")
   def "BBCode to HTML - simple"() {
 
@@ -173,6 +162,7 @@ public class BBCodeToHTMLTransformerSpec extends Specification {
 
   }
 
+  // Not sure what this test is doing. It doesn't look like it asserts anything
   @Unroll("BBCode to HTML : #fileName")
   def "BBCode to HTML - complex"() {
 

@@ -21,8 +21,8 @@ public abstract class BaseNode implements Node {
   public Document document;
 
   /**
-   * Document source index of the beginning of this node.
-   * Example:
+   * Document source index of the beginning of this node. Example:
+   * <p>
    * <pre>
    *   foo [b] bar [/b]
    *       ^
@@ -32,12 +32,12 @@ public abstract class BaseNode implements Node {
   public int tagBegin;
 
   /**
-   * Document source index of the end of this node.
-   * Example:
+   * Document source index of the end of this node. Example:
+   * <p>
    * <pre>
    *   foo [b] bar [/b]
-   *                  ^
-   *                  16
+   *                   ^
+   *                   16
    * </pre>
    */
   public int tagEnd;
@@ -47,4 +47,7 @@ public abstract class BaseNode implements Node {
     return document.getString(tagBegin, tagEnd);
   }
 
+  public int length() {
+    return tagEnd - tagBegin;
+  }
 }

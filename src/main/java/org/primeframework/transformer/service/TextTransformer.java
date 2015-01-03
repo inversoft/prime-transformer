@@ -34,21 +34,8 @@ import org.primeframework.transformer.domain.TransformerException;
  */
 public class TextTransformer implements Transformer {
   @Override
-  public boolean isStrict() {
-    return false;
-  }
-
-  @Override
-  public Transformer setStrict(boolean strict) {
-    throw new UnsupportedOperationException(this.getClass().getSimpleName() + " does not support strict mode.");
-  }
-
-//  @Override
-//  public String transform(Document document) throws TransformerException {
-//  }
-
-  @Override
-  public String transform(Document document, Predicate<TagNode> transformPredicate, TransformFunction transformFunction) throws TransformerException {
+  public String transform(Document document, Predicate<TagNode> transformPredicate, TransformFunction transformFunction,
+                          NodeConsumer nodeConsumer) throws TransformerException {
     // Build the plain text version of the document
     StringBuilder sb = new StringBuilder();
     document.getChildTextNodes().stream().forEach(n -> sb.append(n.getBody()));

@@ -15,11 +15,9 @@
  */
 package org.primeframework.transformer.service;
 
-import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 import org.primeframework.transformer.domain.Document;
 import org.primeframework.transformer.domain.Node;
@@ -35,45 +33,91 @@ import org.primeframework.transformer.domain.TransformerException;
  */
 public interface Transformer {
   /**
-   * @return true if strict mode is enabled. When strict mode is enabled a {@link TransformerException} will be thrown
-   * if a tag is not able to be transformed. If set to false, or disabled, when a tag is encountered that is not able to
-   * be transformed, the original string including the tag will be returned.
-   */
-  boolean isStrict();
-
-  /**
-   * Sets the strict mode of the transformer, passing a true value will enable strict mode. See {@link #isStrict()} for
-   * information about the strict setting.
-   *
-   * @param strict Whether or not the transformer is strict.
-   */
-  Transformer setStrict(boolean strict);
-
-  /**
-   * Transform the document. The returned string will be defined by the implementation.
-   *
-   * @param document The document to transform.
-   * @return The transformer result.
-   * @throws TransformerException If the document could not be transformed due to an error, such as a template execution
-   *                              error or an invalid tag.
-   */
-//  String transform(Document document) throws TransformerException;
-
-  /**
    * Transform the document. The returned string will be defined by the implementation.
    *
    * @param document           The document to transform.
    * @param transformPredicate This predicate will be evaluated on each {@link TagNode}. If it evaluates to false, the
    *                           node will not be transformed.
    * @param transformFunction  A function that can be optionally provided to transform text nodes.
+   * @param nodeConsumer       A consumer that accepts each node as they are traversed during the transformation.
    * @return The transformer result.
    * @throws TransformerException
    */
-  String transform(Document document, Predicate<TagNode> transformPredicate, TransformFunction transformFunction)
+  String transform(Document document, Predicate<TagNode> transformPredicate, TransformFunction transformFunction,
+                   NodeConsumer nodeConsumer)
       throws TransformerException;
 
-  public interface NodeObserver {
-    void observe(Node node, String result, int bodyOffset);
+  /**
+   * Defines a consumer that accepts each node in the Document as they are transformed.
+   *
+   * @author Brian Pontarelli
+   */
+  public interface NodeConsumer {
+    /**
+     * Accepts the given node and its transformed result.
+     *
+     * @param node    The node.
+     * @param result  The complete result of the transformation of the node.
+     * @param newBody The new body of the node that is the result of nested transformations.
+     */
+    void accept(Node node, String result, String newBody);
+
+    /**
+     * A node consumer implementation that consumers all TagNode instances and calculates the offsets based on the
+     * result of the transformer.
+     *
+     * @author Brian Pontarelli
+     */
+    public static class OffsetNodeConsumer implements NodeConsumer {
+      private final Offsets offsets;
+
+      public OffsetNodeConsumer(Offsets offsets) {
+        this.offsets = offsets;
+      }
+
+      @Override
+      public void accept(Node node, String result, String newBody) {
+        if (!(node instanceof TagNode)) {
+          return;
+        }
+
+        TagNode tagNode = (TagNode) node;
+
+        // If the tag has no body, we add an offset for the difference between the original length and the new length.
+        // This will ensure that the indexes are valid.
+        int bodyOffset = newBody.isEmpty() ? -1 : result.indexOf(newBody);
+        if (/*!tagNode.hasBody ||*/ bodyOffset == -1) {
+          int lengthDelta = result.length() - tagNode.length();
+          offsets.add(tagNode.tagEnd, lengthDelta);
+          return;
+        }
+
+        // Calculate the change between the original body begin (relative to the tag start) and the new body begin.
+        // i.e.   [b]foo[/b]   becomes    <strong>foo</strong>
+        //        ^  ^                            ^
+        //        0  3                            8
+        //
+        // originalBodyOffset = 3 - 0 = 3
+        // bodyOffsetDelta = 8 - 3 = 5
+        int originalBodyOffset = tagNode.bodyBegin - tagNode.tagBegin;
+        int bodyOffsetDelta = bodyOffset - originalBodyOffset;
+        offsets.add(tagNode.bodyBegin, bodyOffsetDelta);
+
+        // Calculate the change between original length and the new length. This gives us the total change. If we subtract
+        // the bodyOffsetDelta, it should give us the shift in the end tag as long as the body contents don't change.
+        // i.e.   [b]foo[/b]   becomes    <strong>foo</strong>
+        //              ^   ^                     ^  ^        ^
+        //              6   10                    8  11       20
+        //
+        // originalEndTagLength = 10 - 6 + 1 = 4
+        // newEndTagLength = 20 - 3 - 8 = 9
+        // endTagDelta = 9 - 4 = 5
+        int originalEndTagLength = tagNode.tagEnd - tagNode.bodyEnd;
+        int newEndTagLength = result.length() - newBody.length() - bodyOffset;
+        int endTagDelta = newEndTagLength - originalEndTagLength;
+        offsets.add(tagNode.tagEnd, endTagDelta);
+      }
+    }
   }
 
   /**
@@ -83,14 +127,17 @@ public interface Transformer {
    */
   public interface TransformFunction {
     /**
-     * An HTML escaping transform function.
+     * Transforms the given TextNode and original body String  of the TextNode into a different String.
+     *
+     * @param node     The node.
+     * @param original The original body of the node.
+     * @return The transformed String.
      */
-    TransformFunction HTML_ESCAPE = (node, original) -> original.replace("&", "&amp;").replace("\"", "&quot;").replace("<", "&lt;").replace(">", "&gt;");
-
     String transform(TextNode node, String original);
 
     /**
-     * An implementation of the TransformFunction that escapes HTML but also manages the Offsets created by the escapes.
+     * An implementation of the TransformFunction that escapes HTML but also manages the Offsets created by the
+     * escapes.
      *
      * @author Brian Pontarelli
      */
@@ -122,6 +169,17 @@ public interface Transformer {
             case '"':
               build.append("&quot;");
               offsets.add(node.tagBegin + i, 5);
+              break;
+            case '\n':
+            case '\r':
+              if (i + i < ca.length && (ca[i] == '\n' && ca[i + 1] == '\r') || (ca[i] == '\r' && ca[i + 1] == '\n')) {
+                offsets.add(node.tagBegin + i, 3);
+                i++;
+              } else {
+                offsets.add(node.tagBegin + i, 4);
+              }
+
+              build.append("<br/>");
               break;
             default:
               build.append(ca[i]);
@@ -158,6 +216,22 @@ public interface Transformer {
       offsets.add(new Pair<>(position, amount));
     }
 
+    /**
+     * Calculates the new index using the offsets before the given original index.
+     *
+     * @param originalIndex The original index to translate to a new index.
+     * @return The new index.
+     */
+    public int computeOffsetFromIndex(int originalIndex) {
+      int totalOffset = 0;
+      for (Pair<Integer, Integer> offset : offsets) {
+        if (originalIndex >= offset.first) {
+          totalOffset += offset.second;
+        }
+      }
+      return totalOffset;
+    }
+
     @Override
     public boolean equals(Object o) {
       if (this == o) {
@@ -180,83 +254,9 @@ public interface Transformer {
     public String toString() {
       return offsets.toString();
     }
-  }
 
-  /**
-   * Transform result object that provides the resulting transformed string and index and offset values that can be used
-   * to understand how the the original string could be reconstructed.
-   */
-  public static class TransformedResult {
-
-    public String result;
-
-    // e.g. at offset 1, shift right 3; at offset 4, shift right 6, etc...
-    private Set<Pair<Integer, Integer>> offsets = new TreeSet<>();
-
-    public TransformedResult(String result) {
-      this.result = result;
-    }
-
-    public TransformedResult(String result, List<Pair<Integer, Integer>> offsets) {
-      this.offsets.addAll(offsets);
-      this.result = result;
-    }
-
-    public void addOffset(int oldIndex, int incrementBy) {
-      Pair<Integer, Integer> pair = new Pair<>(oldIndex, incrementBy);
-      if (offsets.contains(pair)) {
-        offsets.remove(pair);
-        pair = new Pair<>(oldIndex, incrementBy * 2);
-      }
-      offsets.add(pair);
-    }
-
-    public int computeOffsetFromIndex(int oldIndex) {
-      // sample implementation
-      int totalOffset = 0;
-      for (Pair<Integer, Integer> offset : offsets) {
-        if (oldIndex >= offset.first) {
-          totalOffset += offset.second;
-        }
-      }
-      return totalOffset;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-      if (this == o) {
-        return true;
-      }
-      if (o == null || getClass() != o.getClass()) {
-        return false;
-      }
-
-      TransformedResult that = (TransformedResult) o;
-
-      if (!offsets.equals(that.offsets)) {
-        return false;
-      }
-      if (result != null ? !result.equals(that.result) : that.result != null) {
-        return false;
-      }
-
-      return true;
-    }
-
-    @Override
-    public int hashCode() {
-      int result1 = offsets.hashCode();
-      result1 = 31 * result1 + (result != null ? result.hashCode() : 0);
-      return result1;
-    }
-
-    @Override
-    public String toString() {
-      return "TransformedResult{" +
-          "offsets=[" +
-          String.join(", ", offsets.stream().map(o -> o.first + ":" + o.second).collect(Collectors.toList())) +
-          "], result='" + result + "\'" +
-          "}";
+    public int total() {
+      return offsets.stream().mapToInt((offset) -> offset.second).sum();
     }
   }
 }

@@ -13,7 +13,6 @@
  * either express or implied. See the License for the specific
  * language governing permissions and limitations under the License.
  */
-
 package org.primeframework.transformer.service;
 
 import java.io.IOException;
@@ -22,12 +21,11 @@ import java.util.Map;
 import java.util.function.Predicate;
 
 import freemarker.template.Configuration;
+import freemarker.template.Template;
 import org.primeframework.transformer.domain.Document;
-import org.primeframework.transformer.domain.FreeMarkerTemplateDefinition;
 import org.primeframework.transformer.domain.TagNode;
 import org.primeframework.transformer.domain.TransformerException;
 import org.primeframework.transformer.domain.TransformerRuntimeException;
-
 
 /**
  * BBCode to HTML Transformer.
@@ -40,95 +38,59 @@ import org.primeframework.transformer.domain.TransformerRuntimeException;
  * @author Daniel DeGroff
  */
 public class BBCodeToHTMLTransformer implements Transformer {
-  private static final Map<String, FreeMarkerTemplateDefinition> DEFAULT_TEMPLATES = new HashMap<>();
-
-  private boolean ready;
-
-  private boolean strict;
+  private static final Map<String, Template> DEFAULT_TEMPLATES = new HashMap<>();
 
   private FreeMarkerTransformer transformer;
 
   static {
-    DEFAULT_TEMPLATES.put("b", new FreeMarkerTemplateDefinition("bold.ftl"));
-    DEFAULT_TEMPLATES.put("i", new FreeMarkerTemplateDefinition("italic.ftl"));
-    DEFAULT_TEMPLATES.put("u", new FreeMarkerTemplateDefinition("underline.ftl"));
-    DEFAULT_TEMPLATES.put("s", new FreeMarkerTemplateDefinition("strikethrough.ftl"));
-    DEFAULT_TEMPLATES.put("*", new FreeMarkerTemplateDefinition("item.ftl", false, false, false));
-    DEFAULT_TEMPLATES.put("li",new FreeMarkerTemplateDefinition( "item.ftl"));
-    DEFAULT_TEMPLATES.put("list", new FreeMarkerTemplateDefinition("list.ftl"));
-    DEFAULT_TEMPLATES.put("ul", new FreeMarkerTemplateDefinition("list.ftl"));
-    DEFAULT_TEMPLATES.put("ol", new FreeMarkerTemplateDefinition("ol.ftl"));
-    DEFAULT_TEMPLATES.put("url", new FreeMarkerTemplateDefinition("url.ftl"));
-    DEFAULT_TEMPLATES.put("table", new FreeMarkerTemplateDefinition("table.ftl"));
-    DEFAULT_TEMPLATES.put("tr", new FreeMarkerTemplateDefinition("tr.ftl"));
-    DEFAULT_TEMPLATES.put("td", new FreeMarkerTemplateDefinition("td.ftl"));
-    DEFAULT_TEMPLATES.put("code", new FreeMarkerTemplateDefinition("code.ftl", true, true, true));
-    DEFAULT_TEMPLATES.put("quote", new FreeMarkerTemplateDefinition("quote.ftl"));
-    DEFAULT_TEMPLATES.put("email", new FreeMarkerTemplateDefinition("email.ftl"));
-    DEFAULT_TEMPLATES.put("img", new FreeMarkerTemplateDefinition("image.ftl"));
-    DEFAULT_TEMPLATES.put("size", new FreeMarkerTemplateDefinition("size.ftl"));
-    DEFAULT_TEMPLATES.put("sub", new FreeMarkerTemplateDefinition("sub.ftl"));
-    DEFAULT_TEMPLATES.put("sup", new FreeMarkerTemplateDefinition("sup.ftl"));
-    DEFAULT_TEMPLATES.put("noparse", new FreeMarkerTemplateDefinition("noparse.ftl", true, true, true));
-    DEFAULT_TEMPLATES.put("color", new FreeMarkerTemplateDefinition("color.ftl"));
-    DEFAULT_TEMPLATES.put("left", new FreeMarkerTemplateDefinition("left.ftl"));
-    DEFAULT_TEMPLATES.put("center", new FreeMarkerTemplateDefinition("center.ftl"));
-    DEFAULT_TEMPLATES.put("right", new FreeMarkerTemplateDefinition("right.ftl"));
-    DEFAULT_TEMPLATES.put("th", new FreeMarkerTemplateDefinition("th.ftl"));
-    DEFAULT_TEMPLATES.put("font", new FreeMarkerTemplateDefinition("font.ftl"));
+    Configuration configuration = new Configuration();
+    configuration.setTagSyntax(Configuration.SQUARE_BRACKET_TAG_SYNTAX);
+    configuration.setClassForTemplateLoading(BBCodeToHTMLTransformer.class, "/org/primeframework/transformer/templates/bbCode");
+
+    try {
+      DEFAULT_TEMPLATES.put("b", configuration.getTemplate("bold.ftl"));
+      DEFAULT_TEMPLATES.put("i", configuration.getTemplate("italic.ftl"));
+      DEFAULT_TEMPLATES.put("u", configuration.getTemplate("underline.ftl"));
+      DEFAULT_TEMPLATES.put("s", configuration.getTemplate("strikethrough.ftl"));
+      DEFAULT_TEMPLATES.put("*", configuration.getTemplate("item.ftl"));
+      DEFAULT_TEMPLATES.put("li", configuration.getTemplate("item.ftl"));
+      DEFAULT_TEMPLATES.put("list", configuration.getTemplate("list.ftl"));
+      DEFAULT_TEMPLATES.put("ul", configuration.getTemplate("list.ftl"));
+      DEFAULT_TEMPLATES.put("ol", configuration.getTemplate("ol.ftl"));
+      DEFAULT_TEMPLATES.put("url", configuration.getTemplate("url.ftl"));
+      DEFAULT_TEMPLATES.put("table", configuration.getTemplate("table.ftl"));
+      DEFAULT_TEMPLATES.put("tr", configuration.getTemplate("tr.ftl"));
+      DEFAULT_TEMPLATES.put("td", configuration.getTemplate("td.ftl"));
+      DEFAULT_TEMPLATES.put("code", configuration.getTemplate("code.ftl"));
+      DEFAULT_TEMPLATES.put("quote", configuration.getTemplate("quote.ftl"));
+      DEFAULT_TEMPLATES.put("email", configuration.getTemplate("email.ftl"));
+      DEFAULT_TEMPLATES.put("img", configuration.getTemplate("image.ftl"));
+      DEFAULT_TEMPLATES.put("size", configuration.getTemplate("size.ftl"));
+      DEFAULT_TEMPLATES.put("sub", configuration.getTemplate("sub.ftl"));
+      DEFAULT_TEMPLATES.put("sup", configuration.getTemplate("sup.ftl"));
+      DEFAULT_TEMPLATES.put("noparse", configuration.getTemplate("noparse.ftl"));
+      DEFAULT_TEMPLATES.put("color", configuration.getTemplate("color.ftl"));
+      DEFAULT_TEMPLATES.put("left", configuration.getTemplate("left.ftl"));
+      DEFAULT_TEMPLATES.put("center", configuration.getTemplate("center.ftl"));
+      DEFAULT_TEMPLATES.put("right", configuration.getTemplate("right.ftl"));
+      DEFAULT_TEMPLATES.put("th", configuration.getTemplate("th.ftl"));
+      DEFAULT_TEMPLATES.put("font", configuration.getTemplate("font.ftl"));
+    } catch (IOException e) {
+      throw new TransformerRuntimeException("Failed to load FreeMarker template from classpath.", e);
+    }
   }
 
   public BBCodeToHTMLTransformer() {
+    this(false);
   }
 
   public BBCodeToHTMLTransformer(boolean strict) {
-    this();
-    this.strict = strict;
-  }
-
-  public BBCodeToHTMLTransformer init() {
-    Map<String, FreeMarkerTemplateDefinition> templates = new HashMap<>();
-
-    Configuration configuration = new Configuration();
-    configuration.setTagSyntax(Configuration.SQUARE_BRACKET_TAG_SYNTAX);
-    configuration.setClassForTemplateLoading(this.getClass(), "/org/primeframework/transformer/templates/bbCode");
-
-    for (String templateName : DEFAULT_TEMPLATES.keySet()) {
-      try {
-        FreeMarkerTemplateDefinition templateDefinition = DEFAULT_TEMPLATES.get(templateName);
-        templateDefinition.template = configuration.getTemplate(templateDefinition.fileName);
-        templates.put(templateName, templateDefinition);
-      } catch (IOException e) {
-        throw new TransformerRuntimeException("Failed to load FreeMarker template " + templateName + " from classpath.", e);
-      }
-    }
-    transformer = new FreeMarkerTransformer(templates);
-    ready = true;
-    return this;
+    this.transformer = new FreeMarkerTransformer(DEFAULT_TEMPLATES, strict);
   }
 
   @Override
-  public boolean isStrict() {
-    return strict;
-  }
-
-  @Override
-  public Transformer setStrict(boolean strict) {
-    this.strict = strict;
-    return this;
-  }
-
-//  @Override
-//  public String transform(Document document) throws TransformerException {
-//    return transform(document, null);
-//  }
-
-  @Override
-  public String transform(Document document, Predicate<TagNode> transformPredicate, TransformFunction transformFunction) throws TransformerException {
-    if (!ready) {
-      throw new TransformerException("Transformer has not yet been initialized. Run init() prior to transform().");
-    }
-    transformer.setStrict(strict);
-    return transformer.transform(document, transformPredicate, null);
+  public String transform(Document document, Predicate<TagNode> transformPredicate, TransformFunction transformFunction,
+                          NodeConsumer nodeConsumer) throws TransformerException {
+    return transformer.transform(document, transformPredicate, null, null);
   }
 }
