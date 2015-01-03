@@ -91,6 +91,6 @@ public class BBCodeToHTMLTransformer implements Transformer {
   @Override
   public String transform(Document document, Predicate<TagNode> transformPredicate, TransformFunction transformFunction,
                           NodeConsumer nodeConsumer) throws TransformerException {
-    return transformer.transform(document, transformPredicate, null, null);
+    return transformer.transform(document, transformPredicate, transformFunction, nodeConsumer);
   }
 }

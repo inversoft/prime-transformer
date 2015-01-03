@@ -55,9 +55,8 @@ public class BBCodeParserSpec extends Specification {
       document.children.size() == 1
       ((TagNode) document.children.get(0)).children.size() == 1
 
-
-//    and: "offsets to tags should be correct"
-//      document.offsets == [new Pair<>(0, 3), new Pair<>(7, 4)] as TreeSet
+    and: "offsets to tags should be correct"
+      document.offsets == [new Pair<>(0, 3), new Pair<>(7, 4)] as TreeSet
   }
 
   def "Build a new document using BBCode - Two Tags"() {
@@ -79,17 +78,17 @@ public class BBCodeParserSpec extends Specification {
     ((TagNode) document.children.get(0)).children.size() == 1
     ((TagNode) document.children.get(1)).children.size() == 1
 
-
-//    and: "offsets to tags should be correct"
-//      document.offsets == [new Pair<>(0, 3), new Pair<>(7, 4)] as TreeSet
+    and: "offsets to tags should be correct"
+      document.offsets == [new Pair<>(0, 3), new Pair<>(7, 4), new Pair<>(11, 3), new Pair<>(20, 4)] as TreeSet
   }
 
   def "Build a new document using BBCode - 1 Tag with nested Tag"() {
 
     when: "A document is constructed"
     def source = "[b][i]Italic[/i][/b]"
-    /*            ^      ^      */
-    /*            0,3    7,4    */
+    /*               ^        ^   ^      */
+    /*            0,3         12,4       */
+    /*               3,3          16,4   */
     def document = new BBCodeParser().buildDocument(source)
 
     then: "no exceptions thrown"
@@ -129,8 +128,8 @@ public class BBCodeParserSpec extends Specification {
       def text = (TextNode) italic.children.get(0)
       text.getBody() == "Italic"
 
-//    and: "offsets to tags should be correct"
-//      document.offsets == [new Pair<>(0, 3), new Pair<>(7, 4)] as TreeSet
+    and: "offsets to tags should be correct"
+      document.offsets == [new Pair<>(0, 3), new Pair<>(3, 3), new Pair<>(12, 4), new Pair<>(16, 4)] as TreeSet
   }
 
   def "Build a new document using BBCode with uppercase tags"() {
@@ -138,7 +137,7 @@ public class BBCodeParserSpec extends Specification {
     when: "A document is constructed"
       def source = "[B]Text[/B]"
       def document = new BBCodeParser().buildDocument(source)
-      def result = new BBCodeToHTMLTransformer().init().transform(document, transformPredicate, null)
+      def result = new BBCodeToHTMLTransformer().transform(document, transformPredicate, null, null)
 
     then: "basic offsets are correct"
       def tag = document.childTagNodes.get(0)
@@ -177,13 +176,13 @@ public class BBCodeParserSpec extends Specification {
       italic.tagEnd == 25
 
     and: "the document is transformed properly"
-      def result = new BBCodeToHTMLTransformer().init().transform(document, transformPredicate, null)
+      def result = new BBCodeToHTMLTransformer().transform(document, transformPredicate, null, null)
       result == "<strong>Hello</strong> <em>World</em>"
   }
 
   def "Build a new document using BBCode in a char array"() {
 
-    when: "A document is constructed using the builder with all parameters"
+    when: "A document is constructed"
       def source = ['[', 'b', ']', 'T', 'e', 'x', 't', '[', '/', 'b', ']'] as char[]
       def document = new BBCodeParser().buildDocument(source)
 
@@ -196,7 +195,7 @@ public class BBCodeParserSpec extends Specification {
 
   def "Parse BBCode with simple attributes verify offsets"() {
 
-    when: "A document is constructed using the builder with all parameters"
+    when: "A document is constructed"
       def source = "[url=\"http://www.google.com\"]http://www.google.com[/url]"
       /*            ^     ^                                             ^       */
       /* offsets    0,29                                                50,6    */
@@ -215,7 +214,7 @@ public class BBCodeParserSpec extends Specification {
 
   def "Parse BBCode with a complex attribute for a tag that only uses a simple attribute verify offsets"() {
 
-    when: "A document is constructed using the builder with all parameters"
+    when: "A document is constructed"
       def source = "[font foo=\"abc\"] bar [/font]"
       /*            ^           ^           ^                                         */
       /* offsets    0,16                   21,7                                       */
@@ -225,13 +224,18 @@ public class BBCodeParserSpec extends Specification {
     then: "offsets to tags should be correct"
       document.offsets == [new Pair<>(0, 16), new Pair<>(21, 7)] as TreeSet
 
-//    and: "attribute offsets should be correct"
-//      document.attributeOffsets == [new Pair<>(11, 3)] as TreeSet
+    and: "attribute offsets should be correct"
+      document.attributeOffsets == [new Pair<>(11, 3)] as TreeSet
+
+    and: "and so should the attribute key value pair"
+      def font = (TagNode) document.children.get(0)
+      font.attributes.containsKey("foo")
+      font.attributes.get("foo") == "abc"
   }
 
   def "Parse BBCode with complex attributes verify offsets"() {
 
-    when: "A document is constructed using the builder with all parameters"
+    when: "A document is constructed"
       def source = "Hello [font size=\"10\" family=\"a fucker yo\"] World! [/font]"
       /*                  ^            ^            ^                      ^        */
       /* offsets          6,37                                             51,7     */
@@ -241,13 +245,13 @@ public class BBCodeParserSpec extends Specification {
     then: "offsets to tags should be correct"
       document.offsets == [new Pair<>(6, 37), new Pair<>(51, 7)] as TreeSet
 
-//    and: "attribute offsets should be correct"
-//      document.attributeOffsets == [new Pair<>(18, 2), new Pair<>(30, 11)] as TreeSet
+    and: "attribute offsets should be correct"
+      document.attributeOffsets == [new Pair<>(18, 2), new Pair<>(30, 11)] as TreeSet
   }
 
   def "Parse BBCode with a single tag that has no closing tag and no parent enclosing tag"() {
 
-    when: "A document is constructed using the builder with all parameters"
+    when: "A document is constructed"
       def document = new BBCodeParser().buildDocument("[*] tester")
 
     then: "no exception should be thrown"
@@ -286,7 +290,7 @@ public class BBCodeParserSpec extends Specification {
 
   def "Parse BBCode that does not require a closing tag in a parent tag that is not a list"() {
 
-    when: "A document is constructed using the builder with all parameters"
+    when: "A document is constructed"
       def source = "[b][*]test1 [*]test2[/b]"
       /*          ^  ^        ^       ^                                             */
       /* offsets  0,3 3,3     12,3    20,4                                          */
@@ -300,7 +304,7 @@ public class BBCodeParserSpec extends Specification {
 
   def "Parse BBCode that does not require a closing tag with no body"() {
 
-    when: "A document is constructed using the builder with all parameters"
+    when: "A document is constructed"
       def source = "[list][*][/list]"
       /*            ^     ^  ^                                                      */
       /* offsets    0,6  6,3  9,7                                                   */
@@ -314,7 +318,7 @@ public class BBCodeParserSpec extends Specification {
 
   def "Parse BBCode that does not require a closing tag with no body and text before bullet tag"() {
 
-    when: "A document is constructed using the builder with all parameters"
+    when: "A document is constructed"
       def source = "[list]test[*][/list]"
       /*            ^         ^  ^                                                  */
       /* offsets    0,6       10,3  13,7                                            */
@@ -328,7 +332,7 @@ public class BBCodeParserSpec extends Specification {
 
   def "Parse BBCode that has embedded tags of the same type"() {
 
-    when: "A document is constructed using the builder with all parameters"
+    when: "A document is constructed"
       def source = "[quote][quote][quote]Hot pocket in a hot pocket[/quote][/quote][/quote]"
       /*            ^      ^      ^                                ^       ^       ^      */
       /* offsets    0,7    7,7  14,7                               47,8   55,8     63,8   */
@@ -342,7 +346,7 @@ public class BBCodeParserSpec extends Specification {
 
   def "Simple attribute"() {
 
-    when: "A document is constructed using the builder with all parameters"
+    when: "A document is constructed"
       def source = "[color=blue]blah[/color]"
       /*            ^      ^        ^                                                     */
       /* offsets    0,12            16,8                                                  */
@@ -354,12 +358,11 @@ public class BBCodeParserSpec extends Specification {
 
     and: "attribute offsets should be correct"
       document.attributeOffsets == [new Pair<>(7, 4)] as TreeSet
-
   }
 
   def "Complex attributes with an extra space"() {
 
-    when: "A document is constructed using the builder with all parameters"
+    when: "A document is constructed"
       def source = "[font  size=5]blah[/font]"
       /*            ^      ^          ^                                                     */
       /* offsets    0,14            18,7                                                    */
@@ -369,14 +372,13 @@ public class BBCodeParserSpec extends Specification {
     then:
       document.offsets == [new Pair<>(0, 14), new Pair<>(18, 7)] as TreeSet
 
-//    and: "attribute offsets should be correct"
-//      document.attributeOffsets == [new Pair<>(12, 1)] as TreeSet
-
+    and: "attribute offsets should be correct"
+      document.attributeOffsets == [new Pair<>(12, 1)] as TreeSet
   }
 
   def "Complex attributes with an extra space and a single quote"() {
 
-    when: "A document is constructed using the builder with all parameters"
+    when: "A document is constructed"
       def source = "[font  size=\'5\']blah[/font]"
       /*            ^           ^         ^                                                 */
       /* offsets    0,16                  18,7                                              */
@@ -386,26 +388,24 @@ public class BBCodeParserSpec extends Specification {
     then:
       document.offsets == [new Pair<>(0, 16), new Pair<>(20, 7)] as TreeSet
 
-//    and: "attribute offsets should be correct"
-//      document.attributeOffsets == [new Pair<>(13, 3)] as TreeSet
-
+    and: "attribute offsets should be correct"
+      document.attributeOffsets == [new Pair<>(13, 1)] as TreeSet
   }
 
-  def "Complex attributes with lots of extra space"() {
+  def "Complex attributes with lots of extra space and a non-quoted value"() {
 
-    when: "A document is constructed using the builder with all parameters"
+    when: "A document is constructed"
       def source = "[font      size=5]blah[/font]"
-      /*            ^          ^          ^                                                 */
+      /*            ^              ^      ^                                                 */
       /* offsets    0,18                  22,7                                              */
-      /* attributes            16,1                                                         */
+      /* attributes                16,1                                                     */
       def document = new BBCodeParser().buildDocument(source)
 
     then:
       document.offsets == [new Pair<>(0, 18), new Pair<>(22, 7)] as TreeSet
 
-//    and: "attribute offsets should be correct"
-//      document.attributeOffsets == [new Pair<>(16, 1)] as TreeSet
-
+    and: "attribute offsets should be correct"
+      document.attributeOffsets == [new Pair<>(16, 1)] as TreeSet
   }
 
   def "List with child tags without closing tags"() {

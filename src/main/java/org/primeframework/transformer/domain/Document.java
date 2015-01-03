@@ -28,8 +28,14 @@ import java.util.stream.Collectors;
  */
 public class Document extends BaseTagNode {
 
+  /**
+   * Child nodes, may contain both {@link TagNode} or {@link TextNode} types.
+   */
   public List<Node> children = new ArrayList<>();
 
+  /**
+   * Unstructured source string.
+   */
   public char[] source;
 
   /**

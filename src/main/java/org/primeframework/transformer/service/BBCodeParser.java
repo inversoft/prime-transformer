@@ -133,6 +133,11 @@ public class BBCodeParser extends AbstractParser {
 
 
     int index = 0;
+
+    String attributeName = null;
+    int attributeNameBegin = 0;
+    int attributeValueBegin = 0;
+
     State state = State.initial;
     TextNode textNode = null;
     TagNode current = null;
@@ -208,6 +213,48 @@ public class BBCodeParser extends AbstractParser {
 
         case complexAttribute:
           state = state.nextState(source[index]);
+          if (state == State.complexAttributeName) {
+            attributeNameBegin = index;
+          }
+          index++;
+          break;
+
+        case complexAttributeName:
+          state = state.nextState(source[index]);
+          if (state == State.complexAttributeValue) {
+            attributeName = document.getString(attributeNameBegin, index);
+          }
+          index++;
+          break;
+
+        case complexAttributeValue:
+          state = state.nextState(source[index]);
+          if (state == State.singleQuotedAttributeValue || state == State.doubleQuotedAttributeValue) {
+            attributeValueBegin = index + 1;
+          } else if (state == State.complexAttributeValue) {
+            attributeValueBegin = index;
+          } else if (state != State.complexAttributeValue) {
+            nodes.peek().attributes.put(attributeName, document.getString(attributeValueBegin, index));
+            document.attributeOffsets.add(new Pair<>(attributeValueBegin, index - attributeValueBegin));
+          }
+          index++;
+          break;
+
+        case doubleQuotedAttributeValue:
+          state = state.nextState(source[index]);
+          if (state != State.doubleQuotedAttributeValue) {
+            nodes.peek().attributes.put(attributeName, document.getString(attributeValueBegin, index));
+            document.attributeOffsets.add(new Pair<>(attributeValueBegin, index - attributeValueBegin));
+          }
+          index++;
+          break;
+
+        case singleQuotedAttributeValue:
+          state = state.nextState(source[index]);
+          if (state != State.singleQuotedAttributeValue) {
+            nodes.peek().attributes.put(attributeName, document.getString(attributeValueBegin, index));
+            document.attributeOffsets.add(new Pair<>(attributeValueBegin, index - attributeValueBegin));
+          }
           index++;
           break;
 
@@ -377,10 +424,71 @@ public class BBCodeParser extends AbstractParser {
     complexAttribute {
       @Override
       public State nextState(char c) {
+
         if (c == ']') {
           return openingTagEnd;
-        } else {
+//        } else if (c == '\'') {
+//          return singleQuotedAttributeValue;
+//        } else if (c == '\"') {
+//          return doubleQuotedAttributeValue;
+        } else if (c == ' ') {
+          // ignore additional white space here
           return complexAttribute;
+        } else {
+          return complexAttributeName;
+        }
+      }
+    },
+
+    complexAttributeName {
+      @Override
+      public State nextState(char c) {
+        if (c == '=') {
+          return complexAttributeValue;
+        } else {
+          return complexAttributeName;
+        }
+      }
+    },
+
+    /**
+     * An attribute value when not quoted is not allowed to contain spaces.
+     */
+    complexAttributeValue {
+      @Override
+      public State nextState(char c) {
+        if (c == ']') {
+          return openingTagEnd;
+        } else if (c == ' ') {
+          return complexAttribute;
+        } else if (c == '\'') {
+          return singleQuotedAttributeValue;
+        } else if (c == '\"') {
+          return doubleQuotedAttributeValue;
+        } else {
+          return complexAttributeValue;
+        }
+      }
+    },
+
+    doubleQuotedAttributeValue {
+      @Override
+      public State nextState(char c) {
+        if (c == '"') {
+          return complexAttribute;
+        } else {
+          return doubleQuotedAttributeValue;
+        }
+      }
+    },
+
+    singleQuotedAttributeValue {
+      @Override
+      public State nextState(char c) {
+        if (c == '\'') {
+          return complexAttribute;
+        } else {
+          return singleQuotedAttributeValue;
         }
       }
     },

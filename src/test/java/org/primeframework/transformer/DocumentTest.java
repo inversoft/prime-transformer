@@ -29,19 +29,31 @@ import static org.testng.AssertJUnit.assertEquals;
 public class DocumentTest {
   @Test
   public void walk() throws Exception {
+    // TODO Do we need this test anymore?  Looks like we can still set the boolean to false, but it does not affect
+    // TODO the output since we now take a transform predicate instead.
+
+    // TODO These two walk methods do in fact demonstrate the document model was changed, so perhaps it is ok.
+    // TODO we probably just need need the last step where we validate the transformation.
+
     Document document = new BBCodeParser().buildDocument("Hello [size=\"14\"][b]World!![/b][/size] Yo.");
     document.walk(TagNode.class, node -> node.transform = false);
 
     // assert all tag nodes are set to not transform
     document.walk(TagNode.class, node -> assertFalse(node.transform));
 
-    String transformedResult = new BBCodeToHTMLTransformer().transform(document, (node) -> true, null, null);
+    String transformedResult = new BBCodeToHTMLTransformer().transform(document, (node) -> false, null, null);
     assertEquals("Hello [size=\"14\"][b]World!![/b][/size] Yo.", transformedResult);
-
   }
 
   @Test
   public void walkWithNoType() throws Exception {
+
+    // TODO Do we need this test anymore?  Looks like we can still set the boolean to false, but it does not affect
+    // TODO the output since we now take a transform predicate instead.
+
+    // TODO These two walk methods do in fact demonstrate the document model was changed, so perhaps it is ok.
+    // TODO we probably just need need the last step where we validate the transformation.
+
     Document document = new BBCodeParser().buildDocument("Hello [size=\"14\"][b]World!![/b][/size] Yo.");
     document.walk(node -> {
       if (node instanceof TagNode) {
@@ -56,7 +68,7 @@ public class DocumentTest {
       }
     });
 
-    String transformedResult = new BBCodeToHTMLTransformer().transform(document, (node) -> true, null, null);
+    String transformedResult = new BBCodeToHTMLTransformer().transform(document, (node) -> false, null, null);
     assertEquals("Hello [size=\"14\"][b]World!![/b][/size] Yo.", transformedResult);
   }
 }
