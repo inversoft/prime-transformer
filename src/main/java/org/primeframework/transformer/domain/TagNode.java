@@ -109,7 +109,10 @@ public class TagNode extends BaseTagNode {
   }
 
   public String getName() {
-    return document.getString(tagBegin + 1, nameEnd);
+    if (nameEnd > tagBegin + 1) {
+      return document.getString(tagBegin + 1, nameEnd);
+    }
+    return null;
   }
 
   public TextNode toTextNode() {

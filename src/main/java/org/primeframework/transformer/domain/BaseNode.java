@@ -44,6 +44,9 @@ public abstract class BaseNode implements Node {
 
   @Override
   public String getRawString() {
+    if (this instanceof Document) {
+      throw new UnsupportedOperationException("This method may only be called on a TagNode or TextNode.");
+    }
     return document.getString(tagBegin, tagEnd);
   }
 
