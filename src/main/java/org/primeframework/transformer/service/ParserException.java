@@ -14,14 +14,14 @@
  * language governing permissions and limitations under the License.
  */
 
-package org.primeframework.transformer.domain;
+package org.primeframework.transformer.service;
 
-public class TransformerException extends Exception {
-  public TransformerException(String message, Throwable e) {
-    super(message, e);
+public class ParserException extends Exception {
+  public ParserException(String message) {
+    super(message);
   }
 
-  public TransformerException(String message) {
-    super(message);
+  public ParserException(String message, Throwable cause) {
+    super(message, cause);
   }
 }

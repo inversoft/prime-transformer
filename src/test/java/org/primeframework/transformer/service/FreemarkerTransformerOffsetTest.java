@@ -25,7 +25,6 @@ import freemarker.template.Configuration;
 import freemarker.template.Template;
 import org.primeframework.transformer.domain.Document;
 import org.primeframework.transformer.domain.TagNode;
-import org.primeframework.transformer.domain.TransformerException;
 import org.primeframework.transformer.service.Transformer.NodeConsumer.OffsetNodeConsumer;
 import org.primeframework.transformer.service.Transformer.Offsets;
 import org.primeframework.transformer.service.Transformer.TransformFunction.OffsetHTMLEscapeTransformFunction;

@@ -17,7 +17,6 @@
 package org.primeframework.transformer.service;
 
 import org.primeframework.transformer.domain.Document;
-import org.primeframework.transformer.domain.ParserException;
 
 /**
  * Parser interface. <p>Parser implementations are only responsible for building the abstract syntax tree (AST). The

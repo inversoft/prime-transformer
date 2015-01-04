@@ -50,6 +50,34 @@ public abstract class BaseNode implements Node {
     return document.getString(tagBegin, tagEnd);
   }
 
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+
+    BaseNode baseNode = (BaseNode) o;
+
+    if (tagBegin != baseNode.tagBegin) {
+      return false;
+    }
+    if (tagEnd != baseNode.tagEnd) {
+      return false;
+    }
+
+    return true;
+  }
+
+  @Override
+  public int hashCode() {
+    int result = tagBegin;
+    result = 31 * result + tagEnd;
+    return result;
+  }
+
   public int length() {
     return tagEnd - tagBegin;
   }

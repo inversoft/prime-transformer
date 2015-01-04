@@ -27,7 +27,6 @@ import org.primeframework.transformer.domain.Document;
 import org.primeframework.transformer.domain.Node;
 import org.primeframework.transformer.domain.TagNode;
 import org.primeframework.transformer.domain.TextNode;
-import org.primeframework.transformer.domain.TransformerException;
 
 /**
  * FreeMarker transformer implementation.

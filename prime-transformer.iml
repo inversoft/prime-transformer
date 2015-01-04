@@ -93,6 +93,5 @@
       </library>
     </orderEntry>
     <orderEntry type="library" name="Groovy 2.2" level="application" />
-    <orderEntry type="library" name="groovy-2.2.2" level="application" />
   </component>
 </module>

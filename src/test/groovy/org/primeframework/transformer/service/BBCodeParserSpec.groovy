@@ -13,10 +13,9 @@
  * either express or implied. See the License for the specific
  * language governing permissions and limitations under the License.
  */
-
 package org.primeframework.transformer.service
+
 import org.primeframework.transformer.domain.Pair
-import org.primeframework.transformer.domain.ParserException
 import org.primeframework.transformer.domain.TagNode
 import org.primeframework.transformer.domain.TextNode
 import spock.lang.Shared
@@ -36,113 +35,6 @@ public class BBCodeParserSpec extends Specification {
       return true;
     }
   }
-
-  // TODO BEGIN - Brian - check out these edge cases. These are ones we had sketched out while we were screen sharing.
-  // TODO         You ok with this behavior?
-
-  def "edge -- char[] ca = new char[1024]"() {
-
-    when: "A document is constructed"
-      def source = "char[] ca = new char[1024]"
-      def document = new BBCodeParser().buildDocument(source)
-
-    then: "two text nodes should exist in the document"
-      document.children.size() == 3
-      document.children.get(0) instanceof TextNode
-      document.children.get(1) instanceof TextNode
-      document.children.get(2) instanceof TextNode
-
-    and: "and each node contains a portion of the whole"
-      def text1 = (TextNode) document.children.get(0)
-      def text2 = (TextNode) document.children.get(1)
-      def text3 = (TextNode) document.children.get(2)
-
-      text1.getBody() == "char"
-      text2.getBody() == "[] ca = new char"
-      text3.getBody() == "[1024]"
-
-      document.getString(document.tagBegin, document.tagEnd) == "char[] ca = new char[1024]"
-
-    and: "no offsets should be set"
-      document.offsets.empty
-      document.attributeOffsets.empty
-  }
-
-  def "edge -- abc[def"() {
-
-    when: "A document is constructed"
-      def source = "abc[def"
-      def document = new BBCodeParser().buildDocument(source)
-
-    then: "two text nodes should exist in the document"
-      document.children.size() == 2
-      document.children.get(0) instanceof TextNode
-      document.children.get(1) instanceof TextNode
-
-    and: "and each node contains a portion of the whole"
-      def text1 = (TextNode) document.children.get(0)
-      def text2 = (TextNode) document.children.get(1)
-
-      text1.getBody() == "abc"
-      text2.getBody() == "[def"
-
-      document.getString(document.tagBegin, document.tagEnd) == "abc[def"
-
-    and: "no offsets should be set"
-      document.offsets.empty
-      document.attributeOffsets.empty
-
-  }
-
-  def "edge -- [foo][def"() {
-    when: "A document is constructed"
-      def source = "[foo][def"
-      def document = new BBCodeParser().buildDocument(source)
-
-    then: "a single text node should exist in the document"
-      document.children.size() == 1
-      document.children.get(0) instanceof TextNode
-
-    and: "and the one node should contain the entire body"
-      def text = (TextNode) document.children.get(0)
-      text.getBody() == "[foo][def"
-      document.getString(document.tagBegin, document.tagEnd) == "[foo][def"
-
-    and: "no offsets should be set"
-      document.offsets.empty
-      document.attributeOffsets.empty
-  }
-
-  def "edge -- [b]foo[/b] abc[def"() {
-    when: "A document is constructed"
-      def source = "[b]foo[/b] abc[def"
-      def document = new BBCodeParser().buildDocument(source)
-
-    then: "three nodes should be in the document"
-      document.children.size() == 3
-      document.children.get(0) instanceof TagNode
-      document.children.get(1) instanceof TextNode
-      document.children.get(2) instanceof TextNode
-
-    and: "the single tag node should have a text node child"
-      def tag = (TagNode) document.children.get(0)
-      tag.children.size() == 1
-      tag.children.get(0) instanceof TextNode
-      def child = (TextNode) tag.children.get(0)
-      child.getBody() == "foo"
-
-    and: "and the end of the string should be the two text nodes"
-      def text1 = (TextNode) document.children.get(1)
-      def text2 = (TextNode) document.children.get(2)
-      text1.getBody() == " abc"
-      text2.getBody() == "[def"
-
-    and: "offsets should be correct, and no attributes offsets"
-      document.offsets == [new Pair<>(0, 3), new Pair<>(6, 4)] as TreeSet
-      document.attributeOffsets.empty
-  }
-
-  // TODO END - Brian - check out these edge cases.
 
   def "Build a new document using BBCode - 1 Tag"() {
 

@@ -16,10 +16,8 @@
 package org.primeframework.transformer.service
 
 import org.primeframework.transformer.domain.Document
-import org.primeframework.transformer.domain.ParserException
 import org.primeframework.transformer.domain.TagNode
 import org.primeframework.transformer.domain.TextNode
-import org.primeframework.transformer.domain.TransformerException
 import spock.lang.Shared
 import spock.lang.Specification
 import spock.lang.Unroll

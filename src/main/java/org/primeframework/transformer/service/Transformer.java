@@ -24,7 +24,6 @@ import org.primeframework.transformer.domain.Node;
 import org.primeframework.transformer.domain.Pair;
 import org.primeframework.transformer.domain.TagNode;
 import org.primeframework.transformer.domain.TextNode;
-import org.primeframework.transformer.domain.TransformerException;
 
 /**
  * Transformer interface.

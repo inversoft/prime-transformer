@@ -25,20 +25,27 @@ import java.util.stream.Stream;
  * @author Daniel DeGroff
  */
 public abstract class BaseTagNode extends BaseNode {
-  /**
-   * Return the child nodes.
-   *
-   * @return
-   */
-  public abstract List<Node> getChildren();
-
   public abstract boolean addChild(Node node);
 
   /**
-   * Return a {@link List} of TextNode objects. A {@link TagNode} that is set to transform false will be returned in
-   * this list as a <code>TextNode</code>.
-   *
-   * @return
+   * @return Return a {@link List} of {@link TagNode} objects.
+   */
+  public List<TagNode> getChildTagNodes() {
+    List<TagNode> tagNodes = new ArrayList<>(getChildren().size());
+    if (this instanceof TagNode) {
+      tagNodes.add((TagNode) this);
+    }
+    getChildren().forEach(n -> {
+      if (n instanceof TagNode) {
+        tagNodes.addAll(((TagNode) n).getChildTagNodes());
+      }
+    });
+    return tagNodes;
+  }
+
+  /**
+   * @return Return a {@link List} of TextNode objects. A {@link TagNode} that is set to transform false will be
+   * returned in this list as a <code>TextNode</code>.
    */
   public List<TextNode> getChildTextNodes() {
     List<TextNode> textNodes = new ArrayList<>(getChildren().size());
@@ -58,22 +65,9 @@ public abstract class BaseTagNode extends BaseNode {
   }
 
   /**
-   * Return a {@link List} of {@link TagNode} objects.
-   *
-   * @return
+   * @return Return the child nodes.
    */
-  public List<TagNode> getChildTagNodes() {
-    List<TagNode> tagNodes = new ArrayList<>(getChildren().size());
-    if (this instanceof TagNode) {
-      tagNodes.add((TagNode) this);
-    }
-    getChildren().forEach(n -> {
-      if (n instanceof TagNode) {
-        tagNodes.addAll(((TagNode) n).getChildTagNodes());
-      }
-    });
-    return tagNodes;
-  }
+  public abstract List<Node> getChildren();
 
   /**
    * Walk the document nodes and apply the action to each node of the specified type..

@@ -17,6 +17,7 @@
 package org.primeframework.transformer.domain;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
@@ -27,16 +28,22 @@ import java.util.stream.Collectors;
  * source.
  */
 public class Document extends BaseTagNode {
+  /**
+   * Set of attribute offsets, first value is the beginning of the attribute, the second value is the length.
+   * <p>
+   * <pre>
+   * Example:
+   *    a [font size="10" family="verdana"] testing [/font]
+   *                  ^           ^
+   *                  14,2        26,7
+   * </pre>
+   */
+  public final Set<Pair<Integer, Integer>> attributeOffsets = new TreeSet<>();
 
   /**
    * Child nodes, may contain both {@link TagNode} or {@link TextNode} types.
    */
-  public List<Node> children = new ArrayList<>();
-
-  /**
-   * Unstructured source string.
-   */
-  public char[] source;
+  public final List<Node> children = new ArrayList<>();
 
   /**
    * Set of offsets, first value is the beginning of the tag, the second value is the length. With these values the
@@ -49,19 +56,12 @@ public class Document extends BaseTagNode {
    *      2,3        14,4
    * </pre>
    */
-  public Set<Pair<Integer, Integer>> offsets = new TreeSet<>();
+  public final Set<Pair<Integer, Integer>> offsets = new TreeSet<>();
 
   /**
-   * Set of attribute offsets, first value is the beginning of the attribute, the second value is the length.
-   * <p>
-   * <pre>
-   * Example:
-   *    a [font size="10" family="verdana"] testing [/font]
-   *                  ^           ^
-   *                  14,2        26,7
-   * </pre>
+   * Unstructured source string.
    */
-  public Set<Pair<Integer, Integer>> attributeOffsets = new TreeSet<>();
+  public final char[] source;
 
   public Document(String source) {
     this(source.toCharArray());
@@ -71,6 +71,7 @@ public class Document extends BaseTagNode {
     this.source = source;
     this.tagBegin = 0;
     this.tagEnd = this.source.length;
+    this.document = this;
   }
 
   @Override
@@ -85,6 +86,34 @@ public class Document extends BaseTagNode {
 
   public String getString(int start, int end) {
     return new String(source, start, end - start);
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+
+    Document document = (Document) o;
+
+    if (!children.equals(document.children)) {
+      return false;
+    }
+    if (!Arrays.equals(source, document.source)) {
+      return false;
+    }
+
+    return true;
+  }
+
+  @Override
+  public int hashCode() {
+    int result = children.hashCode();
+    result = 31 * result + Arrays.hashCode(source);
+    return result;
   }
 
   @Override

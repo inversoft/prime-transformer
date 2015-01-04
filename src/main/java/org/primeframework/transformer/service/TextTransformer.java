@@ -19,7 +19,6 @@ import java.util.function.Predicate;
 
 import org.primeframework.transformer.domain.Document;
 import org.primeframework.transformer.domain.TagNode;
-import org.primeframework.transformer.domain.TransformerException;
 
 /**
  * Text only Transformer implementation. The document source is stripped of all tags and only the text remains.

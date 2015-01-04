@@ -26,7 +26,6 @@ import org.primeframework.transformer.domain.BaseNode;
 import org.primeframework.transformer.domain.Document;
 import org.primeframework.transformer.domain.Node;
 import org.primeframework.transformer.domain.Pair;
-import org.primeframework.transformer.domain.ParserException;
 import org.primeframework.transformer.domain.TagNode;
 import org.primeframework.transformer.domain.TextNode;
 
@@ -36,15 +35,14 @@ import org.primeframework.transformer.domain.TextNode;
  * @author Daniel DeGroff
  */
 public class BBCodeParser implements Parser {
-
-  // TODO Allow this to be configured in the parser.
-  private static final Set<String> NO_CLOSING_TAG = new HashSet<>(Arrays.asList("*"));
-
   /**
    * The body of an 'escape' tag is not parsed.
    */
   // TODO Allow this to be configured in the parser
   private static final Set<String> ESCAPE_TAGS = new HashSet<>(Arrays.asList("code", "noparse"));
+
+  // TODO Allow this to be configured in the parser.
+  private static final Set<String> NO_CLOSING_TAG = new HashSet<>(Arrays.asList("*"));
 
   @Override
   public Document buildDocument(String source) throws ParserException {
@@ -60,7 +58,7 @@ public class BBCodeParser implements Parser {
     try {
       parse(document, nodes);
     } catch (Exception e) {
-      new ParserException("Failed to parse document source.\n\t" + document.source, e);
+      throw new ParserException("Failed to parse document source.\n\t" + new String(document.source), e);
     }
     return document;
   }
@@ -68,9 +66,9 @@ public class BBCodeParser implements Parser {
   /**
    * Finite State Machine parser implementation.
    *
-   * @param document
-   * @param nodes
-   * @throws ParserException
+   * @param document The document to add nodes to.
+   * @param nodes    The node queue for state management.
+   * @throws ParserException If parsing fails for any reason.
    */
   private void parse(Document document, Deque<TagNode> nodes) throws ParserException {
 
@@ -100,8 +98,8 @@ public class BBCodeParser implements Parser {
 
     State state = State.initial;
     TextNode textNode = null;
-    TagNode current = null;
     char[] source = document.source;
+    TagNode current;
 
     while (index <= source.length) {
       if (index == source.length) {
@@ -120,7 +118,9 @@ public class BBCodeParser implements Parser {
           handleExpectedUnclosedTag(document, nodes, index);
           if (state == State.closingTagBegin) {
             // Expecting a tagNode, set bodyEnd
-            nodes.peek().bodyEnd = index - 1;
+            TagNode tag = nodes.peek();
+            tag.bodyEnd = index - 1;
+            tag.hasBody = tag.bodyBegin != tag.bodyEnd;
           } else if (state == State.tagName) {
             nodes.push(new TagNode(document, index - 1));
           } else if (state == State.text) {
@@ -266,7 +266,83 @@ public class BBCodeParser implements Parser {
     }
   }
 
+  /**
+   * Add the provided node to node on the top of the stack if it isn't closed out yet, otherwise add it directly to the
+   * document as a top level node.
+   *
+   * @param document The document to add the node to.
+   * @param nodes    The node queue.
+   * @param node     The node to add.
+   */
+  private void addNode(Document document, Deque<TagNode> nodes, Node node) {
 
+    if (nodes.isEmpty()) {
+      document.addChild(node);
+    } else {
+      nodes.peek().addChild(node);
+    }
+
+    if (node instanceof TagNode) {
+      TagNode tag = (TagNode) node;
+      document.offsets.add(new Pair<>(tag.tagBegin, tag.bodyBegin - tag.tagBegin));
+      if (tag.hasClosingTag) {
+        document.offsets.add(new Pair<>(tag.bodyEnd, tag.tagEnd - tag.bodyEnd));
+      }
+    }
+  }
+
+  private void handleCompletedTagNode(Document document, Deque<TagNode> nodes, int index) {
+    if (!nodes.isEmpty()) {
+      TagNode tagNode = nodes.pop();
+      tagNode.tagEnd = index;
+      tagNode.hasClosingTag = true;
+      addNode(document, nodes, tagNode);
+    }
+  }
+
+  private void handleCompletedTextNode(Document document, Deque<TagNode> nodes, TextNode textNode, int index) {
+    if (textNode != null) {
+      textNode.tagEnd = index;
+      addNode(document, nodes, textNode);
+    }
+  }
+
+  private void handleDanglingNodes(Document document, Deque<TagNode> nodes, TextNode textNode, int index) {
+    if (textNode != null) {
+      handleCompletedTextNode(document, nodes, textNode, index);
+    }
+    handleExpectedUnclosedTag(document, nodes, index);
+    handleUnExpectedUnclosedTag(document, nodes, index);
+    handleCompletedTagNode(document, nodes, index);
+  }
+
+  private void handleExpectedUnclosedTag(Document document, Deque<TagNode> nodes, int index) {
+    if (!nodes.isEmpty()) {
+      // check for tags that don't require a closing tag
+      if (NO_CLOSING_TAG.contains(nodes.peek().getName())) {
+        TagNode tagNode = nodes.pop();
+        tagNode.bodyEnd = index - 1;
+        tagNode.tagEnd = index - 1;
+        tagNode.hasClosingTag = false;
+        addNode(document, nodes, tagNode);
+      }
+    }
+  }
+
+  private void handleUnExpectedUnclosedTag(Document document, Deque<TagNode> nodes, int index) {
+    while (!nodes.isEmpty()) {
+      TagNode tagNode = nodes.pop();
+      TextNode textNode = tagNode.toTextNode();
+      // If tagNode has children, find the last tagEnd
+      if (tagNode.children.isEmpty()) {
+        textNode.tagEnd = index;
+      } else {
+        Node last = tagNode.children.get(tagNode.children.size() - 1);
+        textNode.tagEnd = ((BaseNode) last).tagEnd;
+      }
+      addNode(document, nodes, textNode);
+    }
+  }
 
   /**
    * Finite States of this parser. Each defined state has one or more state transitions based upon the character at the
@@ -521,84 +597,5 @@ public class BBCodeParser implements Parser {
     };
 
     public abstract State nextState(char c);
-  }
-
-  /**
-   * Add the provided node to node on the top of the stack if it isn't closed out yet, otherwise add it directly to the
-   * document as a top level node.
-   *
-   * @param document
-   * @param nodes
-   * @param node
-   */
-  private void addNode(Document document, Deque<TagNode> nodes, Node node) {
-
-    if (nodes.isEmpty()) {
-      document.addChild(node);
-    } else {
-      nodes.peek().addChild(node);
-    }
-
-    if (node instanceof TagNode) {
-      TagNode tag = (TagNode) node;
-      document.offsets.add(new Pair<>(tag.tagBegin, tag.bodyBegin - tag.tagBegin));
-      if (tag.hasClosingTag) {
-        document.offsets.add(new Pair<>(tag.bodyEnd, tag.tagEnd - tag.bodyEnd));
-      }
-    }
-  }
-
-  private void handleCompletedTagNode(Document document, Deque<TagNode> nodes, int index) {
-    if (!nodes.isEmpty()) {
-      TagNode tagNode = nodes.pop();
-      tagNode.tagEnd = index;
-      tagNode.hasClosingTag = true;
-      addNode(document, nodes, tagNode);
-    }
-  }
-
-  private void handleCompletedTextNode(Document document, Deque<TagNode> nodes, TextNode textNode, int index) {
-    if (textNode != null) {
-      textNode.tagEnd = index;
-      addNode(document, nodes, textNode);
-    }
-  }
-
-  private void handleDanglingNodes(Document document, Deque<TagNode> nodes, TextNode textNode, int index) {
-    if (textNode != null) {
-      handleCompletedTextNode(document, nodes, textNode, index);
-    }
-    handleExpectedUnclosedTag(document, nodes, index);
-    handleUnExpectedUnclosedTag(document, nodes, index);
-    handleCompletedTagNode(document, nodes, index);
-  }
-
-  private void handleExpectedUnclosedTag(Document document, Deque<TagNode> nodes, int index) {
-    if (!nodes.isEmpty()) {
-      // check for tags that don't require a closing tag
-      if (NO_CLOSING_TAG.contains(nodes.peek().getName())) {
-        TagNode tagNode = nodes.pop();
-        tagNode.bodyEnd = index - 1;
-        tagNode.tagEnd = index - 1;
-        tagNode.hasClosingTag = false;
-        addNode(document, nodes, tagNode);
-      }
-    }
-  }
-
-  private void handleUnExpectedUnclosedTag(Document document, Deque<TagNode> nodes, int index) {
-    while (!nodes.isEmpty()) {
-      TagNode tagNode = nodes.pop();
-      TextNode textNode = tagNode.toTextNode();
-      // If tagNode has children, find the last tagEnd
-      if (tagNode.children.isEmpty()) {
-        textNode.tagEnd = index;
-      } else {
-        Node last = tagNode.children.get(tagNode.children.size() - 1);
-        int tagEnd = ((BaseNode) last).tagEnd;
-        textNode.tagEnd = tagEnd;
-      }
-      addNode(document, nodes, textNode);
-    }
   }
 }
