@@ -17,15 +17,15 @@
 package org.primeframework.transformer.service;
 
 import java.util.ArrayDeque;
-import java.util.Arrays;
 import java.util.Deque;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 
-import org.primeframework.transformer.domain.BaseNode;
 import org.primeframework.transformer.domain.Document;
 import org.primeframework.transformer.domain.Node;
 import org.primeframework.transformer.domain.Pair;
+import org.primeframework.transformer.domain.TagAttributes;
 import org.primeframework.transformer.domain.TagNode;
 import org.primeframework.transformer.domain.TextNode;
 
@@ -35,28 +35,20 @@ import org.primeframework.transformer.domain.TextNode;
  * @author Daniel DeGroff
  */
 public class BBCodeParser implements Parser {
-  /**
-   * The body of an 'escape' tag is not parsed.
-   */
-  // TODO Allow this to be configured in the parser
-  private static final Set<String> ESCAPE_TAGS = new HashSet<>(Arrays.asList("code", "noparse"));
-
-  // TODO Allow this to be configured in the parser.
-  private static final Set<String> NO_CLOSING_TAG = new HashSet<>(Arrays.asList("*"));
 
   @Override
-  public Document buildDocument(String source) throws ParserException {
-    return buildDocument(source.toCharArray());
+  public Document buildDocument(String source, Map<String, TagAttributes> tagAttributes) throws ParserException {
+    return buildDocument(source.toCharArray(), tagAttributes);
   }
 
   @Override
-  public Document buildDocument(char[] source) throws ParserException {
+  public Document buildDocument(char[] source, Map<String, TagAttributes> tagAttributes) throws ParserException {
 
     Document document = new Document(source);
     Deque<TagNode> nodes = new ArrayDeque<>();
 
     try {
-      parse(document, nodes);
+      parse(document, nodes, tagAttributes);
     } catch (Exception e) {
       throw new ParserException("Failed to parse document source.\n\t" + new String(document.source), e);
     }
@@ -66,29 +58,19 @@ public class BBCodeParser implements Parser {
   /**
    * Finite State Machine parser implementation.
    *
-   * @param document The document to add nodes to.
-   * @param nodes    The node queue for state management.
+   * @param document      The document to add nodes to.
+   * @param nodes         The node queue for state management.
+   * @param tagAttributes A map of tag attributes keyed by tag name.
    * @throws ParserException If parsing fails for any reason.
    */
-  private void parse(Document document, Deque<TagNode> nodes) throws ParserException {
+  private void parse(Document document, Deque<TagNode> nodes, Map<String, TagAttributes> tagAttributes)
+      throws ParserException {
 
-    // abc[ def
-    // TextNode[abc] --> add to parent node
-    // TagNode
-    //      -> illegal state
-    //       ? previous node text?
-    //           --> Remove previous sibling from parent and make current node
-    //           --> Add borked text to current node
-    //       :
-    //           --> Create new TextNode with borked chraracters and make current
-    //           --> TextNode[[ def]
-    //
-    // char[] ca = new char[1024];
-    //
-    // foo[bar] = "Hello World";
-    //
-    // [noparse]abc[def[/noparse]
-
+    final Map<String, TagAttributes> attributes = new HashMap<>();
+    if (tagAttributes != null) {
+      attributes.putAll(tagAttributes);
+    }
+    // TODO Validate attributes
 
     int index = 0;
 
@@ -96,10 +78,12 @@ public class BBCodeParser implements Parser {
     int attributeNameBegin = 0;
     int attributeValueBegin = 0;
 
+    Deque<String> preFormatted = new ArrayDeque<>();
+
     State state = State.initial;
+    TagNode current;
     TextNode textNode = null;
     char[] source = document.source;
-    TagNode current;
 
     while (index <= source.length) {
       if (index == source.length) {
@@ -115,11 +99,14 @@ public class BBCodeParser implements Parser {
 
         case tagBegin:
           state = state.nextState(source[index]);
-          handleExpectedUnclosedTag(document, nodes, index);
+          handleExpectedUnclosedTag(document, attributes, nodes, index);
           if (state == State.closingTagBegin) {
-            // Expecting a tagNode, set bodyEnd
-            TagNode tag = nodes.peek();
-            tag.bodyEnd = index - 1;
+            if (nodes.isEmpty()) {
+              state = State.text;
+              index--;
+            } else {
+              nodes.peek().bodyEnd = index - 1;
+            }
           } else if (state == State.tagName) {
             nodes.push(new TagNode(document, index - 1));
           } else if (state == State.text) {
@@ -133,7 +120,9 @@ public class BBCodeParser implements Parser {
 
         case tagName:
           state = state.nextState(source[index]);
-          if (state != State.tagName) {
+          if (state == State.tagBegin) {
+            handleUnExpectedOpenTag(document, nodes, index);
+          } else if (state != State.tagName) {
             nodes.peek().nameEnd = index;
           }
           index++;
@@ -141,10 +130,10 @@ public class BBCodeParser implements Parser {
 
         case openingTagEnd:
           state = state.nextState(source[index]);
-          // Set initial end to bodyBegin, if a closing tag exists this will be set again
           current = nodes.peek();
-          current.end = index;
+          current.end = index; // when tag is closed this will be updated
           current.bodyBegin = index;
+          checkForPreFormattedTag(current, preFormatted, attributes);
           index++;
           break;
 
@@ -156,9 +145,9 @@ public class BBCodeParser implements Parser {
         case closingTagName:
           state = state.nextState(source[index]);
           index++;
-
           if (state == State.closingTagEnd) {
-            handleCompletedTagNode(document, nodes, index);
+            handlePreFormattedClosingTag(document, nodes, preFormatted);
+            handleCompletedTagNode(document, index, nodes);
           }
           break;
 
@@ -195,13 +184,10 @@ public class BBCodeParser implements Parser {
 
         case complexAttributeValue:
           state = state.nextState(source[index]);
-          if (state == State.singleQuotedAttributeValue || state == State.doubleQuotedAttributeValue) {
-            attributeValueBegin = index + 1;
-          } else if (state == State.complexAttributeValue) {
+          if (state == State.unQuotedAttributeValue) {
             attributeValueBegin = index;
-          } else if (state != State.complexAttributeValue) {
-            nodes.peek().attributes.put(attributeName, document.getString(attributeValueBegin, index));
-            document.attributeOffsets.add(new Pair<>(attributeValueBegin, index - attributeValueBegin));
+          } else if (state == State.singleQuotedAttributeValue || state == State.doubleQuotedAttributeValue) {
+            attributeValueBegin = index + 1;
           }
           index++;
           break;
@@ -218,6 +204,15 @@ public class BBCodeParser implements Parser {
         case singleQuotedAttributeValue:
           state = state.nextState(source[index]);
           if (state != State.singleQuotedAttributeValue) {
+            nodes.peek().attributes.put(attributeName, document.getString(attributeValueBegin, index));
+            document.attributeOffsets.add(new Pair<>(attributeValueBegin, index - attributeValueBegin));
+          }
+          index++;
+          break;
+
+        case unQuotedAttributeValue:
+          state = state.nextState(source[index]);
+          if (state != State.unQuotedAttributeValue) {
             nodes.peek().attributes.put(attributeName, document.getString(attributeValueBegin, index));
             document.attributeOffsets.add(new Pair<>(attributeValueBegin, index - attributeValueBegin));
           }
@@ -253,19 +248,38 @@ public class BBCodeParser implements Parser {
             textNode = new TextNode(document, index - 1, index);
           }
           if (state != State.text) {
-            handleCompletedTextNode(document, nodes, textNode, index);
+            handleCompletedTextNode(document, index, textNode, nodes);
             textNode = null;
           }
           index++;
           break;
 
         case complete:
-          handleDanglingNodes(document, nodes, textNode, index);
+          handleDanglingNodes(document, index, nodes, textNode, attributes);
           index++;
           break;
 
         default:
           throw new IllegalStateException("Illegal parser state : " + state);
+      }
+    }
+  }
+
+  private void removeRelatedOffsets(Document document, TagNode current) {
+    // clear out correlating offsets
+    Iterator<Pair<Integer, Integer>> offsets = document.offsets.iterator();
+    while (offsets.hasNext()) {
+      Pair<Integer, Integer> offset = offsets.next();
+      if (offset.first >= current.bodyBegin && offset.first < current.bodyEnd) {
+        offsets.remove();
+      }
+    }
+
+    Iterator<Pair<Integer, Integer>> attributeOffsets = document.attributeOffsets.iterator();
+    while (attributeOffsets.hasNext()) {
+      Pair<Integer, Integer> offset = attributeOffsets.next();
+      if (offset.first > current.bodyBegin && offset.first < current.bodyEnd) {
+        attributeOffsets.remove();
       }
     }
   }
@@ -295,43 +309,88 @@ public class BBCodeParser implements Parser {
     }
   }
 
-  private void handleCompletedTagNode(Document document, Deque<TagNode> nodes, int index) {
-    if (!nodes.isEmpty()) {
-      TagNode tagNode = nodes.pop();
-      tagNode.end = index;
-      addNode(document, nodes, tagNode);
+  private void checkForPreFormattedTag(TagNode current, Deque<String> preFormatted,
+                                       Map<String, TagAttributes> attributes) {
+    String name = current.getName().toLowerCase();
+    if (attributes.containsKey(name)) {
+      if (attributes.get(name).preFormattedBody) {
+        preFormatted.push(name);
+      }
     }
   }
 
-  private void handleCompletedTextNode(Document document, Deque<TagNode> nodes, TextNode textNode, int index) {
+  private void handleCompletedTagNode(Document document, int index, Deque<TagNode> nodes) {
+    if (!nodes.isEmpty()) {
+      TagNode current = nodes.peek();
+      String closingTagName = document.getString(current.bodyEnd + 2, index - 1);
+      if (current.getName().equalsIgnoreCase(closingTagName)) {
+        TagNode tagNode = nodes.pop();
+        tagNode.end = index;
+        addNode(document, nodes, tagNode);
+      } else {
+        handleUnExpectedUnclosedTag(document, index, nodes);
+      }
+    }
+  }
+
+  private void handleCompletedTextNode(Document document, int index, TextNode textNode, Deque<TagNode> nodes) {
     if (textNode != null) {
       textNode.end = index;
       addNode(document, nodes, textNode);
     }
   }
 
-  private void handleDanglingNodes(Document document, Deque<TagNode> nodes, TextNode textNode, int index) {
+  private void handleDanglingNodes(Document document, int index, Deque<TagNode> nodes, TextNode textNode,
+                                   Map<String, TagAttributes> attributes) {
     if (textNode != null) {
-      handleCompletedTextNode(document, nodes, textNode, index);
+      handleCompletedTextNode(document, index, textNode, nodes);
     }
-    handleExpectedUnclosedTag(document, nodes, index);
-    handleUnExpectedUnclosedTag(document, nodes, index);
-    handleCompletedTagNode(document, nodes, index);
+    handleExpectedUnclosedTag(document, attributes, nodes, index);
+    handleUnExpectedUnclosedTag(document, index, nodes);
+    handleCompletedTagNode(document, index, nodes);
   }
 
-  private void handleExpectedUnclosedTag(Document document, Deque<TagNode> nodes, int index) {
+  private void handleExpectedUnclosedTag(Document document, Map<String, TagAttributes> attributes, Deque<TagNode> nodes,
+                                         int index) {
     if (!nodes.isEmpty()) {
       // check for tags that don't require a closing tag
-      if (NO_CLOSING_TAG.contains(nodes.peek().getName())) {
-        TagNode tagNode = nodes.pop();
-        tagNode.bodyEnd = index - 1;
-        tagNode.end = index - 1;
-        addNode(document, nodes, tagNode);
+      String name = nodes.peek().getName();
+      if (name != null) {
+        name = name.toLowerCase();
+        if (attributes.containsKey(name) && !attributes.get(name).requiresClosingTag) {
+          TagNode tagNode = nodes.pop();
+          tagNode.bodyEnd = index - 1;
+          tagNode.end = index - 1;
+          addNode(document, nodes, tagNode);
+        }
+      }
+    }
+
+  }
+
+  private void handlePreFormattedClosingTag(Document document, Deque<TagNode> nodes, Deque<String> preFormatted) {
+    if (!preFormatted.isEmpty()) {
+      TagNode current = nodes.peek();
+      String tagName = preFormatted.peek();
+      if (tagName.equalsIgnoreCase(current.getName())) {
+        // Clear children and add a single text node
+        current.children.clear();
+        current.addChild(new TextNode(document, current.bodyBegin, current.bodyEnd));
+        // remove completed pre-formatted tag and clear correlating offsets from the document
+        preFormatted.pop();
+        removeRelatedOffsets(document, current);
       }
     }
   }
 
-  private void handleUnExpectedUnclosedTag(Document document, Deque<TagNode> nodes, int index) {
+  private void handleUnExpectedOpenTag(Document document, Deque<TagNode> nodes, int index) {
+    TagNode tagNode = nodes.pop();
+    TextNode textNode = tagNode.toTextNode();
+    textNode.end = index;
+    addNode(document, nodes, textNode);
+  }
+
+  private void handleUnExpectedUnclosedTag(Document document, int index, Deque<TagNode> nodes) {
     while (!nodes.isEmpty()) {
       TagNode tagNode = nodes.pop();
       TextNode textNode = tagNode.toTextNode();
@@ -340,7 +399,11 @@ public class BBCodeParser implements Parser {
         textNode.end = index;
       } else {
         Node last = tagNode.children.get(tagNode.children.size() - 1);
-        textNode.end = ((BaseNode) last).end;
+//        int end = ((BaseNode) last).end;
+//        if (end > textNode.end) {
+//          textNode.end = end;
+//        }
+        textNode.end = index;
       }
       addNode(document, nodes, textNode);
     }
@@ -408,6 +471,8 @@ public class BBCodeParser implements Parser {
           return complexAttribute;
         } else if (c == ']') {
           return openingTagEnd;
+        } else if (c == '[') {
+          return tagBegin;
         } else {
           return tagName;
         }
@@ -459,7 +524,7 @@ public class BBCodeParser implements Parser {
         } else if (c == '\"') {
           return doubleQuotedAttributeValue;
         } else {
-          return complexAttributeValue;
+          return unQuotedAttributeValue;
         }
       }
     },
@@ -486,6 +551,21 @@ public class BBCodeParser implements Parser {
       }
     },
 
+    unQuotedAttributeValue {
+      @Override
+      public State nextState(char c) {
+        if ( c == ' ') {
+          return complexAttribute;
+        } else if (c == ']') {
+          return openingTagEnd;
+        } else {
+          return unQuotedAttributeValue;
+        }
+      }
+    },
+
+    // TODO I could pull out some more states here, currently opening with a single quote and ending with a double
+    // TODO won't be detected.  e.g.  [foo bar='test"]abc[/foo]
     simpleAttribute {
       @Override
       public State nextState(char c) {

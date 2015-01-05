@@ -15,24 +15,15 @@
  */
 package org.primeframework.transformer.service;
 
-import java.io.IOException;
-import java.io.StringReader;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Predicate;
 
-import freemarker.template.Configuration;
-import freemarker.template.Template;
 import org.primeframework.transformer.domain.Document;
+import org.primeframework.transformer.domain.TagAttributes;
 import org.primeframework.transformer.domain.TagNode;
-import org.primeframework.transformer.service.Transformer.NodeConsumer.OffsetNodeConsumer;
-import org.primeframework.transformer.service.Transformer.Offsets;
-import org.primeframework.transformer.service.Transformer.TransformFunction.OffsetHTMLEscapeTransformFunction;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertTrue;
 
 /**
  * Tests the TextTransformer.
@@ -40,6 +31,14 @@ import static org.testng.Assert.assertTrue;
  * @author Brian Pontarelli
  */
 public class TextTransformerTest {
+
+  private static Map<String, TagAttributes> attributes = new HashMap<>();
+  static {
+    attributes.put("*", new TagAttributes(false, false));
+    attributes.put("code", new TagAttributes(true, true));
+    attributes.put("noparse", new TagAttributes(true, true));
+  }
+
   @Test
   public void all() throws Exception {
     assertTransform("[list] [*] foo [*] bar [/list]", "  foo  bar ", (node) -> true);
@@ -54,7 +53,7 @@ public class TextTransformerTest {
 
   private void assertTransform(String str, String expected, Predicate<TagNode> transformPredicate) throws Exception {
     BBCodeParser parser = new BBCodeParser();
-    Document doc = parser.buildDocument(str);
+    Document doc = parser.buildDocument(str, attributes);
     Transformer transformer = new TextTransformer();
     String actual = transformer.transform(doc, transformPredicate, null, null);
     assertEquals(actual, expected);

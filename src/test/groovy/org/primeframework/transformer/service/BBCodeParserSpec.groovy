@@ -16,6 +16,7 @@
 package org.primeframework.transformer.service
 
 import org.primeframework.transformer.domain.Pair
+import org.primeframework.transformer.domain.TagAttributes
 import org.primeframework.transformer.domain.TagNode
 import org.primeframework.transformer.domain.TextNode
 import spock.lang.Shared
@@ -36,13 +37,146 @@ public class BBCodeParserSpec extends Specification {
     }
   }
 
+  @Shared
+  def attributes = [ '*' : new TagAttributes(false, false),
+                    code : new TagAttributes(true, true),
+                    noparse : new TagAttributes(true, true)]
+
+  // TODO can be removed - keeping here now until I complete work on the parser
+
+  def "Complex attributes with lots of extra space and a non-quoted value and two digit value"() {
+
+    when: "A document is constructed"
+      def source = "[font      size=55]blah[/font]"
+      /*            ^              ^      ^                                                 */
+      /* offsets    0,19                  23,7                                              */
+      /* attributes                16,2                                                     */
+      def document = new BBCodeParser().buildDocument(source, attributes)
+
+    then:
+      document.offsets == [new Pair<>(0, 19), new Pair<>(23, 7)] as TreeSet
+
+    and: "attribute offsets should be correct"
+      document.attributeOffsets == [new Pair<>(16, 2)] as TreeSet
+  }
+
+  def "unexpected unclosed tag"() {
+
+    when: "A document is constructed"
+      def source = "[b]Text[/i]"
+      /*            ^      ^      */
+      /*            0,3    7,4    */
+      def document = new BBCodeParser().buildDocument(source, attributes)
+
+    then: "no exceptions thrown"
+
+      notThrown Exception
+
+    and: "result should not be null"
+      document != null
+
+    and:
+      document.children.size() == 1
+      document.children.get(0) instanceof TextNode
+      def text = (TextNode) document.children.get(0)
+      text.getBody() == "[b]Text[/i]"
+
+    and: "offsets to tags should be empty"
+      document.offsets.empty
+      document.attributeOffsets.empty
+  }
+
+  def "basic noparse tag"() {
+
+    when: "A document is constructed"
+      def source = "[noparse][b]Bold[/b][/noparse]"
+      def document = new BBCodeParser().buildDocument(source, attributes)
+
+    then:
+      document.children.size() == 1
+      document.children.get(0) instanceof TagNode
+      def tag = (TagNode) document.children.get(0)
+      tag.children.size() == 1
+      tag.children.get(0) instanceof TextNode
+      def text = (TextNode) tag.children.get(0)
+      text.getBody() == "[b]Bold[/b]"
+
+    and:
+      document.offsets == [new Pair<>(0, 9), new Pair<>(20, 10)] as TreeSet
+      document.attributeOffsets.empty
+  }
+
+  def "noparse tag with bad body"() {
+
+    when: "A document is constructed"
+      def source = "[noparse]abc[def[/noparse]"
+      def document = new BBCodeParser().buildDocument(source, attributes)
+
+    then:
+      document.children.size() == 1
+      document.children.get(0) instanceof TagNode
+      def tag = (TagNode) document.children.get(0)
+      tag.children.size() == 1
+      tag.children.get(0) instanceof TextNode
+      def text = (TextNode) tag.children.get(0)
+      text.getBody() == "abc[def"
+
+    and:
+      document.offsets == [new Pair<>(0, 9), new Pair<>(16, 10)] as TreeSet
+      document.attributeOffsets.empty
+  }
+
+  def "foo[bar] = \"Hello World\";"() {
+
+    when: "A document is constructed"
+      def source = "foo[bar] = \"Hello World\";"
+      def document = new BBCodeParser().buildDocument(source, attributes)
+
+    then:
+      document.children.size() == 2
+      document.children.get(0) instanceof TextNode
+      document.children.get(1) instanceof TextNode
+
+      def text1 = (TextNode) document.children.get(0)
+      text1.getBody() == "foo"
+
+      def text2 = (TextNode) document.children.get(1)
+      text2.getBody() == "[bar] = \"Hello World\";"
+
+    and:
+      document.offsets.empty
+      document.attributeOffsets.empty
+  }
+
+  def "noparse tag with embedded noparse"() {
+
+    when: "A document is constructed"
+      def source = "[noparse]Example: [noparse] String test = null; [/noparse][/noparse]"
+      def document = new BBCodeParser().buildDocument(source, attributes)
+
+    then:
+      document.children.size() == 1
+      document.children.get(0) instanceof TagNode
+      def tag = (TagNode) document.children.get(0)
+      tag.children.size() == 1
+      tag.children.get(0) instanceof TextNode
+      def text = (TextNode) tag.children.get(0)
+      text.getBody() == "Example: [noparse] String test = null; [/noparse]"
+
+    and:
+      document.offsets == [new Pair<>(0, 9), new Pair<>(58, 10)] as TreeSet
+      document.attributeOffsets.empty
+  }
+
+  // TODO - END can be removed - keeping here now until I complete work on the parser
+
   def "Build a new document using BBCode - 1 Tag"() {
 
     when: "A document is constructed"
       def source = "[b]Text[/b]"
       /*            ^      ^      */
       /*            0,3    7,4    */
-      def document = new BBCodeParser().buildDocument(source)
+      def document = new BBCodeParser().buildDocument(source, attributes)
 
     then: "no exceptions thrown"
       notThrown Exception
@@ -61,21 +195,21 @@ public class BBCodeParserSpec extends Specification {
   def "Build a new document using BBCode - Two Tags"() {
 
     when: "A document is constructed"
-    def source = "[b]Bold[/b][i]Italic[/i]"
-    /*            ^      ^      */
-    /*            0,3    7,4    */
-    def document = new BBCodeParser().buildDocument(source)
+      def source = "[b]Bold[/b][i]Italic[/i]"
+      /*            ^      ^      */
+      /*            0,3    7,4    */
+      def document = new BBCodeParser().buildDocument(source, attributes)
 
     then: "no exceptions thrown"
-    notThrown Exception
+      notThrown Exception
 
     and: "result should not be null"
-    document != null
+      document != null
 
     and:
-    document.children.size() == 2
-    ((TagNode) document.children.get(0)).children.size() == 1
-    ((TagNode) document.children.get(1)).children.size() == 1
+      document.children.size() == 2
+      ((TagNode) document.children.get(0)).children.size() == 1
+      ((TagNode) document.children.get(1)).children.size() == 1
 
     and: "offsets to tags should be correct"
       document.offsets == [new Pair<>(0, 3), new Pair<>(7, 4), new Pair<>(11, 3), new Pair<>(20, 4)] as TreeSet
@@ -84,11 +218,11 @@ public class BBCodeParserSpec extends Specification {
   def "Build a new document using BBCode - 1 Tag with nested Tag"() {
 
     when: "A document is constructed"
-    def source = "[b][i]Italic[/i][/b]"
-    /*               ^        ^   ^      */
-    /*            0,3         12,4       */
-    /*               3,3          16,4   */
-    def document = new BBCodeParser().buildDocument(source)
+      def source = "[b][i]Italic[/i][/b]"
+      /*               ^        ^   ^      */
+      /*            0,3         12,4       */
+      /*               3,3          16,4   */
+      def document = new BBCodeParser().buildDocument(source, attributes)
 
     then: "no exceptions thrown"
       notThrown Exception
@@ -135,7 +269,7 @@ public class BBCodeParserSpec extends Specification {
 
     when: "A document is constructed"
       def source = "[B]Text[/B]"
-      def document = new BBCodeParser().buildDocument(source)
+      def document = new BBCodeParser().buildDocument(source, attributes)
       def result = new BBCodeToHTMLTransformer().transform(document, transformPredicate, null, null)
 
     then: "basic offsets are correct"
@@ -154,7 +288,7 @@ public class BBCodeParserSpec extends Specification {
 
     when: "A document is constructed"
       def source = "[b]Hello[/B] [I]World[/i]"
-      def document = new BBCodeParser().buildDocument(source)
+      def document = new BBCodeParser().buildDocument(source, attributes)
 
     then: "number of nodes is correct"
       document.children.size() == 3
@@ -183,7 +317,7 @@ public class BBCodeParserSpec extends Specification {
 
     when: "A document is constructed"
       def source = ['[', 'b', ']', 'T', 'e', 'x', 't', '[', '/', 'b', ']'] as char[]
-      def document = new BBCodeParser().buildDocument(source)
+      def document = new BBCodeParser().buildDocument(source, attributes)
 
     then: "no exceptions thrown"
       notThrown Exception
@@ -199,7 +333,7 @@ public class BBCodeParserSpec extends Specification {
       /*            ^     ^                                             ^       */
       /* offsets    0,29                                                50,6    */
       /* attributes       6,12                                                  */
-      def document = new BBCodeParser().buildDocument(source)
+      def document = new BBCodeParser().buildDocument(source, attributes)
 
     then: "offsets to tags should be correct"
       document.offsets == [new Pair<>(0, 29), new Pair<>(50, 6)] as TreeSet
@@ -218,7 +352,7 @@ public class BBCodeParserSpec extends Specification {
       /*            ^           ^           ^                                         */
       /* offsets    0,16                   21,7                                       */
       /* attributes            11,3                                                   */
-      def document = new BBCodeParser().buildDocument(source)
+      def document = new BBCodeParser().buildDocument(source, attributes)
 
     then: "offsets to tags should be correct"
       document.offsets == [new Pair<>(0, 16), new Pair<>(21, 7)] as TreeSet
@@ -239,7 +373,7 @@ public class BBCodeParserSpec extends Specification {
       /*                  ^            ^            ^                      ^        */
       /* offsets          6,37                                             51,7     */
       /* attributes                    18,2         30,11                           */
-      def document = new BBCodeParser().buildDocument(source)
+      def document = new BBCodeParser().buildDocument(source, attributes)
 
     then: "offsets to tags should be correct"
       document.offsets == [new Pair<>(6, 37), new Pair<>(51, 7)] as TreeSet
@@ -251,7 +385,7 @@ public class BBCodeParserSpec extends Specification {
   def "Parse BBCode with a single tag that has no closing tag and no parent enclosing tag"() {
 
     when: "A document is constructed"
-      def document = new BBCodeParser().buildDocument("[*] tester")
+      def document = new BBCodeParser().buildDocument("[*] tester", attributes)
 
     then: "no exception should be thrown"
       notThrown ParserException
@@ -261,7 +395,7 @@ public class BBCodeParserSpec extends Specification {
       document.children.get(0) instanceof TagNode
       def tag = (TagNode) document.children.get(0)
       tag.getName() == "*"
-      tag.hasClosingTag == false
+      tag.hasClosingTag() == false
       tag.children.size() == 1
 
     and: "the tagNode should have a single child textNode"
@@ -273,7 +407,7 @@ public class BBCodeParserSpec extends Specification {
   def "Parse BBCode with embedded tags in a no parse tag w/out a closing tag."() {
 
     when: "We are missing a closing tag w/ embedded non-parsed tags"
-      def document = new BBCodeParser().buildDocument("[code] abc123 [baz] xyz456")
+      def document = new BBCodeParser().buildDocument("[code] abc123 [baz] xyz456", attributes)
 
     then: "no exception should be thrown"
       notThrown ParserException
@@ -294,7 +428,7 @@ public class BBCodeParserSpec extends Specification {
       /*          ^  ^        ^       ^                                             */
       /* offsets  0,3 3,3     12,3    20,4                                          */
       /* attributes                                                                 */
-      def document = new BBCodeParser().buildDocument(source)
+      def document = new BBCodeParser().buildDocument(source, attributes)
 
     then:
       document.offsets == [new Pair<>(0, 3), new Pair<>(3, 3), new Pair<>(12, 3), new Pair<>(20, 4)] as TreeSet
@@ -308,7 +442,7 @@ public class BBCodeParserSpec extends Specification {
       /*            ^     ^  ^                                                      */
       /* offsets    0,6  6,3  9,7                                                   */
       /* attributes                                                                 */
-      def document = new BBCodeParser().buildDocument(source)
+      def document = new BBCodeParser().buildDocument(source, attributes)
 
     then:
       document.offsets == [new Pair<>(0, 6), new Pair<>(6, 3), new Pair<>(9, 7)] as TreeSet
@@ -322,7 +456,7 @@ public class BBCodeParserSpec extends Specification {
       /*            ^         ^  ^                                                  */
       /* offsets    0,6       10,3  13,7                                            */
       /* attributes                                                                 */
-      def document = new BBCodeParser().buildDocument(source)
+      def document = new BBCodeParser().buildDocument(source, attributes)
 
     then:
       document.offsets == [new Pair<>(0, 6), new Pair<>(10, 3), new Pair<>(13, 7)] as TreeSet
@@ -336,10 +470,12 @@ public class BBCodeParserSpec extends Specification {
       /*            ^      ^      ^                                ^       ^       ^      */
       /* offsets    0,7    7,7  14,7                               47,8   55,8     63,8   */
       /* attributes                                                                       */
-      def document = new BBCodeParser().buildDocument(source)
+      def document = new BBCodeParser().buildDocument(source, attributes)
 
     then:
-      document.offsets == [new Pair<>(0, 7), new Pair<>(7, 7), new Pair<>(14, 7), new Pair<>(47, 8), new Pair<>(55, 8), new Pair<>(63, 8)] as TreeSet
+      document.offsets == [new Pair<>(0, 7), new Pair<>(7, 7), new Pair<>(14, 7), new Pair<>(47, 8), new Pair<>(55,
+                                                                                                                8), new Pair<>(
+          63, 8)] as TreeSet
 
   }
 
@@ -350,7 +486,7 @@ public class BBCodeParserSpec extends Specification {
       /*            ^      ^        ^                                                     */
       /* offsets    0,12            16,8                                                  */
       /* attributes        7,4                                                              */
-      def document = new BBCodeParser().buildDocument(source)
+      def document = new BBCodeParser().buildDocument(source, attributes)
 
     then:
       document.offsets == [new Pair<>(0, 12), new Pair<>(16, 8)] as TreeSet
@@ -366,7 +502,7 @@ public class BBCodeParserSpec extends Specification {
       /*            ^      ^          ^                                                     */
       /* offsets    0,14            18,7                                                    */
       /* attributes             12,1                                                        */
-      def document = new BBCodeParser().buildDocument(source)
+      def document = new BBCodeParser().buildDocument(source, attributes)
 
     then:
       document.offsets == [new Pair<>(0, 14), new Pair<>(18, 7)] as TreeSet
@@ -382,7 +518,7 @@ public class BBCodeParserSpec extends Specification {
       /*            ^           ^         ^                                                 */
       /* offsets    0,16                  18,7                                              */
       /* attributes             13,1                                                        */
-      def document = new BBCodeParser().buildDocument(source)
+      def document = new BBCodeParser().buildDocument(source, attributes)
 
     then:
       document.offsets == [new Pair<>(0, 16), new Pair<>(20, 7)] as TreeSet
@@ -398,7 +534,7 @@ public class BBCodeParserSpec extends Specification {
       /*            ^              ^      ^                                                 */
       /* offsets    0,18                  22,7                                              */
       /* attributes                16,1                                                     */
-      def document = new BBCodeParser().buildDocument(source)
+      def document = new BBCodeParser().buildDocument(source, attributes)
 
     then:
       document.offsets == [new Pair<>(0, 18), new Pair<>(22, 7)] as TreeSet
@@ -413,7 +549,7 @@ public class BBCodeParserSpec extends Specification {
       def source = "[list][*]item1[*]item2[/list]";
       /*            ^     ^        ^      ^                                                 */
       /* offsets    0,6   6,3     14,3    22,7                                              */
-      def document = new BBCodeParser().buildDocument(source)
+      def document = new BBCodeParser().buildDocument(source, attributes)
 
     then:
       document.offsets == [new Pair<>(0, 6), new Pair<>(6, 3), new Pair<>(14, 3), new Pair<>(22, 7)] as TreeSet

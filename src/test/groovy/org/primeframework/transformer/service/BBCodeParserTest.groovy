@@ -236,6 +236,15 @@ class BBCodeParserTest {
   }
 
   @Test
+  void edgeCase_noparseEmbeddedNoParse() {
+    assertParse("[noparse]Example: [noparse]foo[/noparse][/noparse]", [[0, 9], [40, 10]]) {
+      TagNode(name: "noparse", start: 0, nameEnd: 8, attributesBegin: -1, bodyBegin: 9, bodyEnd: 40, end: 48) {
+        TextNode(body: "Example: [noparse]foo[/noparse]", start: 9, end: 40)
+      }
+    }
+  }
+
+  @Test
   public void offsets() {
     assertParse("z [b]abc defg [/b]hijk [ul][*]lmn opqr[*][/ul]",
                 [[2, 3], [14, 4], [23, 4], [27, 3], [38, 3], [41, 5]]) {

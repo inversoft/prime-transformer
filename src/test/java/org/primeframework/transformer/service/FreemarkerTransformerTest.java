@@ -24,6 +24,7 @@ import java.util.function.Predicate;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
 import org.primeframework.transformer.domain.Document;
+import org.primeframework.transformer.domain.TagAttributes;
 import org.primeframework.transformer.domain.TagNode;
 import org.primeframework.transformer.service.Transformer.NodeConsumer.OffsetNodeConsumer;
 import org.primeframework.transformer.service.Transformer.Offsets;
@@ -334,6 +335,11 @@ public class FreemarkerTransformerTest {
 
   private Document parseDocument(String string) throws Exception {
     Parser parser = new BBCodeParser();
-    return parser.buildDocument(string, Parser.defaultPreFormattedPredicate);
+    Map<String, TagAttributes> attributes = new HashMap<>();
+    attributes.put("noparse", new TagAttributes(true, true));
+    attributes.put("code", new TagAttributes(true, true));
+    attributes.put("*", new TagAttributes(false, false));
+
+    return parser.buildDocument(string, attributes);
   }
 }

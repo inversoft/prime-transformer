@@ -16,6 +16,7 @@
 package org.primeframework.transformer.service
 
 import org.primeframework.transformer.domain.Document
+import org.primeframework.transformer.domain.TagAttributes
 import org.primeframework.transformer.domain.TagNode
 import org.primeframework.transformer.domain.TextNode
 import spock.lang.Shared
@@ -31,6 +32,10 @@ public class BBCodeToHTMLTransformerSpec extends Specification {
   @Shared
   def bbCodeToFreeMarkerTransformer;
 
+  @Shared
+  def attributes = [ '*' : new TagAttributes(false, false),
+                     code : new TagAttributes(true, true),
+                     noparse : new TagAttributes(true, true)]
   /**
    * No lambdas until Groovy v3.
    */
@@ -51,7 +56,7 @@ public class BBCodeToHTMLTransformerSpec extends Specification {
   def "No FreeMarker template for tag with strict mode disabled"() {
 
     when: "A BBCodeParser is setup and a template has not been provided for a tag"
-      def document = bbCodeParser.buildDocument("[unknown]Testing[/unknown]")
+      def document = bbCodeParser.buildDocument("[unknown]Testing[/unknown]", attributes)
 
     and: "transform is bbCodeTransformer"
       def html = bbCodeToFreeMarkerTransformer.transform(document, transformPredicate, null, null)
@@ -65,7 +70,7 @@ public class BBCodeToHTMLTransformerSpec extends Specification {
   def "No FreeMarker template for tag with strict mode enabled"() {
 
     when: "A BBCodeParser is setup and a template has not been provided for a tag"
-      def document = bbCodeParser.buildDocument("[unknown]Testing[/unknown]")
+      def document = bbCodeParser.buildDocument("[unknown]Testing[/unknown]", attributes)
 
     and: "transform is bbCodeTransformer"
       def html = bbCodeToFreeMarkerTransformer.transform(document, transformPredicate, null, null)
@@ -81,7 +86,7 @@ public class BBCodeToHTMLTransformerSpec extends Specification {
   def "No FreeMarker template for tag with strict mode enabled in the constructor"() {
 
     when: "A BBCodeParser is setup and a template has not been provided for a tag"
-      Document document = bbCodeParser.buildDocument("[unknown]Testing[/unknown]")
+      Document document = bbCodeParser.buildDocument("[unknown]Testing[/unknown]", attributes)
 
     and: "transform is bbCodeTransformer"
       def html = new BBCodeToHTMLTransformer(true).transform(document, transformPredicate, null, null)
@@ -97,7 +102,7 @@ public class BBCodeToHTMLTransformerSpec extends Specification {
   def "No closing BBCode tag"() {
 
     when: "A BBCode string with a missing closing tag is parsed"
-      def document = bbCodeParser.buildDocument("[b]Testing");
+      def document = bbCodeParser.buildDocument("[b]Testing", attributes);
 
     then: "a parse exception is not thrown"
       notThrown ParserException
@@ -120,7 +125,7 @@ public class BBCodeToHTMLTransformerSpec extends Specification {
   def "BBCode to HTML - simple"() {
 
     expect: "when HTML transformer is called with bbCode properly formatted HTML is returned"
-      def document = bbCodeParser.buildDocument(bbCode, Parser.defaultPreFormattedPredicate)
+      def document = bbCodeParser.buildDocument(bbCode, attributes)
       Transformer.Offsets offsets = new Transformer.Offsets();
       def transformFunction = new Transformer.TransformFunction.OffsetHTMLEscapeTransformFunction(offsets)
       bbCodeToFreeMarkerTransformer.transform(document, transformPredicate, transformFunction, null).replaceAll(" ", "").replaceAll("<br>", "").replaceAll("&nbsp;", "") == html.replaceAll(" ", "");
@@ -141,12 +146,12 @@ public class BBCodeToHTMLTransformerSpec extends Specification {
       "<u>Underline</u>"                                                                                                      | "[u]Underline[/u]"
       "<a href=\"http://foo.com\">http://foo.com</a>"                                                                         | "[url=http://foo.com]http://foo.com[/url]"
       "<a href=\"http://foo.com\">foo.com</a>"                                                                                | "[url=http://foo.com]foo.com[/url]"
-//      "Testing []"                                                                                                            | "Testing []"
+      "Testing []"                                                                                                            | "Testing []"
       "<a href=\"mailto:barney@rubble.com\">barney</a>"                                                                       | "[email=barney@rubble.com]barney[/email]"
       "<a href=\"mailto:barney@rubble.com\">barney@rubble.com</a>"                                                            | "[email=barney@rubble.com]barney@rubble.com[/email]"
       "Text <sub>subscript</sub> Other text"                                                                                  | "Text [sub]subscript[/sub] Other text"
       "Text <sup>superscript</sup> Other text"                                                                                | "Text [sup]superscript[/sup] Other text"
-//      "Testing <div>[b] Testing [/b] [url]http://www.google.com[/url]</div> Text"                                             | "Testing [noparse][b] Testing [/b] [url]http://www.google.com[/url][/noparse] Text"
+      "Testing <div>[b] Testing [/b] [url]http://www.google.com[/url]</div> Text"                                             | "Testing [noparse][b] Testing [/b] [url]http://www.google.com[/url][/noparse] Text"
       "Test color is <span style=\"color: red\">red</span>."                                                                  | "Test color is [color=red]red[/color]."
       "Test color is <span style=\"color: #FFF\">white</span>."                                                               | "Test color is [color=\"#FFF\"]white[/color]."
       "Test color is <span style=\"color: black\">black</span>."                                                              | "Test color is [color=\"black\"]black[/color]."
@@ -172,7 +177,7 @@ public class BBCodeToHTMLTransformerSpec extends Specification {
       def bbCode = this.getClass().getResourceAsStream("/org/primeframework/transformer/bbcode/" + fileName).getText();
       def html = this.getClass().getResourceAsStream("/org/primeframework/transformer/html/" + fileName).getText();
 
-      def document = bbCodeParser.buildDocument(bbCode)
+      def document = bbCodeParser.buildDocument(bbCode, attributes)
       bbCodeToFreeMarkerTransformer.transform(document, transformPredicate, null, null).replaceAll("<br>", "").replaceAll("\\s+", "") == html.replaceAll("\\s+", "")
 
     where:

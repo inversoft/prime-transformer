@@ -14,20 +14,23 @@
  * language governing permissions and limitations under the License.
  */
 package org.primeframework.transformer.service
-
 import org.primeframework.transformer.domain.BaseTagNode
 import org.primeframework.transformer.domain.Document
 import org.primeframework.transformer.domain.Pair
+import org.primeframework.transformer.domain.TagAttributes
 import org.primeframework.transformer.domain.TagNode
 import org.primeframework.transformer.domain.TextNode
 import org.testng.Assert
-
 /**
  * Provides an assertion DSL for asserting the parser results.
  *
  * @author Brian Pontarelli
  */
 class ParserAssert {
+
+  static attributes = [ '*' : new TagAttributes(false, false),
+                     code : new TagAttributes(true, true),
+                     noparse : new TagAttributes(true, true)]
   /**
    * Asserts the results of a parse. This uses a DSL via the closure.
    *
@@ -39,7 +42,7 @@ class ParserAssert {
     closure.delegate = new NodeDelegate(expected)
     closure()
 
-    Document actual = new BBCodeParser().buildDocument(str);
+    Document actual = new BBCodeParser().buildDocument(str, attributes);
     if (offsets != null) {
       offsets.each { pair ->
         expected.offsets.add(new Pair<>(pair[0], pair[1]))

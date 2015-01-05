@@ -16,11 +16,10 @@
 
 package org.primeframework.transformer.service;
 
-import java.util.function.Predicate;
+import java.util.Map;
 
 import org.primeframework.transformer.domain.Document;
-import org.primeframework.transformer.domain.ParserException;
-import org.primeframework.transformer.domain.TagNode;
+import org.primeframework.transformer.domain.TagAttributes;
 
 /**
  * Parser interface. <p>Parser implementations are only responsible for building the abstract syntax tree (AST). The
@@ -31,10 +30,17 @@ import org.primeframework.transformer.domain.TagNode;
  */
 public interface Parser {
 
-  Predicate<TagNode> defaultPreFormattedPredicate = (tag) -> {
-    String lcTagName = tag.getName().toLowerCase();
-    return "noparse".equals(lcTagName) || "code".equals(lcTagName);
-  };
+  /**
+   * Return a constructed <code>Document</code> representation of the document source.<p>No transformation is done as a
+   * part of building the document.</p><p>The returned document may then be passed into any transformer
+   * implementation.</p>
+   *
+   * @param source
+   * @param tagAttributes
+   * @return
+   * @throws ParserException
+   */
+  Document buildDocument(String source, Map<String, TagAttributes> tagAttributes) throws ParserException;
 
   /**
    * Return a constructed <code>Document</code> representation of the document source.<p>No transformation is done as a
@@ -42,21 +48,9 @@ public interface Parser {
    * implementation.</p>
    *
    * @param source
-   * @param preFormattedPredicate
+   * @param tagAttributes
    * @return
    * @throws ParserException
    */
-  Document buildDocument(String source, Predicate<TagNode> preFormattedPredicate) throws ParserException;
-
-  /**
-   * Return a constructed <code>Document</code> representation of the document source.<p>No transformation is done as a
-   * part of building the document.</p><p>The returned document may then be passed into any transformer
-   * implementation.</p>
-   *
-   * @param source
-   * @param preFormattedPredicate
-   * @return
-   * @throws ParserException
-   */
-  Document buildDocument(char[] source, Predicate<TagNode> preFormattedPredicate) throws ParserException;
+  Document buildDocument(char[] source, Map<String, TagAttributes> tagAttributes) throws ParserException;
 }
