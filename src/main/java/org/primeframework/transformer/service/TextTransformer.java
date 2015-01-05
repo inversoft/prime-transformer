@@ -26,7 +26,7 @@ import org.primeframework.transformer.domain.TagNode;
  * Example:
  * <pre>
  *     Document document = new Document("[b] Hello World![/b]")
- *     new TextTransformer().transform(document, null, null, null) == " Hello World! "
+ *     new TextTransformer().transform(document, null, null, null) == " Hello World!"
  * </pre>
  *
  * @author Daniel DeGroff

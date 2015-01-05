@@ -49,23 +49,37 @@ class ParserAssert {
       this.node = node
     }
 
-    def TextNode(String body, int start, int end) {
-      def textNode = new TextNode(node.document, start, end)
+    def TextNode(Map attributes) {
+      Objects.requireNonNull(attributes['body'], 'The [body] attribute is required')
+      Objects.requireNonNull(attributes['start'], 'The [start] attribute is required')
+      Objects.requireNonNull(attributes['end'], 'The [end] attribute is required')
+
+      def textNode = new TextNode(node.document, attributes['start'], attributes['end'])
       node.children.add(textNode)
-      Assert.assertEquals(textNode.body, body)
+      Assert.assertEquals(textNode.body, attributes['body'])
     }
 
-    def TagNode(String name, int start, int nameEnd, int attributeStart, int bodyBegin, int bodyEnd, int tagEnd,
-                String attribute = null,
-                Map<String, String> attributes = [:], @DelegatesTo(NodeDelegate.class) Closure closure) {
-      TagNode child = new TagNode(node.document, start, nameEnd, attributeStart, bodyBegin, bodyEnd, tagEnd, attribute,
-                                  attributes)
+    def TagNode(Map attributes, @DelegatesTo(NodeDelegate.class) Closure closure) {
+      Objects.requireNonNull(attributes['name'], 'The [name] attribute is required')
+      Objects.requireNonNull(attributes['start'], 'The [start] attribute is required')
+      Objects.requireNonNull(attributes['nameEnd'], 'The [nameEnd] attribute is required')
+      Objects.requireNonNull(attributes['bodyBegin'], 'The [bodyBegin] attribute is required')
+      Objects.requireNonNull(attributes['end'], 'The [end] attribute is required')
+
+      TagNode child = new TagNode(node.document,
+                                  attributes['start'],
+                                  attributes['nameEnd'],
+                                  attributes['attributeStart'] != null ? attributes['attributesStart'] : -1,
+                                  attributes['bodyBegin'],
+                                  attributes['bodyEnd'] != null ? attributes['bodyEnd'] : attributes['bodyBegin'],
+                                  attributes['end'],
+                                  attributes['attribute'],
+                                  attributes['attributes'])
       node.children.add(child)
 
-      Assert.assertEquals(child.name, name)
+      Assert.assertEquals(child.name, attributes['name'])
 
       if (closure != null) {
-//        closure.delegate = new NodeDelegate(child)
         BaseTagNode old = node
         node = child
         closure.delegate = this

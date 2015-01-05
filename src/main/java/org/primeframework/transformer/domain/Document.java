@@ -69,8 +69,8 @@ public class Document extends BaseTagNode {
 
   public Document(char[] source) {
     this.source = source;
-    this.tagBegin = 0;
-    this.tagEnd = this.source.length;
+    this.begin = 0;
+    this.end = this.source.length;
     this.document = this;
   }
 

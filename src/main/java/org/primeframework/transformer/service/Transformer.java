@@ -87,7 +87,7 @@ public interface Transformer {
         int bodyOffset = newBody.isEmpty() ? -1 : result.indexOf(newBody);
         if (/*!tagNode.hasBody ||*/ bodyOffset == -1) {
           int lengthDelta = result.length() - tagNode.length();
-          offsets.add(tagNode.tagEnd, lengthDelta);
+          offsets.add(tagNode.end, lengthDelta);
           return;
         }
 
@@ -98,7 +98,7 @@ public interface Transformer {
         //
         // originalBodyOffset = 3 - 0 = 3
         // bodyOffsetDelta = 8 - 3 = 5
-        int originalBodyOffset = tagNode.bodyBegin - tagNode.tagBegin;
+        int originalBodyOffset = tagNode.bodyBegin - tagNode.begin;
         int bodyOffsetDelta = bodyOffset - originalBodyOffset;
         offsets.add(tagNode.bodyBegin, bodyOffsetDelta);
 
@@ -111,10 +111,10 @@ public interface Transformer {
         // originalEndTagLength = 10 - 6 + 1 = 4
         // newEndTagLength = 20 - 3 - 8 = 9
         // endTagDelta = 9 - 4 = 5
-        int originalEndTagLength = tagNode.tagEnd - tagNode.bodyEnd;
+        int originalEndTagLength = tagNode.end - tagNode.bodyEnd;
         int newEndTagLength = result.length() - newBody.length() - bodyOffset;
         int endTagDelta = newEndTagLength - originalEndTagLength;
-        offsets.add(tagNode.tagEnd, endTagDelta);
+        offsets.add(tagNode.end, endTagDelta);
       }
     }
   }
@@ -155,27 +155,27 @@ public interface Transformer {
           switch (ca[i]) {
             case '&':
               build.append("&amp;");
-              offsets.add(node.tagBegin + i, 4);
+              offsets.add(node.begin + i, 4);
               break;
             case '<':
               build.append("&lt;");
-              offsets.add(node.tagBegin + i, 3);
+              offsets.add(node.begin + i, 3);
               break;
             case '>':
               build.append("&gt;");
-              offsets.add(node.tagBegin + i, 3);
+              offsets.add(node.begin + i, 3);
               break;
             case '"':
               build.append("&quot;");
-              offsets.add(node.tagBegin + i, 5);
+              offsets.add(node.begin + i, 5);
               break;
             case '\n':
             case '\r':
               if (i + i < ca.length && (ca[i] == '\n' && ca[i + 1] == '\r') || (ca[i] == '\r' && ca[i + 1] == '\n')) {
-                offsets.add(node.tagBegin + i, 3);
+                offsets.add(node.begin + i, 3);
                 i++;
               } else {
-                offsets.add(node.tagBegin + i, 4);
+                offsets.add(node.begin + i, 4);
               }
 
               build.append("<br/>");

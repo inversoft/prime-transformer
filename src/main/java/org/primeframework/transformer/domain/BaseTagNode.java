@@ -44,8 +44,7 @@ public abstract class BaseTagNode extends BaseNode {
   }
 
   /**
-   * @return Return a {@link List} of TextNode objects. A {@link TagNode} that is set to transform false will be
-   * returned in this list as a <code>TextNode</code>.
+   * @return Return a {@link List} of TextNode objects.
    */
   public List<TextNode> getChildTextNodes() {
     List<TextNode> textNodes = new ArrayList<>(getChildren().size());
@@ -54,11 +53,7 @@ public abstract class BaseTagNode extends BaseNode {
         textNodes.add((TextNode) n);
       } else {
         TagNode tag = (TagNode) n;
-        if (tag.transform) {
-          textNodes.addAll(tag.getChildTextNodes());
-        } else {
-          textNodes.add(new TextNode(tag.document, tag.tagBegin, tag.tagEnd));
-        }
+        textNodes.addAll(tag.getChildTextNodes());
       }
     });
     return textNodes;

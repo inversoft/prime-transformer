@@ -109,8 +109,8 @@ public class BBCodeToHTMLTransformerSpec extends Specification {
       document.children.size() == 1
       document.children.get(0) instanceof TextNode
       def text = (TextNode) document.children.get(0)
-      text.tagBegin == 0
-      text.tagEnd == 10
+      text.begin == 0
+      text.end == 10
       text.getBody() == "[b]Testing"
 
   }

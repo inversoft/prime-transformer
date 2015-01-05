@@ -36,11 +36,11 @@ import java.util.Map;
  *  Between index 2 and 3 is the tag body.
  *  Between index 3 and 4 is the closing tag.
  *
- *  1. tagBegin
+ *  1. begin
  *  2. attributeBegin
  *  3. bodyBegin
  *  4. bodyEnd
- *  5. tagEnd
+ *  5. end
  * </pre>
  * The body of the tag is contained in the children collection. A child may be either another <code>TagNode</code> or a
  * <code>TextNode</code>. The <code>TagNode</code> itself does not have a body, the body will be contained in a child
@@ -73,38 +73,74 @@ public class TagNode extends BaseTagNode {
 
   public int attributesBegin = -1;
 
+  /**
+   * Always equal to the index where the opening tag ends (exclusive), even if the tag doesn't have a body:
+   * <p>
+   * <pre>
+   *   [b]foo[/b]
+   *      ^
+   *
+   *   [font size=12][/font]
+   *                 ^
+   *
+   *   [:)]
+   *       ^
+   * </pre>
+   */
   public int bodyBegin = -1;
 
+  /**
+   * If the body is empty or the tag has no body, this will be equal to bodyBegin. Otherwise, this will
+   * be the index at the end of the body (exclusive):
+   * <p>
+   * <pre>
+   *   [b]foo[/b]
+   *         ^
+   *
+   *   [b][/b]
+   *      ^
+   *
+   *   [:)]
+   *       ^
+   * </pre>
+   */
   public int bodyEnd = -1;
 
-  public boolean hasBody;
-
-  public boolean hasClosingTag;
-
+  /**
+   * The index (exclusive) where the name of the opening tag ends:
+   * <p>
+   * <pre>
+   *   [b]foo[/b]
+   *     ^
+   *
+   *   [font size=12][/b]
+   *        ^
+   *
+   *   [:)]
+   *      ^
+   * </pre>
+   */
   public int nameEnd = -1;
 
-  public boolean transform;
-
-  public TagNode(Document document, int tagBegin) {
+  public TagNode(Document document, int begin) {
     this.document = document;
-    this.tagBegin = tagBegin;
-    this.transform = true;
+    this.begin = begin;
   }
 
-  public TagNode(Document document, int tagBegin, int nameEnd, int attributesBegin, int bodyBegin, int bodyEnd,
-                 int tagEnd, String attribute, Map<String, String> attributes) {
+  public TagNode(Document document, int begin, int nameEnd, int attributesBegin, int bodyBegin, int bodyEnd,
+                 int end, String attribute, Map<String, String> attributes) {
     this.document = document;
-    this.tagBegin = tagBegin;
+    this.begin = begin;
     this.nameEnd = nameEnd;
     this.attributesBegin = attributesBegin;
     this.bodyBegin = bodyBegin;
     this.bodyEnd = bodyEnd;
-    this.tagEnd = tagEnd;
+    this.end = end;
     this.attribute = attribute;
-    this.attributes.putAll(attributes);
-    this.transform = true;
-    this.hasBody = bodyBegin != -1 && bodyEnd != -1 && bodyBegin != bodyEnd;
-    this.hasClosingTag = hasBody ? bodyEnd != tagEnd : nameEnd + 1 != tagEnd;
+
+    if (attributes != null) {
+      this.attributes.putAll(attributes);
+    }
   }
 
   @Override
@@ -135,16 +171,7 @@ public class TagNode extends BaseTagNode {
     if (bodyEnd != tagNode.bodyEnd) {
       return false;
     }
-    if (hasBody != tagNode.hasBody) {
-      return false;
-    }
-    if (hasClosingTag != tagNode.hasClosingTag) {
-      return false;
-    }
     if (nameEnd != tagNode.nameEnd) {
-      return false;
-    }
-    if (transform != tagNode.transform) {
       return false;
     }
     if (attribute != null ? !attribute.equals(tagNode.attribute) : tagNode.attribute != null) {
@@ -166,10 +193,18 @@ public class TagNode extends BaseTagNode {
   }
 
   public String getName() {
-    if (nameEnd > tagBegin + 1) {
-      return document.getString(tagBegin + 1, nameEnd);
+    if (nameEnd > begin + 1) {
+      return document.getString(begin + 1, nameEnd);
     }
     return null;
+  }
+
+  public boolean hasBody() {
+    return bodyEnd != -1 && bodyBegin != bodyEnd;
+  }
+
+  public boolean hasClosingTag() {
+    return hasBody() ? bodyEnd != end : bodyBegin != end;
   }
 
   @Override
@@ -181,32 +216,26 @@ public class TagNode extends BaseTagNode {
     result = 31 * result + bodyBegin;
     result = 31 * result + bodyEnd;
     result = 31 * result + children.hashCode();
-    result = 31 * result + (hasBody ? 1 : 0);
-    result = 31 * result + (hasClosingTag ? 1 : 0);
     result = 31 * result + nameEnd;
-    result = 31 * result + (transform ? 1 : 0);
     return result;
   }
 
   @Override
   public String toString() {
     return "TagNode{" +
-        "tagBegin=" + tagBegin +
-        ", tagEnd=" + tagBegin +
+        "begin=" + begin +
+        ", end=" + begin +
         ", attributes=" + attributes +
         ", children=" + children +
         ", attribute='" + attribute + '\'' +
         ", attributesBegin=" + attributesBegin +
         ", bodyBegin=" + bodyBegin +
         ", bodyEnd=" + bodyEnd +
-        ", hasBody=" + hasBody +
-        ", hasClosingTag=" + hasClosingTag +
         ", nameEnd=" + nameEnd +
-        ", transform=" + transform +
         '}';
   }
 
   public TextNode toTextNode() {
-    return new TextNode(document, tagBegin, tagEnd);
+    return new TextNode(document, begin, end);
   }
 }
