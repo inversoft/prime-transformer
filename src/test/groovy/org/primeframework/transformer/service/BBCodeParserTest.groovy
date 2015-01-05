@@ -214,6 +214,17 @@ class BBCodeParserTest {
   }
 
   @Test
+  void edgeCase_SimpleAttributeSpacesAfter() {
+    Assert.fail("Need to figure out handling")
+    assertParse("[font=12   ]foo[/font]") {
+      TagNode(name: "font", start: 0, nameEnd: 5, attributesBegin: 6, bodyBegin: 12, bodyEnd: 15, end: 24,
+              attribute: "12") {
+        TextNode(body: "foo", start: 12, end: 15)
+      }
+    }
+  }
+
+  @Test
   void edgeCase_SimpleAttributeQuotesContainsBracket() {
     Assert.fail("Need to figure out handling")
     assertParse("[font='values[\"size\"]']foo[/font]") {
@@ -231,6 +242,15 @@ class BBCodeParserTest {
       TagNode(name: "font", start: 0, nameEnd: 5, attributesBegin: 6, bodyBegin: 19, bodyEnd: 22, end: 29,
               attribute: "values{'12'}") {
         TextNode(body: "foo", start: 19, end: 22)
+      }
+    }
+  }
+
+  @Test
+  public void attributes() {
+    assertParse("[d testattr=33]xyz[/d]") {
+      TagNode(name: "d", start: 0, nameEnd: 2, attributesBegin: 3, bodyBegin: 15, bodyEnd: 18, end: 22, attributes: ["testattr": "33"]) {
+        TextNode(body: "xyz", start: 15, end: 18)
       }
     }
   }
