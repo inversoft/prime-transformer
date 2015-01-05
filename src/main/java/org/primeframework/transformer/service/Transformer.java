@@ -85,7 +85,7 @@ public interface Transformer {
         // If the tag has no body, we add an offset for the difference between the original length and the new length.
         // This will ensure that the indexes are valid.
         int bodyOffset = newBody.isEmpty() ? -1 : result.indexOf(newBody);
-        if (/*!tagNode.hasBody ||*/ bodyOffset == -1) {
+        if (bodyOffset == -1) {
           int lengthDelta = result.length() - tagNode.length();
           offsets.add(tagNode.end, lengthDelta);
           return;

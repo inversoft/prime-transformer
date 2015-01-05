@@ -49,7 +49,7 @@ public class FreemarkerTransformerTest {
     templates.put("a", new Template("a", new StringReader("<aaaaaa>${body}</aaaaaa>"), conf));
     templates.put("b", new Template("b", new StringReader("<bbbbbb>${body}</bbbbbb>"), conf));
     templates.put("c", new Template("c", new StringReader("<cccccc>${body}</cccccc>"), conf));
-    templates.put("d", new Template("d", new StringReader("[#ftl/][#macro attrMacro attrs][#if attrs??][#list attrs?keys as attr]${attr}=\"${attrs[attr]}\"[/#list][/#if][/#macro]<dddddd [@attrMacro attributes/]>${body}</dddddd>"), conf));
+    templates.put("d", new Template("d", new StringReader("[#ftl/][#macro attrMacro attrs][#if attrs??][#list attrs?keys as attr] ${attr}=\"${attrs[attr]}\"[/#list][/#if][/#macro]<dddddd[@attrMacro attributes/]>${body}</dddddd>"), conf));
     templates.put("*", new Template("*", new StringReader("<li>${body}</li>"), conf));
     templates.put("nobody", new Template("nobody", new StringReader("<p>no body here</p>"), conf));
     templates.put("list", new Template("list", new StringReader("<ul>${body}</ul>"), conf));
@@ -295,9 +295,9 @@ public class FreemarkerTransformerTest {
     Offsets expectedOffsets = new Offsets();
     expectedOffsets.add(6, -2);
     expectedOffsets.add(9, 1);
-    expectedOffsets.add(14, 4);
+    expectedOffsets.add(14, 5);
     expectedOffsets.add(17, 1);
-    expectedOffsets.add(22, 4);
+    expectedOffsets.add(22, 5);
     expectedOffsets.add(29, -2);
 
     assertTransform(strict, doc, (node) -> true, expected, expectedOffsets);
