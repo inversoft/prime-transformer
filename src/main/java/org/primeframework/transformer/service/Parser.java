@@ -13,7 +13,6 @@
  * either express or implied. See the License for the specific
  * language governing permissions and limitations under the License.
  */
-
 package org.primeframework.transformer.service;
 
 import java.util.Map;
@@ -36,7 +35,9 @@ public interface Parser {
    * implementation.</p>
    *
    * @param source
-   * @param tagAttributes
+   * @param tagAttributes The set of attributes for the tags being parsed. The key is the tag name (lowercase) and the
+   *                      value is the attributes. Caller must ensure that the attributes are valid by calling the
+   *                      {@link TagAttributes#validate()} method before calling.
    * @return
    * @throws ParserException
    */
@@ -48,7 +49,9 @@ public interface Parser {
    * implementation.</p>
    *
    * @param source
-   * @param tagAttributes
+   * @param tagAttributes The set of attributes for the tags being parsed. The key is the tag name (lowercase) and the
+   *                      value is the attributes. Caller must ensure that the attributes are valid by calling the
+   *                      {@link TagAttributes#validate()} method before calling.
    * @return
    * @throws ParserException
    */
