@@ -59,7 +59,7 @@ class ParserAssert {
       Assert.assertEquals(textNode.body, attributes['body'])
     }
 
-    def TagNode(Map attributes, @DelegatesTo(NodeDelegate.class) Closure closure) {
+    def TagNode(Map attributes, @DelegatesTo(NodeDelegate.class) Closure closure = null) {
       Objects.requireNonNull(attributes['name'], 'The [name] attribute is required')
       Objects.requireNonNull(attributes['start'], 'The [start] attribute is required')
       Objects.requireNonNull(attributes['nameEnd'], 'The [nameEnd] attribute is required')
@@ -69,7 +69,7 @@ class ParserAssert {
       TagNode child = new TagNode(node.document,
                                   attributes['start'],
                                   attributes['nameEnd'],
-                                  attributes['attributeStart'] != null ? attributes['attributesStart'] : -1,
+                                  attributes['attributesBegin'] != null ? attributes['attributesBegin'] : -1,
                                   attributes['bodyBegin'],
                                   attributes['bodyEnd'] != null ? attributes['bodyEnd'] : attributes['bodyBegin'],
                                   attributes['end'],

@@ -176,6 +176,11 @@ public class BBCodeParser implements Parser {
           state = state.nextState(source[index]);
           if (state == State.complexAttributeName) {
             attributeNameBegin = index;
+
+            TagNode tagNode = nodes.peek();
+            if (tagNode.attributesBegin == -1) {
+              nodes.peek().attributesBegin = index;
+            }
           }
           index++;
           break;

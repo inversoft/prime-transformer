@@ -35,11 +35,11 @@ import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 
 /**
- * Testing the offsets returned from the {@link FreeMarkerTransformer}
+ * Tests the FreeMarker transformer.
  *
- * @author Seth Musselman
+ * @author Seth Musselman and Brian Pontarelli
  */
-public class FreemarkerTransformerOffsetTest {
+public class FreemarkerTransformerTest {
   private static final Map<String, Template> templates = new HashMap<>();
 
   @BeforeClass
