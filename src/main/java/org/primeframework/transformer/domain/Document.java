@@ -105,6 +105,12 @@ public class Document extends BaseTagNode {
     if (!Arrays.equals(source, document.source)) {
       return false;
     }
+    if (!offsets.equals(document.offsets)) {
+      return false;
+    }
+    if (!attributeOffsets.equals(document.attributeOffsets)) {
+      return false;
+    }
 
     return true;
   }
@@ -113,6 +119,8 @@ public class Document extends BaseTagNode {
   public int hashCode() {
     int result = children.hashCode();
     result = 31 * result + Arrays.hashCode(source);
+    result = 31 * result + offsets.hashCode();
+    result = 31 * result + attributeOffsets.hashCode();
     return result;
   }
 
