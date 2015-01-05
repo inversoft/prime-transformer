@@ -102,11 +102,11 @@ public class BBCodeParserSpec extends Specification {
     and: "the first child should be a bold tag with a single child with correct name and offsets"
       def bold = (TagNode) document.children.get(0)
 
-      bold.tagBegin == 0
+      bold.begin == 0
       bold.nameEnd == 2
       bold.bodyBegin == 3
       bold.bodyEnd == 16
-      bold.tagEnd == 20
+      bold.end == 20
 
       bold.getName() == "b"
       bold.children.size() == 1
@@ -114,11 +114,11 @@ public class BBCodeParserSpec extends Specification {
     and: "the bold child node should be italic with a single text node, correct offsets and name"
       def italic = (TagNode) bold.children.get(0)
 
-      italic.tagBegin == 3
+      italic.begin == 3
       italic.nameEnd == 5
       italic.bodyBegin == 6
       italic.bodyEnd == 12
-      italic.tagEnd == 16
+      italic.end == 16
 
       italic.getName() == "i"
       italic.children.size() == 1
@@ -140,11 +140,11 @@ public class BBCodeParserSpec extends Specification {
 
     then: "basic offsets are correct"
       def tag = document.childTagNodes.get(0)
-      tag.tagBegin == 0
+      tag.begin == 0
       tag.nameEnd == 2
       tag.bodyBegin == 3
       tag.bodyEnd == 7
-      tag.tagEnd == 11
+      tag.end == 11
 
     and: "the document is transformed properly"
       result == "<strong>Text</strong>"
@@ -161,18 +161,18 @@ public class BBCodeParserSpec extends Specification {
 
     then: "basic offsets are correct"
       def bold = document.childTagNodes.get(0)
-      bold.tagBegin == 0
+      bold.begin == 0
       bold.nameEnd == 2
       bold.bodyBegin == 3
       bold.bodyEnd == 8
-      bold.tagEnd == 12
+      bold.end == 12
 
       def italic = document.childTagNodes.get(1)
-      italic.tagBegin == 13
+      italic.begin == 13
       italic.nameEnd == 15
       italic.bodyBegin == 16
       italic.bodyEnd == 21
-      italic.tagEnd == 25
+      italic.end == 25
 
     and: "the document is transformed properly"
       def result = new BBCodeToHTMLTransformer().transform(document, transformPredicate, null, null)
@@ -282,8 +282,8 @@ public class BBCodeParserSpec extends Specification {
       document.children.size() == 1
       document.children.get(0) instanceof TextNode
       def text = (TextNode) document.children.get(0)
-      text.tagBegin == 0
-      text.tagEnd == 26
+      text.begin == 0
+      text.end == 26
       text.getBody() == "[code] abc123 [baz] xyz456"
   }
 

@@ -33,15 +33,14 @@ package org.primeframework.transformer.domain;
  * </pre>
  */
 public class TextNode extends BaseNode {
-
-  public TextNode(Document document, int tagBegin, int tagEnd) {
+  public TextNode(Document document, int begin, int end) {
     this.document = document;
-    this.tagBegin = tagBegin;
-    this.tagEnd = tagEnd;
+    this.begin = begin;
+    this.end = end;
   }
 
   public String getBody() {
-    return document.getString(tagBegin, tagEnd);
+    return document.getString(begin, end);
   }
 
   @Override

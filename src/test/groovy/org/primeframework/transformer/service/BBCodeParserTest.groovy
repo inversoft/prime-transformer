@@ -30,9 +30,9 @@ class BBCodeParserTest {
   void edgeCase_BadNesting() {
     Assert.fail("Need to figure out handling")
     assertParse("abc[list][[[def[/list]", {
-      TextNode("abc", 0, 3)
-      TagNode("list", 3, 8, -1, 9, 15, 22) {
-        TextNode("[[[def", 9, 15)
+      TextNode(body: "abc", start: 0, end: 3)
+      TagNode(name: "list", start: 3, nameEnd: 8, bodyBegin: 9, bodyEnd: 15, end: 22) {
+        TextNode(body: "[[[def", start: 9, end: 15)
       }
     })
   }
@@ -40,25 +40,25 @@ class BBCodeParserTest {
   @Test
   void edgeCase_Code() {
     assertParse("char[] ca = new char[1024]", {
-      TextNode("char", 0, 4)
-      TextNode("[] ca = new char", 4, 20)
-      TextNode("[1024]", 20, 26)
+      TextNode(body: "char", start: 0, end: 4)
+      TextNode(body: "[] ca = new char", start: 4, end: 20)
+      TextNode(body: "[1024]", start: 20, end: 26)
     })
   }
 
   @Test
   void edgeCase_SingleBracket() {
     assertParse("abc[def", {
-      TextNode("abc", 0, 3)
-      TextNode("[def", 3, 7)
+      TextNode(body: "abc", start: 0, end: 3)
+      TextNode(body: "[def", start: 3, end: 7)
     })
   }
 
   @Test
   void edgeCase_MultipleBrackets() {
     assertParse("abc[[[def", {
-      TextNode("abc", 0, 3)
-      TextNode("[[[def", 3, 9)
+      TextNode(body: "abc", start: 0, end: 3)
+      TextNode(body: "[[[def", start: 3, end: 9)
     })
   }
 
@@ -66,18 +66,18 @@ class BBCodeParserTest {
   void edgeCase_GoodStart_ThenOpen() {
     Assert.fail("Need to figure out handling")
     assertParse("[foo][def", {
-      TextNode("[foo][def", 0, 9)
+      TextNode(body: "[foo][def", start: 0, end: 9)
     })
   }
 
   @Test
   void edgeCase_GoodTag_ThenOpen() {
     assertParse("[b]foo[/b] abc[def", {
-      TagNode("b", 0, 2, -1, 3, 6, 10) {
-        TextNode("foo", 3, 6)
+      TagNode(name: "b", start: 0, nameEnd: 2, bodyBegin: 3, bodyEnd: 6, end: 10) {
+        TextNode(body: "foo", start: 3, end: 6)
       }
-      TextNode(" abc", 10, 14)
-      TextNode("[def", 14, 18)
+      TextNode(body: " abc", start: 10, end: 14)
+      TextNode(body: "[def", start: 14, end: 18)
     })
   }
 }

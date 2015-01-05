@@ -48,7 +48,6 @@ project(group: "org.primeframework", name: "prime-transformer", version: "1.0.9"
 dependency = loadPlugin(id: "org.savantbuild.plugin:dependency:${savantVersion}")
 java = loadPlugin(id: "org.savantbuild.plugin:java:${savantVersion}")
 groovy = loadPlugin(id: "org.savantbuild.plugin:groovy:0.3.2")
-groovyTestNG = loadPlugin(id: "org.savantbuild.plugin:groovy:-testng0.3.2")
 javaTestNG = loadPlugin(id: "org.savantbuild.plugin:java-testng:${savantVersion}")
 idea = loadPlugin(id: "org.savantbuild.plugin:idea:${savantVersion}")
 release = loadPlugin(id: "org.savantbuild.plugin:release-git:${savantVersion}")
@@ -61,8 +60,6 @@ java.settings.javaVersion = "1.8"
 groovy.settings.javaVersion = "1.8"
 groovy.settings.groovyVersion = "2.2"
 
-groovyTestNG.settings.javaVersion = "1.8"
-groovyTestNG.settings.groovyVersion = "2.2"
 javaTestNG.settings.javaVersion = "1.8"
 
 spock.settings.javaVersion = "1.8"
@@ -90,7 +87,6 @@ target(name: "jar", description: "JARs the project", dependsOn: ["compile"]) {
 
 target(name: "test", description: "Runs the project's tests", dependsOn: ["jar"]) {
   javaTestNG.test()
-  groovyTestNG.test()
   spock.test()
 }
 

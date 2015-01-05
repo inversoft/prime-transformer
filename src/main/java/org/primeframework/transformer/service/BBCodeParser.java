@@ -120,11 +120,10 @@ public class BBCodeParser implements Parser {
             // Expecting a tagNode, set bodyEnd
             TagNode tag = nodes.peek();
             tag.bodyEnd = index - 1;
-            tag.hasBody = tag.bodyBegin != tag.bodyEnd;
           } else if (state == State.tagName) {
             nodes.push(new TagNode(document, index - 1));
           } else if (state == State.text) {
-            // Bad BBCode or not really a tagBegin, i.e. 'char [] array = new char[1];'
+            // Bad BBCode or not really a begin, i.e. 'char [] array = new char[1];'
             index--; // back up the pointer and continue in text state.
 //            errorObserver.handleError(ErrorState.BAD_TAG, currentNode, index);
 //            fixIt();
@@ -142,9 +141,9 @@ public class BBCodeParser implements Parser {
 
         case openingTagEnd:
           state = state.nextState(source[index]);
-          // Set initial tagEnd to bodyBegin, if a closing tag exists this will be set again
+          // Set initial end to bodyBegin, if a closing tag exists this will be set again
           current = nodes.peek();
-          current.tagEnd = index;
+          current.end = index;
           current.bodyBegin = index;
           index++;
           break;
@@ -284,9 +283,9 @@ public class BBCodeParser implements Parser {
 
     if (node instanceof TagNode) {
       TagNode tag = (TagNode) node;
-      document.offsets.add(new Pair<>(tag.tagBegin, tag.bodyBegin - tag.tagBegin));
-      if (tag.hasClosingTag) {
-        document.offsets.add(new Pair<>(tag.bodyEnd, tag.tagEnd - tag.bodyEnd));
+      document.offsets.add(new Pair<>(tag.begin, tag.bodyBegin - tag.begin));
+      if (tag.hasClosingTag()) {
+        document.offsets.add(new Pair<>(tag.bodyEnd, tag.end - tag.bodyEnd));
       }
     }
   }
@@ -294,15 +293,14 @@ public class BBCodeParser implements Parser {
   private void handleCompletedTagNode(Document document, Deque<TagNode> nodes, int index) {
     if (!nodes.isEmpty()) {
       TagNode tagNode = nodes.pop();
-      tagNode.tagEnd = index;
-      tagNode.hasClosingTag = true;
+      tagNode.end = index;
       addNode(document, nodes, tagNode);
     }
   }
 
   private void handleCompletedTextNode(Document document, Deque<TagNode> nodes, TextNode textNode, int index) {
     if (textNode != null) {
-      textNode.tagEnd = index;
+      textNode.end = index;
       addNode(document, nodes, textNode);
     }
   }
@@ -322,8 +320,7 @@ public class BBCodeParser implements Parser {
       if (NO_CLOSING_TAG.contains(nodes.peek().getName())) {
         TagNode tagNode = nodes.pop();
         tagNode.bodyEnd = index - 1;
-        tagNode.tagEnd = index - 1;
-        tagNode.hasClosingTag = false;
+        tagNode.end = index - 1;
         addNode(document, nodes, tagNode);
       }
     }
@@ -333,12 +330,12 @@ public class BBCodeParser implements Parser {
     while (!nodes.isEmpty()) {
       TagNode tagNode = nodes.pop();
       TextNode textNode = tagNode.toTextNode();
-      // If tagNode has children, find the last tagEnd
+      // If tagNode has children, find the last end
       if (tagNode.children.isEmpty()) {
-        textNode.tagEnd = index;
+        textNode.end = index;
       } else {
         Node last = tagNode.children.get(tagNode.children.size() - 1);
-        textNode.tagEnd = ((BaseNode) last).tagEnd;
+        textNode.end = ((BaseNode) last).end;
       }
       addNode(document, nodes, textNode);
     }
@@ -354,7 +351,7 @@ public class BBCodeParser implements Parser {
    *          ------------------- < ---------------------
    *          |                                         ^
    *           \                                        |
-   *   initial --> tagBegin --> tagName --> openingTagEnd ---> complete
+   *   initial --> begin --> tagName --> openingTagEnd ---> complete
    *             \                                       /
    *              \ -------------> text --------------->/
    *               \        ^                          |

@@ -21,33 +21,31 @@ public abstract class BaseNode implements Node {
   public Document document;
 
   /**
-   * Document source index of the beginning of this node. Example:
+   * The index of the beginning of this node (inclusive):
    * <p>
    * <pre>
    *   foo [b] bar [/b]
    *       ^
-   *       4
    * </pre>
    */
-  public int tagBegin;
+  public int begin;
 
   /**
-   * Document source index of the end of this node. Example:
+   * The index of the end of this node (exclusive):
    * <p>
    * <pre>
    *   foo [b] bar [/b]
    *                   ^
-   *                   16
    * </pre>
    */
-  public int tagEnd;
+  public int end;
 
   @Override
   public String getRawString() {
     if (this instanceof Document) {
       throw new UnsupportedOperationException("This method may only be called on a TagNode or TextNode.");
     }
-    return document.getString(tagBegin, tagEnd);
+    return document.getString(begin, end);
   }
 
   @Override
@@ -61,10 +59,10 @@ public abstract class BaseNode implements Node {
 
     BaseNode baseNode = (BaseNode) o;
 
-    if (tagBegin != baseNode.tagBegin) {
+    if (begin != baseNode.begin) {
       return false;
     }
-    if (tagEnd != baseNode.tagEnd) {
+    if (end != baseNode.end) {
       return false;
     }
 
@@ -73,12 +71,12 @@ public abstract class BaseNode implements Node {
 
   @Override
   public int hashCode() {
-    int result = tagBegin;
-    result = 31 * result + tagEnd;
+    int result = begin;
+    result = 31 * result + end;
     return result;
   }
 
   public int length() {
-    return tagEnd - tagBegin;
+    return end - begin;
   }
 }
