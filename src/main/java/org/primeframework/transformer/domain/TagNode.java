@@ -13,9 +13,7 @@
  * either express or implied. See the License for the specific
  * language governing permissions and limitations under the License.
  */
-
 package org.primeframework.transformer.domain;
-
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -224,7 +222,7 @@ public class TagNode extends BaseTagNode {
   public String toString() {
     return "TagNode [" + getName() + "]{" +
         "begin=" + begin +
-        ", end=" + begin +
+        ", end=" + end +
         ", attributes=" + attributes +
         ", children=" + children +
         ", attribute='" + attribute + '\'' +

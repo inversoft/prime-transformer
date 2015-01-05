@@ -15,7 +15,7 @@
  */
 package org.primeframework.transformer.service
 
-import org.testng.Assert
+import org.testng.annotations.DataProvider
 import org.testng.annotations.Test
 
 import static org.primeframework.transformer.service.ParserAssert.assertParse
@@ -28,7 +28,6 @@ import static org.primeframework.transformer.service.ParserAssert.assertParse
 class BBCodeParserTest {
   @Test
   void edgeCase_BadNesting() {
-    Assert.fail("Need to figure out handling")
     assertParse("abc[list][[[def[/list]") {
       TextNode(body: "abc", start: 0, end: 3)
       TagNode(name: "list", start: 3, nameEnd: 8, bodyBegin: 9, bodyEnd: 15, end: 22) {
@@ -57,14 +56,12 @@ class BBCodeParserTest {
   @Test
   void edgeCase_MultipleBrackets() {
     assertParse("abc[[[def") {
-      TextNode(body: "abc", start: 0, end: 3)
-      TextNode(body: "[[[def", start: 3, end: 9)
+      TextNode(body: "abc[[[def", start: 0, end: 9)
     }
   }
 
   @Test
   void edgeCase_GoodStart_ThenOpen() {
-    Assert.fail("Need to figure out handling")
     assertParse("[foo][def") {
       TextNode(body: "[foo][def", start: 0, end: 9)
     }
@@ -90,7 +87,6 @@ class BBCodeParserTest {
 
   @Test
   void edgeCase_BadTagName() {
-    Assert.fail("Need to figure out handling")
     assertParse("[b[b[b[b] foo") {
       TextNode(body: "[b[b[b[b] foo", start: 0, end: 13)
     }
@@ -108,40 +104,30 @@ class BBCodeParserTest {
 
   @Test
   void edgeCase_TagOpeningEndBracketInAttributeWithoutQuote() {
-    Assert.fail("Need to figure out handling")
     assertParse("[font size=]]foo[/font]") {
       TagNode(name: "font", start: 0, nameEnd: 5, attributesBegin: 6, bodyBegin: 13, bodyEnd: 16, end: 23,
               attributes: [size: ""]) {
-        TextNode(body: "foo", start: 13, end: 16)
+        TextNode(body: "]foo", start: 12, end: 16)
       }
     }
   }
 
   @Test
   void edgeCase_MismatchedOpenAndCloseTags() {
-    Assert.fail("Need to figure out handling")
     assertParse("[font size=12]foo[/b]") {
-      TagNode(name: "font", start: 0, nameEnd: 5, attributesBegin: 6, bodyBegin: 14, bodyEnd: 21, end: 21,
-              attributes: [size: "12"]) {
-        TextNode(body: "foo[/b]", start: 14, end: 21)
-      }
+      TextNode(body: "[font size=12]foo[/b]", start: 0, end: 21)
     }
   }
 
   @Test
   void edgeCase_CloseTagNoName() {
-    Assert.fail("Need to figure out handling")
     assertParse("[font size=12]foo[/]") {
-      TagNode(name: "font", start: 0, nameEnd: 5, attributesBegin: 6, bodyBegin: 14, bodyEnd: 17, end: 20,
-              attributes: [size: "12"]) {
-        TextNode(body: "foo", start: 14, end: 17)
-      }
+      TextNode(body: "[font size=12]foo[/]", start: 0, end: 20)
     }
   }
 
   @Test
-  void edgeCase_BadAttributeName() {
-    Assert.fail("Need to figure out handling")
+  void edgeCase_StrangeAttributeName() {
     assertParse("[font ,;_!=;_l;!]foo[/font]") {
       TagNode(name: "font", start: 0, nameEnd: 5, attributesBegin: 6, bodyBegin: 17, bodyEnd: 20, end: 27,
               attributes: [",;_!": ";_l;!"]) {
@@ -151,8 +137,7 @@ class BBCodeParserTest {
   }
 
   @Test
-  void edgeCase_BadAttributeNameWithQuote() {
-    Assert.fail("Need to figure out handling")
+  void edgeCase_StrangeAttributeNameWithQuote() {
     assertParse("[font ,;'!=;l;!]foo[/font]") {
       TagNode(name: "font", start: 0, nameEnd: 5, attributesBegin: 6, bodyBegin: 16, bodyEnd: 19, end: 26,
               attributes: [",;'!": ";l;!"]) {
@@ -163,7 +148,6 @@ class BBCodeParserTest {
 
   @Test
   void edgeCase_BadAttributeValueWithQuote() {
-    Assert.fail("Need to figure out handling")
     assertParse("[font foo=values{'bar'}]foo[/font]") {
       TagNode(name: "font", start: 0, nameEnd: 5, attributesBegin: 6, bodyBegin: 24, bodyEnd: 27, end: 34,
               attributes: ["foo": "values{'bar'}"]) {
@@ -174,12 +158,8 @@ class BBCodeParserTest {
 
   @Test
   void edgeCase_BadAttributeValueWithMismatchedQuotes() {
-    Assert.fail("Need to figure out handling")
     assertParse("[font foo='bar\"]foo[/font]") {
-      TagNode(name: "font", start: 0, nameEnd: 5, attributesBegin: 6, bodyBegin: 16, bodyEnd: 19, end: 26,
-              attributes: ["foo": "bar"]) {
-        TextNode(body: "foo", start: 16, end: 19)
-      }
+      TextNode(body: "[font foo='bar\"]foo[/font]", start: 0, end: 26)
     }
   }
 
@@ -215,7 +195,7 @@ class BBCodeParserTest {
 
   @Test
   void edgeCase_SimpleAttributeSpacesAfter() {
-    Assert.fail("Need to figure out handling")
+    // Need to trim this and adjust the offsets
     assertParse("[font=12   ]foo[/font]") {
       TagNode(name: "font", start: 0, nameEnd: 5, attributesBegin: 6, bodyBegin: 12, bodyEnd: 15, end: 24,
               attribute: "12") {
@@ -226,7 +206,6 @@ class BBCodeParserTest {
 
   @Test
   void edgeCase_SimpleAttributeQuotesContainsBracket() {
-    Assert.fail("Need to figure out handling")
     assertParse("[font='values[\"size\"]']foo[/font]") {
       TagNode(name: "font", start: 0, nameEnd: 5, attributesBegin: 6, bodyBegin: 23, bodyEnd: 26, end: 33,
               attribute: "values[\"size\"]") {
@@ -237,7 +216,6 @@ class BBCodeParserTest {
 
   @Test
   void edgeCase_SimpleAttributeQuotesInside() {
-    Assert.fail("Need to figure out handling")
     assertParse("[font=values{'12'}]foo[/font]") {
       TagNode(name: "font", start: 0, nameEnd: 5, attributesBegin: 6, bodyBegin: 19, bodyEnd: 22, end: 29,
               attribute: "values{'12'}") {
@@ -249,17 +227,26 @@ class BBCodeParserTest {
   @Test
   public void attributes() {
     assertParse("[d testattr=33]xyz[/d]") {
-      TagNode(name: "d", start: 0, nameEnd: 2, attributesBegin: 3, bodyBegin: 15, bodyEnd: 18, end: 22, attributes: ["testattr": "33"]) {
+      TagNode(name: "d", start: 0, nameEnd: 2, attributesBegin: 3, bodyBegin: 15, bodyEnd: 18, end: 22,
+              attributes: ["testattr": "33"]) {
         TextNode(body: "xyz", start: 15, end: 18)
       }
     }
   }
 
-  @Test
-  void edgeCase_noparseEmbeddedNoParse() {
-    assertParse("[noparse]Example: [noparse]foo[/noparse][/noparse]", [[0, 9], [40, 10]]) {
-      TagNode(name: "noparse", start: 0, nameEnd: 8, attributesBegin: -1, bodyBegin: 9, bodyEnd: 40, end: 48) {
-        TextNode(body: "Example: [noparse]foo[/noparse]", start: 9, end: 40)
+  @DataProvider
+  public Object[][] noParseData() {
+    return [
+        ["[noparse]Example: [noparse]foo[/noparse][/noparse]", "Example: [noparse]foo[/noparse]"],
+        ["[noparse]Example: [noparse []foo[/noparse][/noparse]", "Example: [noparse []foo[/noparse]"],
+    ]
+  }
+
+  @Test(dataProvider = "noParseData")
+  void edgeCase_noparseEmbeddedNoParse(String str, String body) {
+    assertParse(str, [[0, 9], [str.length() - 10, 10]]) {
+      TagNode(name: "noparse", start: 0, nameEnd: 8, bodyBegin: 9, bodyEnd: str.length() - 10, end: str.length()) {
+        TextNode(body: body, start: 9, end: str.length() - 10)
       }
     }
   }
