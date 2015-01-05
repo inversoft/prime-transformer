@@ -266,7 +266,6 @@ public class BBCodeParser implements Parser {
   }
 
   private void removeRelatedOffsets(Document document, TagNode current) {
-    // clear out correlating offsets
     Iterator<Pair<Integer, Integer>> offsets = document.offsets.iterator();
     while (offsets.hasNext()) {
       Pair<Integer, Integer> offset = offsets.next();
@@ -365,7 +364,6 @@ public class BBCodeParser implements Parser {
         }
       }
     }
-
   }
 
   private void handlePreFormattedClosingTag(Document document, Deque<TagNode> nodes, Deque<String> preFormatted) {
@@ -398,7 +396,8 @@ public class BBCodeParser implements Parser {
       if (tagNode.children.isEmpty()) {
         textNode.end = index;
       } else {
-        Node last = tagNode.children.get(tagNode.children.size() - 1);
+        // TODO - add some edge cases for this path, I thought I needed this logic earlier...
+//        Node last = tagNode.children.get(tagNode.children.size() - 1);
 //        int end = ((BaseNode) last).end;
 //        if (end > textNode.end) {
 //          textNode.end = end;
@@ -485,12 +484,8 @@ public class BBCodeParser implements Parser {
 
         if (c == ']') {
           return openingTagEnd;
-//        } else if (c == '\'') {
-//          return singleQuotedAttributeValue;
-//        } else if (c == '\"') {
-//          return doubleQuotedAttributeValue;
         } else if (c == ' ') {
-          // ignore additional white space here
+          // Ignore whitespace
           return complexAttribute;
         } else {
           return complexAttributeName;
