@@ -334,6 +334,6 @@ public class FreemarkerTransformerOffsetTest {
 
   private Document parseDocument(String string) throws Exception {
     Parser parser = new BBCodeParser();
-    return parser.buildDocument(string);
+    return parser.buildDocument(string, Parser.defaultPreFormattedPredicate);
   }
 }

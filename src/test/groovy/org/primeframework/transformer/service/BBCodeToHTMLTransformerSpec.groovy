@@ -120,7 +120,7 @@ public class BBCodeToHTMLTransformerSpec extends Specification {
   def "BBCode to HTML - simple"() {
 
     expect: "when HTML transformer is called with bbCode properly formatted HTML is returned"
-      def document = bbCodeParser.buildDocument(bbCode)
+      def document = bbCodeParser.buildDocument(bbCode, Parser.defaultPreFormattedPredicate)
       Transformer.Offsets offsets = new Transformer.Offsets();
       def transformFunction = new Transformer.TransformFunction.OffsetHTMLEscapeTransformFunction(offsets)
       bbCodeToFreeMarkerTransformer.transform(document, transformPredicate, transformFunction, null).replaceAll(" ", "").replaceAll("<br>", "").replaceAll("&nbsp;", "") == html.replaceAll(" ", "");
@@ -159,7 +159,7 @@ public class BBCodeToHTMLTransformerSpec extends Specification {
       "the <em>XY </em>Trainer"                                                                                               | "the [I]XY [/I]Trainer"
       "<span style=\"font-family: times new roman\">Matthew(not 69) (175) </span>"                                            | "[font=times new roman]Matthew(not 69) (175) [/font]"
       "<u>&lt;script&gt; var inject=true;&lt;/script&gt;</u>"                                                                 | "[u]<script> var inject=true;</script>[/u]"
-//      "<div>Example: [noparse]foo[/noparse]</div>"                                                                            | "[noparse]Example: [noparse]foo[/noparse][/noparse]"
+      "<div>Example: [noparse]foo[/noparse]</div>"                                                                            | "[noparse]Example: [noparse]foo[/noparse][/noparse]"
 
   }
 

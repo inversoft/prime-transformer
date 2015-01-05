@@ -19,6 +19,7 @@ import org.primeframework.transformer.domain.Document;
 import org.primeframework.transformer.domain.TagNode;
 import org.primeframework.transformer.service.BBCodeParser;
 import org.primeframework.transformer.service.BBCodeToHTMLTransformer;
+import org.primeframework.transformer.service.Parser;
 import org.testng.annotations.Test;
 import static org.testng.Assert.assertFalse;
 import static org.testng.AssertJUnit.assertEquals;
@@ -35,7 +36,7 @@ public class DocumentTest {
     // TODO These two walk methods do in fact demonstrate the document model was changed, so perhaps it is ok.
     // TODO we probably just need need the last step where we validate the transformation.
 
-    Document document = new BBCodeParser().buildDocument("Hello [size=\"14\"][b]World!![/b][/size] Yo.");
+    Document document = new BBCodeParser().buildDocument("Hello [size=\"14\"][b]World!![/b][/size] Yo.", Parser.defaultPreFormattedPredicate);
     document.walk(TagNode.class, node -> node.transform = false);
 
     // assert all tag nodes are set to not transform
@@ -54,7 +55,7 @@ public class DocumentTest {
     // TODO These two walk methods do in fact demonstrate the document model was changed, so perhaps it is ok.
     // TODO we probably just need need the last step where we validate the transformation.
 
-    Document document = new BBCodeParser().buildDocument("Hello [size=\"14\"][b]World!![/b][/size] Yo.");
+    Document document = new BBCodeParser().buildDocument("Hello [size=\"14\"][b]World!![/b][/size] Yo.", Parser.defaultPreFormattedPredicate);
     document.walk(node -> {
       if (node instanceof TagNode) {
         ((TagNode) node).transform = false;
