@@ -17,8 +17,11 @@ package org.primeframework.transformer.service;
 
 import java.util.function.Predicate;
 
+import freemarker.template.Template;
 import org.primeframework.transformer.domain.Document;
+import org.primeframework.transformer.domain.Node;
 import org.primeframework.transformer.domain.TagNode;
+import org.primeframework.transformer.domain.TextNode;
 
 /**
  * Text only Transformer implementation. The document source is stripped of all tags and only the text remains.
@@ -36,8 +39,42 @@ public class TextTransformer implements Transformer {
   public String transform(Document document, Predicate<TagNode> transformPredicate, TransformFunction transformFunction,
                           NodeConsumer nodeConsumer) throws TransformerException {
     // Build the plain text version of the document
-    StringBuilder sb = new StringBuilder();
-    document.getChildTextNodes().stream().forEach(n -> sb.append(n.getBody()));
-    return sb.toString();
+    StringBuilder build = new StringBuilder();
+    recurse(document, build, transformPredicate, transformFunction, nodeConsumer);
+    return build.toString();
+  }
+
+  private void recurse(Node node, StringBuilder build, Predicate<TagNode> transformPredicate, TransformFunction transformFunction,
+                       NodeConsumer nodeConsumer) throws TransformerException {
+    if (node instanceof TextNode) {
+      TextNode textNode = (TextNode) node;
+      String text = textNode.getBody();
+      if (transformFunction != null) {
+        text = transformFunction.transform(textNode, text);
+      }
+
+      if (nodeConsumer != null) {
+        nodeConsumer.accept(node, text, text);
+      }
+
+      build.append(text);
+    } else if (node instanceof Document) {
+      Document document = (Document) node;
+      for (Node child : document.children) {
+        recurse(child, build, transformPredicate, transformFunction, nodeConsumer);
+      }
+    } else if (node instanceof TagNode) {
+      TagNode tagNode = (TagNode) node;
+      if (transformPredicate.test(tagNode)) {
+        // Transform the children first
+        for (Node child : tagNode.children) {
+          recurse(child, build, transformPredicate, transformFunction, nodeConsumer);
+        }
+      } else {
+        build.append(tagNode.getRawString());
+      }
+    } else {
+      throw new TransformerException("Invalid node class [" + node.getClass() + "]");
+    }
   }
 }

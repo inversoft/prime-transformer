@@ -17,6 +17,7 @@ package org.primeframework.transformer.service
 
 import org.primeframework.transformer.domain.BaseTagNode
 import org.primeframework.transformer.domain.Document
+import org.primeframework.transformer.domain.Pair
 import org.primeframework.transformer.domain.TagNode
 import org.primeframework.transformer.domain.TextNode
 import org.testng.Assert
@@ -33,12 +34,28 @@ class ParserAssert {
    * @param str The String to parse.
    * @param closure The closure for the DSL.
    */
-  public static void assertParse(String str, @DelegatesTo(NodeDelegate.class) Closure closure) {
+  public static void assertParse(String str, List offsets = null, List attributeOffsets = null, @DelegatesTo(NodeDelegate.class) Closure closure) {
     Document expected = new Document(str)
     closure.delegate = new NodeDelegate(expected)
     closure()
 
     Document actual = new BBCodeParser().buildDocument(str);
+    if (offsets != null) {
+      offsets.each { pair ->
+        expected.offsets.add(new Pair<>(pair[0], pair[1]))
+      }
+    } else {
+      expected.offsets.addAll(actual.offsets)
+    }
+
+    if (attributeOffsets != null) {
+      attributeOffsets.each { pair ->
+        expected.attributeOffsets.add(new Pair<>(pair[0], pair[1]))
+      }
+    } else {
+      expected.attributeOffsets.addAll(actual.attributeOffsets)
+    }
+
     Assert.assertEquals(actual, expected)
   }
 
@@ -59,7 +76,7 @@ class ParserAssert {
       Assert.assertEquals(textNode.body, attributes['body'])
     }
 
-    def TagNode(Map attributes, @DelegatesTo(NodeDelegate.class) Closure closure) {
+    def TagNode(Map attributes, @DelegatesTo(NodeDelegate.class) Closure closure = null) {
       Objects.requireNonNull(attributes['name'], 'The [name] attribute is required')
       Objects.requireNonNull(attributes['start'], 'The [start] attribute is required')
       Objects.requireNonNull(attributes['nameEnd'], 'The [nameEnd] attribute is required')
@@ -69,7 +86,7 @@ class ParserAssert {
       TagNode child = new TagNode(node.document,
                                   attributes['start'],
                                   attributes['nameEnd'],
-                                  attributes['attributeStart'] != null ? attributes['attributesStart'] : -1,
+                                  attributes['attributesBegin'] != null ? attributes['attributesBegin'] : -1,
                                   attributes['bodyBegin'],
                                   attributes['bodyEnd'] != null ? attributes['bodyEnd'] : attributes['bodyBegin'],
                                   attributes['end'],
