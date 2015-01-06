@@ -15,6 +15,7 @@
     </content>
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="inheritedJdk" />
+    <orderEntry type="library" name="Groovy 2.2" level="application" />
     <orderEntry type="module-library">
       <library>
         <CLASSES>
@@ -92,6 +93,6 @@
         </SOURCES>
       </library>
     </orderEntry>
-    <orderEntry type="library" name="Groovy 2.2" level="application" />
   </component>
 </module>
+
