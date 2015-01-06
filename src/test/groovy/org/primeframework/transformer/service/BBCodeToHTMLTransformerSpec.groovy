@@ -76,7 +76,7 @@ public class BBCodeToHTMLTransformerSpec extends Specification {
       def html = bbCodeToFreeMarkerTransformer.transform(document, transformPredicate, null, null)
 
     then: "an exception should be thrown"
-      thrown(TransformerException)
+      thrown(TransformException)
 
     and: "html should be null"
       html == null
@@ -92,7 +92,7 @@ public class BBCodeToHTMLTransformerSpec extends Specification {
       def html = new BBCodeToHTMLTransformer(true).transform(document, transformPredicate, null, null)
 
     then: "an exception should be thrown"
-      thrown TransformerException
+      thrown TransformException
 
     and: "html should be null"
       html == null
@@ -104,8 +104,8 @@ public class BBCodeToHTMLTransformerSpec extends Specification {
     when: "A BBCode string with a missing closing tag is parsed"
       def document = bbCodeParser.buildDocument("[b]Testing", attributes);
 
-    then: "a parse exception is not thrown"
-      notThrown ParserException
+    then: "an exception is not thrown"
+      notThrown Exception
 
     and: "document is not null"
       document != null

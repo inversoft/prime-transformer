@@ -13,7 +13,6 @@
  * either express or implied. See the License for the specific
  * language governing permissions and limitations under the License.
  */
-
 package org.primeframework.transformer.service;
 
 import java.util.ArrayDeque;
@@ -39,21 +38,15 @@ import org.primeframework.transformer.domain.TextNode;
 public class BBCodeParser implements Parser {
 
   @Override
-  public Document buildDocument(String source, Map<String, TagAttributes> tagAttributes) throws ParserException {
+  public Document buildDocument(String source, Map<String, TagAttributes> tagAttributes) {
     return buildDocument(source.toCharArray(), tagAttributes);
   }
 
   @Override
-  public Document buildDocument(char[] source, Map<String, TagAttributes> tagAttributes) throws ParserException {
-
+  public Document buildDocument(char[] source, Map<String, TagAttributes> tagAttributes) {
     Document document = new Document(source);
     Deque<TagNode> nodes = new ArrayDeque<>();
-
-    try {
-      parse(document, nodes, tagAttributes);
-    } catch (Exception e) {
-      throw new ParserException("Failed to parse document source.\n\t" + new String(document.source), e);
-    }
+    parse(document, nodes, tagAttributes);
     return document;
   }
 
@@ -63,10 +56,8 @@ public class BBCodeParser implements Parser {
    * @param document      The document to add nodes to.
    * @param nodes         The node queue for state management.
    * @param tagAttributes A map of tag attributes keyed by tag name.
-   * @throws ParserException If parsing fails for any reason.
    */
-  private void parse(Document document, Deque<TagNode> nodes, Map<String, TagAttributes> tagAttributes)
-      throws ParserException {
+  private void parse(Document document, Deque<TagNode> nodes, Map<String, TagAttributes> tagAttributes) {
 
     final Map<String, TagAttributes> attributes = new HashMap<>();
     if (tagAttributes != null) {

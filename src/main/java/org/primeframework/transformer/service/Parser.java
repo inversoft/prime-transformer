@@ -21,7 +21,9 @@ import org.primeframework.transformer.domain.Document;
 import org.primeframework.transformer.domain.TagAttributes;
 
 /**
- * Parser interface. <p>Parser implementations are only responsible for building the abstract syntax tree (AST). The
+ * Parser interface.
+ * <p>
+ * Parser implementations are only responsible for building the abstract syntax tree (AST). The
  * returned <code>Document</code> holds the original source and an AST that maps the source to index values identifying
  * the source markup tags and content.
  *
@@ -30,30 +32,38 @@ import org.primeframework.transformer.domain.TagAttributes;
 public interface Parser {
 
   /**
-   * Return a constructed <code>Document</code> representation of the document source.<p>No transformation is done as a
-   * part of building the document.</p><p>The returned document may then be passed into any transformer
-   * implementation.</p>
+   * Return a constructed <code>Document</code> representation of the document source.
+   * <p>
+   * No transformation is done as a
+   * part of building the document.
+   * <p>
+   * The returned document may then be passed into any transformer
+   * implementation.
    *
-   * @param source
+   * @param source        The source string that contains the BBCode.
    * @param tagAttributes The set of attributes for the tags being parsed. The key is the tag name (lowercase) and the
    *                      value is the attributes. Caller must ensure that the attributes are valid by calling the
    *                      {@link TagAttributes#validate()} method before calling.
-   * @return
-   * @throws ParserException
+   *
+   * @return The Document that contains the BBCode.
    */
-  Document buildDocument(String source, Map<String, TagAttributes> tagAttributes) throws ParserException;
+  Document buildDocument(String source, Map<String, TagAttributes> tagAttributes);
 
   /**
-   * Return a constructed <code>Document</code> representation of the document source.<p>No transformation is done as a
-   * part of building the document.</p><p>The returned document may then be passed into any transformer
-   * implementation.</p>
+   * Return a constructed <code>Document</code> representation of the document source.
+   * <p>
+   * No transformation is done as a
+   * part of building the document.
+   * <p>
+   * The returned document may then be passed into any transformer
+   * implementation.
    *
-   * @param source
+   * @param source        The source string that contains the BBCode.
    * @param tagAttributes The set of attributes for the tags being parsed. The key is the tag name (lowercase) and the
    *                      value is the attributes. Caller must ensure that the attributes are valid by calling the
    *                      {@link TagAttributes#validate()} method before calling.
-   * @return
-   * @throws ParserException
+   *
+   * @return The Document that contains the BBCode.
    */
-  Document buildDocument(char[] source, Map<String, TagAttributes> tagAttributes) throws ParserException;
+  Document buildDocument(char[] source, Map<String, TagAttributes> tagAttributes);
 }

@@ -62,12 +62,12 @@ public class FreeMarkerTransformer implements Transformer {
   @Override
   public String transform(Document document, Predicate<TagNode> transformPredicate, TransformFunction transformFunction,
                           NodeConsumer nodeConsumer)
-      throws TransformerException {
+      throws TransformException {
     Objects.requireNonNull(transformPredicate, "A transform predicate is required");
     return recurse(document, transformPredicate, transformFunction, nodeConsumer);
   }
 
-  private String executeTemplate(Template template, TagNode tagNode, String body) throws TransformerException {
+  private String executeTemplate(Template template, TagNode tagNode, String body) throws TransformException {
     Map<String, Object> data = new HashMap<>();
     data.put("body", body);
     data.put("attributes", tagNode.attributes);
@@ -78,13 +78,13 @@ public class FreeMarkerTransformer implements Transformer {
       template.process(data, out);
       return out.toString();
     } catch (Exception e) {
-      throw new TransformerException("FreeMarker processing failed for template [" + template.getName() + "]\n\t Data model [" + data + "]", e);
+      throw new TransformException("FreeMarker processing failed for template [" + template.getName() + "]\n\t Data model [" + data + "]", e);
     }
   }
 
   private String recurse(Node node, Predicate<TagNode> transformPredicate, TransformFunction transformFunction,
                          NodeConsumer nodeConsumer)
-      throws TransformerException {
+      throws TransformException {
     StringBuilder build = new StringBuilder();
     if (node instanceof TextNode) {
       TextNode textNode = (TextNode) node;
@@ -123,12 +123,12 @@ public class FreeMarkerTransformer implements Transformer {
 
         build.append(result);
       } else if (strict && template == null) {
-        throw new TransformerException("No template found for tag [" + tagNode.getName() + "]");
+        throw new TransformException("No template found for tag [" + tagNode.getName() + "]");
       } else {
         build.append(tagNode.getRawString());
       }
     } else {
-      throw new TransformerException("Invalid node class [" + node.getClass() + "]");
+      throw new TransformException("Invalid node class [" + node.getClass() + "]");
     }
 
     return build.toString();

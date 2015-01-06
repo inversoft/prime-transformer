@@ -74,7 +74,7 @@ public class BBCodeToHTMLTransformer implements Transformer {
       DEFAULT_TEMPLATES.put("th", configuration.getTemplate("th.ftl"));
       DEFAULT_TEMPLATES.put("font", configuration.getTemplate("font.ftl"));
     } catch (IOException e) {
-      throw new TransformerRuntimeException("Failed to load FreeMarker template from classpath.", e);
+      throw new IllegalStateException("Failed to load FreeMarker template from classpath.", e);
     }
   }
 
@@ -88,7 +88,7 @@ public class BBCodeToHTMLTransformer implements Transformer {
 
   @Override
   public String transform(Document document, Predicate<TagNode> transformPredicate, TransformFunction transformFunction,
-                          NodeConsumer nodeConsumer) throws TransformerException {
+                          NodeConsumer nodeConsumer) throws TransformException {
     return transformer.transform(document, transformPredicate, transformFunction, nodeConsumer);
   }
 }

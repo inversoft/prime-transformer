@@ -388,7 +388,7 @@ public class BBCodeParserSpec extends Specification {
       def document = new BBCodeParser().buildDocument("[*] tester", attributes)
 
     then: "no exception should be thrown"
-      notThrown ParserException
+      notThrown Exception
 
     and: "the document should contain a single child tagNode"
       document.children.size() == 1
@@ -410,7 +410,7 @@ public class BBCodeParserSpec extends Specification {
       def document = new BBCodeParser().buildDocument("[code] abc123 [baz] xyz456", attributes)
 
     then: "no exception should be thrown"
-      notThrown ParserException
+      notThrown Exception
 
     and: "the document should have a single child text"
       document.children.size() == 1

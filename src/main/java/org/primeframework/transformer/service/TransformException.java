@@ -13,15 +13,17 @@
  * either express or implied. See the License for the specific
  * language governing permissions and limitations under the License.
  */
-
 package org.primeframework.transformer.service;
 
-public class TransformerRuntimeException extends RuntimeException {
-  public TransformerRuntimeException(String message, Throwable e) {
-    super(message, e);
+/**
+ * Thrown when the Transformer fails.
+ */
+public class TransformException extends RuntimeException {
+  public TransformException(String message) {
+    super(message);
   }
 
-  public TransformerRuntimeException(String message) {
-    super(message);
+  public TransformException(String message, Throwable e) {
+    super(message, e);
   }
 }

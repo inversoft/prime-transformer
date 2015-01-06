@@ -17,7 +17,6 @@ package org.primeframework.transformer.service;
 
 import java.util.function.Predicate;
 
-import freemarker.template.Template;
 import org.primeframework.transformer.domain.Document;
 import org.primeframework.transformer.domain.Node;
 import org.primeframework.transformer.domain.TagNode;
@@ -37,7 +36,7 @@ import org.primeframework.transformer.domain.TextNode;
 public class TextTransformer implements Transformer {
   @Override
   public String transform(Document document, Predicate<TagNode> transformPredicate, TransformFunction transformFunction,
-                          NodeConsumer nodeConsumer) throws TransformerException {
+                          NodeConsumer nodeConsumer) throws TransformException {
     // Build the plain text version of the document
     StringBuilder build = new StringBuilder();
     recurse(document, build, transformPredicate, transformFunction, nodeConsumer);
@@ -45,7 +44,7 @@ public class TextTransformer implements Transformer {
   }
 
   private void recurse(Node node, StringBuilder build, Predicate<TagNode> transformPredicate, TransformFunction transformFunction,
-                       NodeConsumer nodeConsumer) throws TransformerException {
+                       NodeConsumer nodeConsumer) throws TransformException {
     if (node instanceof TextNode) {
       TextNode textNode = (TextNode) node;
       String text = textNode.getBody();
@@ -74,7 +73,7 @@ public class TextTransformer implements Transformer {
         build.append(tagNode.getRawString());
       }
     } else {
-      throw new TransformerException("Invalid node class [" + node.getClass() + "]");
+      throw new TransformException("Invalid node class [" + node.getClass() + "]");
     }
   }
 }

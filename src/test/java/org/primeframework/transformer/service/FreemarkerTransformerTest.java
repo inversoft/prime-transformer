@@ -87,7 +87,7 @@ public class FreemarkerTransformerTest {
 
     try {
       assertTransform(true, doc, (node) -> true, null, null);
-    } catch (TransformerException e) {
+    } catch (TransformException e) {
       assertTrue(e.getMessage().startsWith("FreeMarker processing failed for template"));
     }
   }
@@ -98,7 +98,7 @@ public class FreemarkerTransformerTest {
 
     try {
       assertTransform(true, doc, (node) -> true, null, null);
-    } catch (TransformerException e) {
+    } catch (TransformException e) {
       assertEquals(e.getMessage(), "No template found for tag [missing]");
     }
   }

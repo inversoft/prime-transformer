@@ -40,11 +40,11 @@ public interface Transformer {
    * @param transformFunction  A function that can be optionally provided to transform text nodes.
    * @param nodeConsumer       A consumer that accepts each node as they are traversed during the transformation.
    * @return The transformer result.
-   * @throws TransformerException
+   * @throws TransformException If the transformation fails for any reason.
    */
   String transform(Document document, Predicate<TagNode> transformPredicate, TransformFunction transformFunction,
                    NodeConsumer nodeConsumer)
-      throws TransformerException;
+      throws TransformException;
 
   /**
    * Defines a consumer that accepts each node in the Document as they are transformed.
