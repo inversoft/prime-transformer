@@ -33,9 +33,10 @@ public class BBCodeToHTMLTransformerSpec extends Specification {
   def bbCodeToFreeMarkerTransformer;
 
   @Shared
-  def attributes = [ '*' : new TagAttributes(false, false),
-                     code : new TagAttributes(true, true),
-                     noparse : new TagAttributes(true, true)]
+  def attributes = [ '*' : new TagAttributes(true, false),
+                     code : new TagAttributes(false, true),
+                     noparse : new TagAttributes(false, true)]
+
   /**
    * No lambdas until Groovy v3.
    */

@@ -304,6 +304,15 @@ class BBCodeParserTest {
   }
 
   @Test
+  void edgeCase_unclosedTags() {
+    assertParse("[code] abc123 [baz] xyz456",
+                [],[]) {
+      TextNode(body: "[code] abc123 [baz] xyz456", start: 0, end: 26)
+    }
+
+  }
+
+  @Test
   void tagWithoutClosingTagContainingEmbeddedTags() {
     assertParse("[list][*][b]Test[/b][*][i]Test[/i][/list]",
                 [[0, 6], [6, 3], [9, 3], [16, 4], [20, 3], [23, 3], [30, 4], [34, 7]]) {

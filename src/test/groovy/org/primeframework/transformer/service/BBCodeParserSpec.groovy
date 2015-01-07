@@ -38,9 +38,9 @@ public class BBCodeParserSpec extends Specification {
   }
 
   @Shared
-  def attributes = [ '*' : new TagAttributes(false, false),
-                    code : new TagAttributes(true, true),
-                    noparse : new TagAttributes(true, true)]
+  def attributes = [ '*' : new TagAttributes(true, false),
+                     code : new TagAttributes(false, true),
+                     noparse : new TagAttributes(false, true)]
 
   // TODO can be removed - keeping here now until I complete work on the parser
 
@@ -398,23 +398,6 @@ public class BBCodeParserSpec extends Specification {
       tag.children.get(0) instanceof TextNode
       def text = (TextNode) tag.children.get(0)
       text.getBody() == " tester"
-  }
-
-  def "Parse BBCode with embedded tags in a no parse tag w/out a closing tag."() {
-
-    when: "We are missing a closing tag w/ embedded non-parsed tags"
-      def document = new BBCodeParser().buildDocument("[code] abc123 [baz] xyz456", attributes)
-
-    then: "no exception should be thrown"
-      notThrown Exception
-
-    and: "the document should have a single child text"
-      document.children.size() == 1
-      document.children.get(0) instanceof TextNode
-      def text = (TextNode) document.children.get(0)
-      text.begin == 0
-      text.end == 26
-      text.getBody() == "[code] abc123 [baz] xyz456"
   }
 
   def "Parse BBCode that does not require a closing tag in a parent tag that is not a list"() {

@@ -336,9 +336,9 @@ public class FreemarkerTransformerTest {
   private Document parseDocument(String string) throws Exception {
     Parser parser = new BBCodeParser();
     Map<String, TagAttributes> attributes = new HashMap<>();
-    attributes.put("noparse", new TagAttributes(true, true));
-    attributes.put("code", new TagAttributes(true, true));
-    attributes.put("*", new TagAttributes(false, false));
+    attributes.put("noparse", new TagAttributes(false, true));
+    attributes.put("code", new TagAttributes(false, true));
+    attributes.put("*", new TagAttributes(true, false));
 
     return parser.buildDocument(string, attributes);
   }

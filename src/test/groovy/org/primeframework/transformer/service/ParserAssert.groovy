@@ -28,9 +28,9 @@ import org.testng.Assert
  */
 class ParserAssert {
 
-  static attributes = [ '*' : new TagAttributes(false, false),
-                     code : new TagAttributes(true, true),
-                     noparse : new TagAttributes(true, true)]
+  static attributes = [ '*' : new TagAttributes(true, false),
+                     code : new TagAttributes(false, true),
+                     noparse : new TagAttributes(false, true)]
   /**
    * Asserts the results of a parse. This uses a DSL via the closure.
    *
