@@ -171,7 +171,7 @@ public interface Transformer {
               break;
             case '\n':
             case '\r':
-              if (i + i < ca.length && ((ca[i] == '\n' && ca[i + 1] == '\r') || (ca[i] == '\r' && ca[i + 1] == '\n'))) {
+              if (i + 1 < ca.length && ((ca[i] == '\n' && ca[i + 1] == '\r') || (ca[i] == '\r' && ca[i + 1] == '\n'))) {
                 offsets.add(node.begin + i, 3);
                 i++;
               } else {
