@@ -141,7 +141,7 @@ public class BBCodeParser implements Parser {
           index++;
           if (state == State.closingTagEnd) {
             handlePreFormattedClosingTag(document, nodes, preFormatted);
-            handleCompletedTagNode(document, index, nodes, attributes);
+            handleCompletedTagNode(document, index, nodes, attributes, preFormatted);
           }
           break;
 
@@ -435,9 +435,10 @@ public class BBCodeParser implements Parser {
    * @param index
    * @param nodes
    * @param attributes
+   * @param preFormatted
    */
   private void handleCompletedTagNode(Document document, int index, Deque<TagNode> nodes,
-                                      Map<String, TagAttributes> attributes) {
+                                      Map<String, TagAttributes> attributes, Deque<String> preFormatted) {
 
     if (!nodes.isEmpty()) {
       // Start by handling expected unclosed tags.
@@ -453,33 +454,14 @@ public class BBCodeParser implements Parser {
         if (closingTagMatchesCurrentNode) {
           current.end = index;
         }
-
       }
 
-//      if (current.hasClosingTag() || closingTagMatchesCurrentNode) {
       if (current.hasClosingTag() && closingTagMatchesCurrentNode) {
-
         // Set the end of this tag, and add to the document or its parent node.
         TagNode tagNode = nodes.pop();
         tagNode.end = index;
         addNode(document, attributes, tagNode, nodes);
-
-//        if (current.bodyEnd != -1 && index > current.bodyEnd + 2) {
-//
-//          String closingTagName = document.getString(current.bodyEnd + 2, index - 1);
-//          if (eq(current.getName(), closingTagName)) {
-//            // Set the end of this tag, and add to the document or its parent node.
-//            TagNode tagNode = nodes.pop();
-//            tagNode.end = index;
-//            addNode(document, attributes, tagNode, nodes);
-//          } else {
-//            // If this closing tag isn't what we expect, handle it.
-//            //handleUnExpectedUnclosedTag(document, index, nodes);
-//          }
-//        }
-
       }
-
     }
   }
 
@@ -505,7 +487,7 @@ public class BBCodeParser implements Parser {
     handleCompletedTextNode(document, attributes, index, textNodes, nodes);
     handleExpectedUnclosedTag(document, attributes, nodes, index);
     handleUnExpectedUnclosedTag(document, attributes, index, nodes, preFormatted);
-    handleCompletedTagNode(document, index, nodes, attributes);
+    handleCompletedTagNode(document, index, nodes, attributes, preFormatted);
     collapseAdjacentTextNodes(document);
   }
 
@@ -542,50 +524,27 @@ public class BBCodeParser implements Parser {
         }
 
         if (!stack.isEmpty()) {
-
           if (nodes.isEmpty()) {
-
             while(!stack.isEmpty()) {
               TagNode tag = stack.pop();
               if (!tag.children.isEmpty()) {
                 tag.bodyEnd = ((BaseNode) tag.children.get(tag.children.size() - 1)).end;
                 tag.end = tag.bodyEnd;
               }
-
-//              if (stack.isEmpty()) {
-//                tag.end = index;
-//              } else {
-//                tag.bodyEnd = stack.peek().begin;
-//                tag.end = tag.bodyEnd;
-//              }
               addNode(document, attributes, tag, nodes);
             }
-
           } else {
             nodes.peek().bodyEnd = stack.getLast().bodyEnd;
             while (!stack.isEmpty()) {
-              TagNode kid = stack.pop();
-              if (!kid.children.isEmpty()) {
-                kid.end = ((BaseNode) kid.children.get(kid.children.size() - 1)).end;
-                kid.bodyEnd = kid.end;
+              TagNode tag = stack.pop();
+              if (!tag.children.isEmpty()) {
+                tag.end = ((BaseNode) tag.children.get(tag.children.size() - 1)).end;
+                tag.bodyEnd = tag.end;
               }
-              addNode(document, attributes, kid, nodes);
+              addNode(document, attributes, tag, nodes);
             }
           }
-
         }
-
-//        if (!stack.isEmpty() && !nodes.isEmpty()) {
-//          nodes.peek().bodyEnd = stack.getLast().bodyEnd;
-//          while (!stack.isEmpty()) {
-//            TagNode kid = stack.pop();
-//            if (!kid.children.isEmpty()) {
-//              kid.end = ((BaseNode) kid.children.get(kid.children.size() - 1)).end;
-//              kid.bodyEnd = kid.end;
-//            }
-//            addNode(document, nodes, kid);
-//          }
-//        }
       }
     }
   }
@@ -612,28 +571,38 @@ public class BBCodeParser implements Parser {
     addNode(document, attributes, textNode, nodes);
   }
 
+  private String closingName(Document document, int index, TagNode tag) {
+    if (tag.bodyEnd != -1 && index > tag.bodyEnd + 2) {
+      return document.getString(tag.bodyEnd + 2, index - 1);
+    }
+    return null;
+  }
+
   private void handleUnExpectedUnclosedTag(Document document, Map<String, TagAttributes> attributes, int index, Deque<TagNode> nodes, Deque<String> preFormatted) {
     while (!nodes.isEmpty()) {
 
       // If we run into a pre-formatted tag, return unless we're at the end of the document.
-      if (!preFormatted.isEmpty() && index < document.source.length) {
-        if (eq(nodes.peek().getName(), preFormatted.peek())) {
-          return;
+      if (nodes.size() == 1) {
+        if (!preFormatted.isEmpty()) {
+          TagNode current = nodes.peek();
+          String closingName = closingName(document, index, current);
+          if (eq(current.getName(), preFormatted.peek()) && eq(closingName, current.getName())) {
+            return;
+          }
         }
       }
+
       TagNode tagNode = nodes.pop();
       TextNode textNode = tagNode.toTextNode();
       // If tagNode has children, find the last end
       if (tagNode.children.isEmpty()) {
         textNode.end = index;
       } else {
-        // TODO - add some edge cases for this path, I thought I needed this logic earlier...
-//        Node last = tagNode.children.get(tagNode.children.size() - 1);
-//        int end = ((BaseNode) last).end;
-//        if (end > textNode.end) {
-//          textNode.end = end;
-//        }
-        textNode.end = index;
+        if (nodes.isEmpty()) {
+          textNode.end = index;
+        } else if (!tagNode.children.isEmpty()) {
+          textNode.end = ((BaseNode) tagNode.children.get(tagNode.children.size() - 1)).end;
+        }
       }
       addNode(document, attributes, textNode, nodes);
     }
@@ -936,7 +905,5 @@ public class BBCodeParser implements Parser {
     };
 
     public abstract State next(char c);
-
   }
-
 }

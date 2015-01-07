@@ -165,7 +165,7 @@ public class BBCodeToHTMLTransformerSpec extends Specification {
       def transformFunction = new Transformer.TransformFunction.OffsetHTMLEscapeTransformFunction(offsets)
       def document = bbCodeParser.buildDocument(bbCode, attributes)
       // assert the transformed content equals the expected HTML
-      bbCodeToFreeMarkerTransformer.transform(document, transformPredicate, transformFunction, null).replaceAll("<br>", "").replaceAll("\\s+", "") == html.replaceAll("\\s+", "")
+      bbCodeToFreeMarkerTransformer.transform(document, transformPredicate, transformFunction, null).replaceAll("<br/>", "").replaceAll("\\s+", "") == html.replaceAll("\\s+", "")
 
     where:
       fileName   | _

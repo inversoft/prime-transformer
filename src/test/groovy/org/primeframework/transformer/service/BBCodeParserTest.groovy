@@ -247,11 +247,11 @@ class BBCodeParserTest {
   @DataProvider
   public Object[][] noParseData() {
     return [
-//        ["[noparse]Example: [noparse]foo[/noparse][/noparse]", "Example: [noparse]foo[/noparse]"]
-//        , ["[noparse] System.out.println(\"Hello World!\"); [/noparse]", " System.out.println(\"Hello World!\"); "]
-//        ,
-        ["[noparse] [b]b[/i] [xyz] [foo] [] b] [bar '''''' [[[ ]]] [/noparse]", " [b]b[/i] [xyz] [foo] [] b] [bar '''''' [[[ ]]] "]
-//        , ["[noparse] [b][u][/i] ** && == ++ [foo] [] b] [bar \"\"\" ]] [/noparse]", " [b][u][/i] ** && == ++ [foo] [] b] [bar \"\"\" ]] "]
+        ["[noparse]Example: [noparse]foo[/noparse][/noparse]", "Example: [noparse]foo[/noparse]"]
+        , ["[noparse] System.out.println(\"Hello World!\"); [/noparse]", " System.out.println(\"Hello World!\"); "]
+        , ["[noparse] [b]b[/i] [xyz] [foo] [] b] [bar '''''' [[[ ]]] [/noparse]", " [b]b[/i] [xyz] [foo] [] b] [bar '''''' [[[ ]]] "]
+        , ["[noparse] [b][u][/i] ** && == ++ [foo] [] b] [bar \"\"\" ]] [/noparse]", " [b][u][/i] ** && == ++ [foo] [] b] [bar \"\"\" ]] "]
+        , ["[noparse]am.getProcessMemoryInfo([mySinglePID]);[/noparse]", "am.getProcessMemoryInfo([mySinglePID]);"]
     ]
   }
 
@@ -260,6 +260,26 @@ class BBCodeParserTest {
     assertParse(str, [[0, 9], [str.length() - 10, 10]]) {
       TagNode(name: "noparse", start: 0, nameEnd: 8, bodyBegin: 9, bodyEnd: str.length() - 10, end: str.length()) {
         TextNode(body: body, start: 9, end: str.length() - 10)
+      }
+    }
+  }
+
+  @DataProvider
+  public Object[][] codeData() {
+    return [
+        ["[code]Example: [code]foo[/code][/code]", "Example: [code]foo[/code]"]
+        , ["[code] System.out.println(\"Hello World!\"); [/code]", " System.out.println(\"Hello World!\"); "]
+        , ["[code] [b]b[/i] [xyz] [foo] [] b] [bar '''''' [[[ ]]] [/code]", " [b]b[/i] [xyz] [foo] [] b] [bar '''''' [[[ ]]] "]
+        , ["[code] [b][u][/i] ** && == ++ [foo] [] b] [bar \"\"\" ]] [/code]", " [b][u][/i] ** && == ++ [foo] [] b] [bar \"\"\" ]] "]
+        , ["[code]am.getProcessMemoryInfo([mySinglePID]);[/code]", "am.getProcessMemoryInfo([mySinglePID]);"]
+    ]
+  }
+
+  @Test(dataProvider = "codeData")
+  void edgeCase_codeEmbeddedCode(String str, String body) {
+    assertParse(str, [[0, 6], [str.length() - 7, 7]]) {
+      TagNode(name: "code", start: 0, nameEnd: 5, bodyBegin: 6, bodyEnd: str.length() - 7, end: str.length()) {
+        TextNode(body: body, start: 6, end: str.length() - 7)
       }
     }
   }
@@ -276,7 +296,7 @@ class BBCodeParserTest {
     }
   }
 
-  @Test
+  @Test(enabled = false)
   void edgeCase_tagWithoutClosingTagWithoutClosingParent() {
     Assert.fail("Not sure if this assertion is correct. Should it be a single text?")
     // TextNode(body: "[list][*][*]")
@@ -290,7 +310,7 @@ class BBCodeParserTest {
     }
   }
 
-  @Test
+  @Test(enabled = false)
   void edgeCase_tagWithoutClosingTagWithBodyWithoutClosingParent() {
     Assert.fail("Not sure if this assertion is correct. Should it be a single text?")
     // TextNode(body: "[list][*]abc[*] def ")
@@ -309,7 +329,6 @@ class BBCodeParserTest {
                 [],[]) {
       TextNode(body: "[code] abc123 [baz] xyz456", start: 0, end: 26)
     }
-
   }
 
   @Test
