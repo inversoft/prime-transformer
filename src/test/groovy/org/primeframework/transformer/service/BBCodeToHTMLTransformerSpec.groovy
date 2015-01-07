@@ -66,23 +66,6 @@ public class BBCodeToHTMLTransformerSpec extends Specification {
   }
 
   // Covered in the Java test
-  // TODO Is this test still valid, what do we do when no template exists? Just convert it to a text node?
-  def "No FreeMarker template for tag with strict mode enabled"() {
-
-    when: "A BBCodeParser is setup and a template has not been provided for a tag"
-      def document = bbCodeParser.buildDocument("[unknown]Testing[/unknown]", attributes)
-
-    and: "transform is bbCodeTransformer"
-      def html = bbCodeToFreeMarkerTransformer.transform(document, transformPredicate, null, null)
-
-    then: "an exception should be thrown"
-      thrown(TransformException)
-
-    and: "html should be null"
-      html == null
-  }
-
-  // Covered in the Java test
   def "No FreeMarker template for tag with strict mode enabled in the constructor"() {
 
     when: "A BBCodeParser is setup and a template has not been provided for a tag"
@@ -177,8 +160,11 @@ public class BBCodeToHTMLTransformerSpec extends Specification {
       def bbCode = this.getClass().getResourceAsStream("/org/primeframework/transformer/bbcode/" + fileName).getText();
       def html = this.getClass().getResourceAsStream("/org/primeframework/transformer/html/" + fileName).getText();
 
+      Transformer.Offsets offsets = new Transformer.Offsets();
+      def transformFunction = new Transformer.TransformFunction.OffsetHTMLEscapeTransformFunction(offsets)
       def document = bbCodeParser.buildDocument(bbCode, attributes)
-      bbCodeToFreeMarkerTransformer.transform(document, transformPredicate, null, null).replaceAll("<br>", "").replaceAll("\\s+", "") == html.replaceAll("\\s+", "")
+      // assert the transformed content equals the expected HTML
+      bbCodeToFreeMarkerTransformer.transform(document, transformPredicate, transformFunction, null).replaceAll("<br>", "").replaceAll("\\s+", "") == html.replaceAll("\\s+", "")
 
     where:
       fileName   | _
