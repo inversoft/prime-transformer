@@ -196,6 +196,8 @@ public class BBCodeParser implements Parser {
             if (tagNode.attributesBegin == -1) {
               nodes.peek().attributesBegin = index;
             }
+          } else if (state == State.text) {
+            handleUnExpectedOpenTag(document, nodes, index);
           }
           index++;
           break;
@@ -475,25 +477,23 @@ public class BBCodeParser implements Parser {
       boolean handleNoClosingTag = !current.hasClosingTag();
       // If current node has a closing tag, if the closing tag doesn't match, continue
       if (!handleNoClosingTag) {
-        String closingTagName = document.getString(current.bodyEnd + 2, index - 1);
-        handleNoClosingTag = neq(lc(current.getName()), closingTagName);
+        if (current.bodyEnd != -1) {
+          String closingTagName = document.getString(current.bodyEnd + 2, index - 1);
+          handleNoClosingTag = neq(lc(current.getName()), closingTagName);
+        }
       }
 
       if (handleNoClosingTag) {
-        String name = nodes.peek().getName();
+        String name = lc(nodes.peek().getName());
         Deque<TagNode> stack = new ArrayDeque<>(2);
 
         if (name != null) {
-          name = name.toLowerCase();
           while (!nodes.isEmpty() && attributes.containsKey(name) && !attributes.get(name).doesNotRequireClosingTag) {
             stack.push(nodes.pop());
             if (nodes.isEmpty()) {
               break;
             }
-            name = nodes.peek().getName();
-            if (name != null) {
-              name = name.toLowerCase();
-            }
+            name = lc(nodes.peek().getName());
           }
         }
 
@@ -680,6 +680,9 @@ public class BBCodeParser implements Parser {
         } else if (c == ' ') {
           // Ignore whitespace
           return complexAttribute;
+        } else if (c == '[') {
+          // tag is not closed properly.
+          return text;
         } else {
           return complexAttributeName;
         }
