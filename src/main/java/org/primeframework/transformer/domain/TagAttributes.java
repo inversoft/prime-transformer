@@ -25,10 +25,10 @@ public class TagAttributes {
 
   /**
    * Indicates a {@link TagNode} does not require a closing tag. Setting this attribute <code>true</code> does not mean
-   * the tag may
-   * not be closed.
+   * the tag may not be closed.
    * <p>
-   * <p>For example, the [*] does not require a closing tag.</p>
+   * For example, the [*] does not require a closing tag.
+   * <p>
    * The following then is properly formed BBCode.
    * <pre>
    *   [list][*]item 1[*]item 2[/list]
@@ -42,9 +42,7 @@ public class TagAttributes {
    * <p>
    * For example, [code] tag is often configured to contain pre-formatted content.
    * <p>
-   * </p>
-   * In the following example, you can see that the body of the first [code] tag contains BBCode, but it will treated
-   * as
+   * In the following example, you can see that the body of the first [code] tag contains BBCode, but it will treated as
    * text when setting this attribute <code>true</code>.
    * <pre>
    *   [code]BBCode example: [code] System.out.println("Hello World"); [/code][/code]
