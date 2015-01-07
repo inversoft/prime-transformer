@@ -224,18 +224,6 @@ class BBCodeParserTest {
   }
 
   @Test
-  void edgeCase_TagDoesNotRequireClosingTagNoParent() {
-    assertParse("[*]item1[*]item2") {
-      TagNode(name: "*", start: 0, nameEnd: 2, bodyBegin: 3, bodyEnd: 8, end: 8) {
-        TextNode(body: "item1", start: 3, end: 8)
-      }
-      TagNode(name: "*", start: 8, nameEnd: 10, bodyBegin: 11, bodyEnd: 16, end: 16) {
-        TextNode(body: "item2", start: 11, end: 16)
-      }
-    }
-  }
-
-  @Test
   void edgeCase_SimpleAttributeQuotesInside() {
     assertParse("[font=values{'12'}]foo[/font]") {
       TagNode(name: "font", start: 0, nameEnd: 5, attributesBegin: 6, bodyBegin: 19, bodyEnd: 22, end: 29,
@@ -258,8 +246,10 @@ class BBCodeParserTest {
   @DataProvider
   public Object[][] noParseData() {
     return [
-        ["[noparse]Example: [noparse]foo[/noparse][/noparse]", "Example: [noparse]foo[/noparse]"],
-        ["[noparse]Example: [noparse []foo[/noparse][/noparse]", "Example: [noparse []foo[/noparse]"],
+        ["[noparse]Example: [noparse]foo[/noparse][/noparse]", "Example: [noparse]foo[/noparse]"]
+        , ["[noparse] System.out.println(\"Hello World!\"); [/noparse]", " System.out.println(\"Hello World!\"); "]
+        , ["[noparse] [b]b[/i] [xyz] [foo] [] b] [bar '''''' [[[ ]]] [/noparse]", " [b]b[/i] [xyz] [foo] [] b] [bar '''''' [[[ ]]] "]
+        , ["[noparse] [b][u][/i] ** && == ++ [foo] [] b] [bar \"\"\" ]] [/noparse]", " [b][u][/i] ** && == ++ [foo] [] b] [bar \"\"\" ]] "]
     ]
   }
 
@@ -269,6 +259,41 @@ class BBCodeParserTest {
       TagNode(name: "noparse", start: 0, nameEnd: 8, bodyBegin: 9, bodyEnd: str.length() - 10, end: str.length()) {
         TextNode(body: body, start: 9, end: str.length() - 10)
       }
+    }
+  }
+
+  @Test
+  void edgeCase_noparseEmbeddedMalformedNoParse() {
+    assertParse("[noparse]Example: [noparse []foo[/noparse][/noparse]",
+                [[0, 9], [32, 10]],
+                []) {
+      TagNode(name: "noparse", start: 0, nameEnd: 8, bodyBegin: 9, bodyEnd: 32, end: 42) {
+        TextNode(body: "Example: [noparse []foo", start: 9, end: 32)
+      }
+      TextNode(body: "[/noparse]", start: 42, end: 52)
+    }
+  }
+
+  @Test
+  void edgeCase_tagWithoutClosingTagWithoutClosingParent() {
+    assertParse("[list][*][*]",
+                [[0, 6], [7, 3], [10, 3]],
+                []) {
+      TextNode(body: "[list]", start: 0, end: 6)
+      TagNode(name: "*", start: 6, nameEnd: 8, bodyBegin: 9, bodyEnd: 9, end: 9)
+      TagNode(name: "*", start: 9, nameEnd: 11, bodyBegin: 12, bodyEnd: 12, end: 12)
+
+    }
+  }
+
+  @Test
+  void edgeCase_tagWithoutClosingTagWithBodyWithoutClosingParent() {
+    assertParse("[list][*]abc[*] def ",
+                [[0, 6], [7, 3], [10, 3]],
+                []) {
+      TextNode(body: "[list]", start: 0, end: 6)
+      TagNode(name: "*", start: 6, nameEnd: 8, bodyBegin: 9, bodyEnd: 12, end: 12)
+      TagNode(name: "*", start: 12, nameEnd: 14, bodyBegin: 15, bodyEnd: 20, end: 20)
     }
   }
 
@@ -287,6 +312,58 @@ class BBCodeParserTest {
             TextNode(body: "Test", start: 26, end: 30)
           }
         }
+      }
+    }
+  }
+
+  @Test
+  void edge_tagWithoutClosingTagContainingEmbeddedTags_oneClosed() {
+    assertParse("[list][*][b]Test[/b][/*][*][i]Test[/i][/list]",
+                [[0, 6], [6, 3], [9, 3], [16, 4], [20, 4], [24, 3], [27, 3], [34, 4], [38, 7]],
+                []) {
+      TagNode(name: "list", start: 0, nameEnd: 5, bodyBegin: 6, bodyEnd: 38, end: 45) {
+        TagNode(name: "*", start: 6, nameEnd: 8, bodyBegin: 9, bodyEnd: 20, end: 24) {
+          TagNode(name: "b", start: 9, nameEnd: 11, bodyBegin: 12, bodyEnd: 16, end: 20) {
+            TextNode(body: "Test", start: 12, end: 16)
+          }
+        }
+        TagNode(name: "*", start: 24, nameEnd: 26, bodyBegin: 27, bodyEnd: 38, end: 38) {
+          TagNode(name: "i", start: 27, nameEnd: 29, bodyBegin: 30, bodyEnd: 34, end: 38) {
+            TextNode(body: "Test", start: 30, end: 34)
+          }
+        }
+      }
+    }
+  }
+
+  @Test
+  void edge_tagWithoutClosingTagContainingEmbeddedTags_bothClosed() {
+    assertParse("[list][*][b]Test[/b][/*][*][i]Test[/i][/*][/list]",
+                [[0, 6], [6, 3], [9, 3], [16, 4], [20, 4], [24, 3], [27, 3], [34, 4], [38, 4], [42, 7]],
+                []) {
+      TagNode(name: "list", start: 0, nameEnd: 5, bodyBegin: 6, bodyEnd: 42, end: 49) {
+        TagNode(name: "*", start: 6, nameEnd: 8, bodyBegin: 9, bodyEnd: 20, end: 24) {
+          TagNode(name: "b", start: 9, nameEnd: 11, bodyBegin: 12, bodyEnd: 16, end: 20) {
+            TextNode(body: "Test", start: 12, end: 16)
+          }
+        }
+        TagNode(name: "*", start: 24, nameEnd: 26, bodyBegin: 27, bodyEnd: 38, end: 42) {
+          TagNode(name: "i", start: 27, nameEnd: 29, bodyBegin: 30, bodyEnd: 34, end: 38) {
+            TextNode(body: "Test", start: 30, end: 34)
+          }
+        }
+      }
+    }
+  }
+
+  @Test
+  void edge_tagWithoutClosingTagContainingEmbeddedTags() {
+    assertParse("[*]item1[*]item2") {
+      TagNode(name: "*", start: 0, nameEnd: 2, bodyBegin: 3, bodyEnd: 8, end: 8) {
+        TextNode(body: "item1", start: 3, end: 8)
+      }
+      TagNode(name: "*", start: 8, nameEnd: 10, bodyBegin: 11, bodyEnd: 16, end: 16) {
+        TextNode(body: "item2", start: 11, end: 16)
       }
     }
   }

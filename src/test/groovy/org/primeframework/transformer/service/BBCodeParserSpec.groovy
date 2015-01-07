@@ -133,15 +133,11 @@ public class BBCodeParserSpec extends Specification {
       def document = new BBCodeParser().buildDocument(source, attributes)
 
     then:
-      document.children.size() == 2
+      document.children.size() == 1
       document.children.get(0) instanceof TextNode
-      document.children.get(1) instanceof TextNode
 
       def text1 = (TextNode) document.children.get(0)
-      text1.getBody() == "foo"
-
-      def text2 = (TextNode) document.children.get(1)
-      text2.getBody() == "[bar] = \"Hello World\";"
+      text1.getBody() == "foo[bar] = \"Hello World\";"
 
     and:
       document.offsets.empty
@@ -395,7 +391,7 @@ public class BBCodeParserSpec extends Specification {
       document.children.get(0) instanceof TagNode
       def tag = (TagNode) document.children.get(0)
       tag.getName() == "*"
-      tag.hasClosingTag() == false
+      !tag.hasClosingTag()
       tag.children.size() == 1
 
     and: "the tagNode should have a single child textNode"

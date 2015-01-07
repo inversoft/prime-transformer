@@ -25,11 +25,20 @@ import java.util.stream.Stream;
  * @author Daniel DeGroff
  */
 public abstract class BaseTagNode extends BaseNode {
+
+  /**
+   * Add a node as a child to this node.
+   *
+   * @param node the node to be added to this nodes children.
+   *
+   * @return
+   */
   public abstract boolean addChild(Node node);
 
   /**
    * @return Return a {@link List} of {@link TagNode} objects.
    */
+  // TODO Remove? Anyone using this?
   public List<TagNode> getChildTagNodes() {
     List<TagNode> tagNodes = new ArrayList<>(getChildren().size());
     if (this instanceof TagNode) {
@@ -46,6 +55,7 @@ public abstract class BaseTagNode extends BaseNode {
   /**
    * @return Return a {@link List} of TextNode objects.
    */
+  // TODO Remove? Anyone using this?
   public List<TextNode> getChildTextNodes() {
     List<TextNode> textNodes = new ArrayList<>(getChildren().size());
     getChildren().forEach(n -> {
@@ -60,7 +70,9 @@ public abstract class BaseTagNode extends BaseNode {
   }
 
   /**
-   * @return Return the child nodes.
+   * Return a {@link List} of {@link Node} objects.
+   *
+   * @return Return the child nodes. An empty list indicates this node has no children.
    */
   public abstract List<Node> getChildren();
 
@@ -68,11 +80,14 @@ public abstract class BaseTagNode extends BaseNode {
    * Walk the document nodes and apply the action to each node of the specified type..
    *
    * @param action the operation to be applied to each node.
+   *
    * @return {@link Stream}
    */
+  // TODO Remove? Anyone using this?
   public <T> Stream<Node> walk(Class<T> consumerType, Consumer<? super T> action) {
     getChildren().forEach(n -> {
       if (consumerType.isAssignableFrom(n.getClass())) {
+        //noinspection unchecked
         action.accept((T) n);
         if (n instanceof TagNode) {
           ((TagNode) n).walk(consumerType, action);
@@ -86,8 +101,10 @@ public abstract class BaseTagNode extends BaseNode {
    * Walk the document nodes and apply the action to each node.
    *
    * @param action the operation to be applied to each node.
+   *
    * @return {@link Stream}
    */
+  // TODO Remove? Anyone using this?
   public Stream<Node> walk(Consumer<? super Node> action) {
     return walk(Node.class, action);
   }
