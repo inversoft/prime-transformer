@@ -157,9 +157,9 @@ public class BBCodeParser implements Parser {
         case simpleAttribute:
           state = state.next(source[index]);
           if (state == State.unQuotedSimpleAttributeValue) {
-            nodes.peek().attributesBegin = index;
+            attributeValueBegin = index;
           } else if (state == State.singleQuotedSimpleAttributeValue || state == State.doubleQuotedSimpleAttributeValue) {
-            nodes.peek().attributesBegin = index + 1;
+            attributeValueBegin = index + 1;
           }
           index++;
           break;
@@ -167,7 +167,7 @@ public class BBCodeParser implements Parser {
         case unQuotedSimpleAttributeValue:
           state = state.next(source[index]);
           if (state != State.unQuotedSimpleAttributeValue) {
-            addSimpleAttribute(document, index, nodes);
+            addSimpleAttribute(document, attributeValueBegin, index, nodes);
           }
           index++;
           break;
@@ -175,7 +175,7 @@ public class BBCodeParser implements Parser {
         case singleQuotedSimpleAttributeValue:
           state = state.next(source[index]);
           if (state != State.singleQuotedSimpleAttributeValue) {
-            addSimpleAttribute(document, index, nodes);
+            addSimpleAttribute(document, attributeValueBegin, index, nodes);
           }
           index++;
           break;
@@ -183,7 +183,7 @@ public class BBCodeParser implements Parser {
         case doubleQuotedSimpleAttributeValue:
           state = state.next(source[index]);
           if (state != State.doubleQuotedSimpleAttributeValue) {
-            addSimpleAttribute(document, index, nodes);
+            addSimpleAttribute(document, attributeValueBegin, index, nodes);
           }
           index++;
           break;
@@ -192,11 +192,6 @@ public class BBCodeParser implements Parser {
           state = state.next(source[index]);
           if (state == State.complexAttributeName) {
             attributeNameBegin = index;
-
-            TagNode tagNode = nodes.peek();
-            if (tagNode.attributesBegin == -1) {
-              nodes.peek().attributesBegin = index;
-            }
           } else if (state == State.text) {
             handleUnexpectedSyntax(document, attributes, nodes, index);
           }
@@ -257,7 +252,7 @@ public class BBCodeParser implements Parser {
         case simpleAttributeBody:
           state = state.next(source[index]);
           if (state != State.simpleAttributeBody) {
-            addSimpleAttribute(document, index, nodes);
+            addSimpleAttribute(document, attributeValueBegin, index, nodes);
           }
           index++;
           break;
@@ -343,15 +338,15 @@ public class BBCodeParser implements Parser {
     }
   }
 
-  private void addSimpleAttribute(Document document, int index, Deque<TagNode> nodes) {
+  private void addSimpleAttribute(Document document, int attributeValueBegin, int index, Deque<TagNode> nodes) {
     TagNode current = nodes.peek();
-    String name = document.getString(current.attributesBegin, index);
+    String name = document.getString(attributeValueBegin, index);
     // Ignore trailing space on the attribute value. e.g. [foo size=5    ] bar[/foo]
     int length = name.length();
     name = name.trim();
 
     // Keep the trimmed value and account for the shortened value in the offset
-    document.attributeOffsets.add(new Pair<>(current.attributesBegin, index - current.attributesBegin - (length - name.length())));
+    document.attributeOffsets.add(new Pair<>(attributeValueBegin, index - attributeValueBegin - (length - name.length())));
     current.attribute = name;
   }
 

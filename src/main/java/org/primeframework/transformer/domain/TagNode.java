@@ -69,8 +69,6 @@ public class TagNode extends BaseTagNode {
    */
   public String attribute;
 
-  public int attributesBegin = -1;
-
   /**
    * Always equal to the index where the opening tag ends (exclusive), even if the tag doesn't have a body:
    * <p>
@@ -88,8 +86,8 @@ public class TagNode extends BaseTagNode {
   public int bodyBegin = -1;
 
   /**
-   * If the body is empty or the tag has no body, this will be equal to bodyBegin. Otherwise, this will
-   * be the index at the end of the body (exclusive):
+   * If the body is empty or the tag has no body, this will be equal to bodyBegin. Otherwise, this will be the index at
+   * the end of the body (exclusive):
    * <p>
    * <pre>
    *   [b]foo[/b]
@@ -125,12 +123,11 @@ public class TagNode extends BaseTagNode {
     this.begin = begin;
   }
 
-  public TagNode(Document document, int begin, int nameEnd, int attributesBegin, int bodyBegin, int bodyEnd,
+  public TagNode(Document document, int begin, int nameEnd, int bodyBegin, int bodyEnd,
                  int end, String attribute, Map<String, String> attributes) {
     this.document = document;
     this.begin = begin;
     this.nameEnd = nameEnd;
-    this.attributesBegin = attributesBegin;
     this.bodyBegin = bodyBegin;
     this.bodyEnd = bodyEnd;
     this.end = end;
@@ -160,9 +157,6 @@ public class TagNode extends BaseTagNode {
 
     TagNode tagNode = (TagNode) o;
 
-    if (attributesBegin != tagNode.attributesBegin) {
-      return false;
-    }
     if (bodyBegin != tagNode.bodyBegin) {
       return false;
     }
@@ -210,7 +204,6 @@ public class TagNode extends BaseTagNode {
     int result = super.hashCode();
     result = 31 * result + (attribute != null ? attribute.hashCode() : 0);
     result = 31 * result + attributes.hashCode();
-    result = 31 * result + attributesBegin;
     result = 31 * result + bodyBegin;
     result = 31 * result + bodyEnd;
     result = 31 * result + children.hashCode();
@@ -226,7 +219,6 @@ public class TagNode extends BaseTagNode {
         ", attributes=" + attributes +
         ", children=" + children +
         ", attribute='" + attribute + '\'' +
-        ", attributesBegin=" + attributesBegin +
         ", bodyBegin=" + bodyBegin +
         ", bodyEnd=" + bodyEnd +
         ", nameEnd=" + nameEnd +
