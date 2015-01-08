@@ -73,6 +73,8 @@ public class BBCodeParser implements Parser {
     Deque<String> preFormatted = new ArrayDeque<>();
 
     State state = State.initial;
+    State previous;
+
     TagNode current;
     Deque<TextNode> textNodes = new ArrayDeque<>(1);
     char[] source = document.source;
@@ -81,6 +83,7 @@ public class BBCodeParser implements Parser {
       if (index == source.length) {
         state = State.complete;
       }
+      previous = state;
 
       switch (state) {
 
@@ -107,7 +110,7 @@ public class BBCodeParser implements Parser {
         case tagName:
           state = state.next(source[index]);
           if (state == State.tagBegin) {
-            handleUnexpectedSyntax(document, attributes, nodes, index);
+            handleUnexpectedState(document, attributes, nodes, index);
           } else if (state != State.tagName) {
             nodes.peek().nameEnd = index;
           }
@@ -156,25 +159,11 @@ public class BBCodeParser implements Parser {
           index++;
           break;
 
+        case doubleQuotedSimpleAttributeValue:
+        case singleQuotedSimpleAttributeValue:
         case unQuotedSimpleAttributeValue:
           state = state.next(source[index]);
-          if (state != State.unQuotedSimpleAttributeValue) {
-            addSimpleAttribute(document, attributeValueBegin, index, nodes);
-          }
-          index++;
-          break;
-
-        case singleQuotedSimpleAttributeValue:
-          state = state.next(source[index]);
-          if (state != State.singleQuotedSimpleAttributeValue) {
-            addSimpleAttribute(document, attributeValueBegin, index, nodes);
-          }
-          index++;
-          break;
-
-        case doubleQuotedSimpleAttributeValue:
-          state = state.next(source[index]);
-          if (state != State.doubleQuotedSimpleAttributeValue) {
+          if (state != previous) {
             addSimpleAttribute(document, attributeValueBegin, index, nodes);
           }
           index++;
@@ -185,7 +174,7 @@ public class BBCodeParser implements Parser {
           if (state == State.complexAttributeName) {
             attributeNameBegin = index;
           } else if (state == State.text) {
-            handleUnexpectedSyntax(document, attributes, nodes, index);
+            handleUnexpectedState(document, attributes, nodes, index);
           }
           index++;
           break;
@@ -195,7 +184,7 @@ public class BBCodeParser implements Parser {
           if (state == State.complexAttributeValue) {
             attributeName = document.getString(attributeNameBegin, index);
           } else if (state == State.text) {
-            handleUnexpectedSyntax(document, attributes, nodes, index);
+            handleUnexpectedState(document, attributes, nodes, index);
           }
           index++;
           break;
@@ -217,7 +206,6 @@ public class BBCodeParser implements Parser {
         case doubleQuotedAttributeValue:
         case singleQuotedAttributeValue:
         case unQuotedAttributeValue:
-          State previous = state;
           state = state.next(source[index]);
           if (state != previous) {
             nodes.peek().attributes.put(attributeName, document.getString(attributeValueBegin, index));
@@ -290,12 +278,10 @@ public class BBCodeParser implements Parser {
     } else {
       TagNode current = nodes.peek();
       current.addChild(node);
-      int end = ((BaseNode)node).end;
-      if (end > current.bodyEnd) {
-        current.bodyEnd = end;
-        if (doesNotRequireClosingTag(current, attributes)) {
-          current.end = end;
-        }
+      // Adjust parent indexes, they must be at least large enough to contain the child
+      current.bodyEnd = ((BaseNode)node).end;
+      if (doesNotRequireClosingTag(current, attributes)) {
+        current.end = current.bodyEnd;
       }
     }
 
@@ -522,14 +508,21 @@ public class BBCodeParser implements Parser {
         // Clear children and add a single text node
         current.children.clear();
         current.addChild(new TextNode(document, current.bodyBegin, current.bodyEnd));
-        // remove completed pre-formatted tag and clear correlating offsets from the document
         preFormatted.pop();
         removeRelatedOffsets(document, current);
       }
     }
   }
 
-  private void handleUnexpectedSyntax(Document document, Map<String, TagAttributes> attributes, Deque<TagNode> nodes, int index) {
+  /**
+   * When an unexpected state is encountered the current {@link TagNode} will be converted to a {@link TextNode}.
+   * @param document
+   * @param attributes
+   * @param nodes
+   * @param index
+   */
+  private void handleUnexpectedState(Document document, Map<String, TagAttributes> attributes, Deque<TagNode> nodes,
+                                     int index) {
     TagNode tagNode = nodes.pop();
     TextNode textNode = tagNode.toTextNode();
     textNode.end = index;
