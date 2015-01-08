@@ -85,29 +85,23 @@ public class BBCodeParser implements Parser {
       switch (state) {
 
         case initial:
+        case closingTagBegin:
+        case simpleAttributeEnd:
           state = state.next(source[index]);
           index++;
           break;
 
         case tagBegin:
           state = state.next(source[index]);
-          if (state == State.closingTagBegin) {
-            if (nodes.isEmpty()) {
+          // No tags to end, malformed, set state to text
+          if (state == State.closingTagBegin && nodes.isEmpty()) {
               state = State.text;
-              index--;
-            } else if (nodes.size() == 1) {
-              // TODO Don't think I can do this here, I don't know if this is the correct closing tag.
-              // TODO OK if nodes only has a single node.
-              nodes.peek().bodyEnd = index - 1;
-            }
           } else if (state == State.tagName) {
             nodes.push(new TagNode(document, index - 1));
-          } else if (state == State.text) {
-            // Bad BBCode or not really a begin, i.e. 'char [] array = new char[1];'
-            index--; // back up the pointer and continue in text state.
-//            errorObserver.handleError(ErrorState.BAD_TAG, currentNode, index);
           }
-          index++;
+          if (state != State.text) {
+            index++;
+          }
           break;
 
         case tagName:
@@ -123,15 +117,13 @@ public class BBCodeParser implements Parser {
         case openingTagEnd:
           state = state.next(source[index]);
           current = nodes.peek();
-          current.end = index; // when tag is closed this will be updated
           current.bodyBegin = index;
           current.bodyEnd = index; // if a body is found, this index will be adjusted.
-          checkForPreFormattedTag(current, preFormatted, attributes);
-          index++;
-          break;
-
-        case closingTagBegin:
-          state = state.next(source[index]);
+          current.end = index; // when tag is closed this will be updated
+          String name = lc(current.getName());
+          if (hasPreFormattedBody(current, attributes)) {
+            preFormatted.push(name);
+          }
           index++;
           break;
 
@@ -223,42 +215,14 @@ public class BBCodeParser implements Parser {
           break;
 
         case doubleQuotedAttributeValue:
-          state = state.next(source[index]);
-          if (state != State.doubleQuotedAttributeValue) {
-            nodes.peek().attributes.put(attributeName, document.getString(attributeValueBegin, index));
-            document.attributeOffsets.add(new Pair<>(attributeValueBegin, index - attributeValueBegin));
-          }
-          index++;
-          break;
-
         case singleQuotedAttributeValue:
-          state = state.next(source[index]);
-          if (state != State.singleQuotedAttributeValue) {
-            nodes.peek().attributes.put(attributeName, document.getString(attributeValueBegin, index));
-            document.attributeOffsets.add(new Pair<>(attributeValueBegin, index - attributeValueBegin));
-          }
-          index++;
-          break;
-
         case unQuotedAttributeValue:
+          State previous = state;
           state = state.next(source[index]);
-          if (state != State.unQuotedAttributeValue) {
+          if (state != previous) {
             nodes.peek().attributes.put(attributeName, document.getString(attributeValueBegin, index));
             document.attributeOffsets.add(new Pair<>(attributeValueBegin, index - attributeValueBegin));
           }
-          index++;
-          break;
-
-        case simpleAttributeBody:
-          state = state.next(source[index]);
-          if (state != State.simpleAttributeBody) {
-            addSimpleAttribute(document, attributeValueBegin, index, nodes);
-          }
-          index++;
-          break;
-
-        case simpleAttributeEnd:
-          state = state.next(source[index]);
           index++;
           break;
 
@@ -278,12 +242,20 @@ public class BBCodeParser implements Parser {
           handleDocumentCleanup(document, attributes, index, textNodes, nodes, preFormatted);
           index++;
           break;
-
-        default:
-          throw new IllegalStateException("Illegal parser state : " + state);
       }
     }
   }
+
+  private boolean hasPreFormattedBody(TagNode current, Map<String, TagAttributes> attributes) {
+    String name = lc(current.getName());
+    return attributes.containsKey(name) && attributes.get(name).hasPreFormattedBody;
+  }
+
+  private boolean doesNotRequireClosingTag(TagNode current, Map<String, TagAttributes> attributes) {
+    String name = lc(current.getName());
+    return attributes.containsKey(name) && attributes.get(name).doesNotRequireClosingTag;
+  }
+
 
   private void removeRelatedOffsets(Document document, TagNode current) {
     Iterator<Pair<Integer, Integer>> offsets = document.offsets.iterator();
@@ -316,16 +288,15 @@ public class BBCodeParser implements Parser {
     if (nodes.isEmpty()) {
       document.addChild(node);
     } else {
-      nodes.peek().addChild(node);
+      TagNode current = nodes.peek();
+      current.addChild(node);
       int end = ((BaseNode)node).end;
-      if (end > nodes.peek().bodyEnd) {
-        nodes.peek().bodyEnd = end;
-        String name = lc(nodes.peek().getName());
-        if (attributes.containsKey(name) && attributes.get(name).doesNotRequireClosingTag) {
-          nodes.peek().end = end;
+      if (end > current.bodyEnd) {
+        current.bodyEnd = end;
+        if (doesNotRequireClosingTag(current, attributes)) {
+          current.end = end;
         }
       }
-
     }
 
     // Add offsets for tag nodes
@@ -794,20 +765,6 @@ public class BBCodeParser implements Parser {
           return openingTagEnd;
         } else {
           return unQuotedSimpleAttributeValue;
-        }
-      }
-    },
-
-
-    simpleAttributeBody {
-      @Override
-      public State next(char c) {
-        if (c == '"' || c == '\'') {
-          return simpleAttributeEnd;
-        } else if (c == ']') {
-          return openingTagEnd;
-        } else {
-          return simpleAttributeBody;
         }
       }
     },

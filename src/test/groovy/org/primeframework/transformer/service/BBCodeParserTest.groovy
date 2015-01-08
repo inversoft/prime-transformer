@@ -305,6 +305,7 @@ class BBCodeParserTest {
         , ["[code]new <type>[] { <list of values>};[/code]", "new <type>[] { <list of values>};"]
         , ["[code]// Comment[/code]", "// Comment"]
         , ["[code] // Comment[/code]", " // Comment"]
+        , ["[code]<script> window.location.replace(\"http://foo.bar\"); </script> [/code]", "<script> window.location.replace(\"http://foo.bar\"); </script> "]
     ]
   }
 
@@ -329,13 +330,30 @@ class BBCodeParserTest {
 
   @Test
   void edgeCase_codeWithLineReturnInBetweenTags() {
-    assertParse("[code]new <type>[] { <list of values>};[/code]\n[code]am.getProcessMemoryInfo([mySinglePID]);[/code]") {
-      TagNode(name: "code", start: 0, nameEnd: 5, bodyBegin: 6, bodyEnd: 39, end: 46) {
-        TextNode(body: "new <type>[] { <list of values>};", start: 6, end: 39)
+    assertParse("\n[code]new <type>[] { <list of values>};[/code]\n[code]am.getProcessMemoryInfo([mySinglePID]);[/code]") {
+      TextNode(body: "\n", start: 0, end: 1)
+      TagNode(name: "code", start: 1, nameEnd: 6, bodyBegin: 7, bodyEnd: 40, end: 47) {
+        TextNode(body: "new <type>[] { <list of values>};", start: 7, end: 40)
       }
-      TextNode(body: "\n", start: 46, end: 47)
-      TagNode(name: "code", start: 47, nameEnd: 52, bodyBegin: 53, bodyEnd: 92, end: 99) {
-        TextNode(body: "am.getProcessMemoryInfo([mySinglePID]);", start: 53, end: 92)
+      TextNode(body: "\n", start: 47, end: 48)
+      TagNode(name: "code", start: 48, nameEnd: 53, bodyBegin: 54, bodyEnd: 93, end: 100) {
+        TextNode(body: "am.getProcessMemoryInfo([mySinglePID]);", start: 54, end: 93)
+      }
+    }
+  }
+
+  @Test
+  void edgeCase_codeWithLineReturnInBetweenTagsAndEmbeddedScript() {
+    assertParse("\n[code]am.getProcessMemoryInfo([mySinglePID]);[/code]\n[code]<script> window.location.replace(\"http://foo.bar\"); </script> [/code]",
+                [[0, 7], [122, 9]],
+                []) {
+      TextNode(body: "\n", start: 0, end: 1)
+      TagNode(name: "code", start: 1, nameEnd: 6, bodyBegin: 7, bodyEnd: 46, end: 53) {
+        TextNode(body: "am.getProcessMemoryInfo([mySinglePID]);", start: 7, end: 46)
+      }
+      TextNode(body: "\n", start: 53, end: 54)
+      TagNode(name: "code", start: 54, nameEnd: 59, bodyBegin: 60, bodyEnd: 122, end: 129) {
+        TextNode(body: "<script> window.location.replace(\"http://foo.bar\"); </script> ", start: 60, end: 122)
       }
     }
   }

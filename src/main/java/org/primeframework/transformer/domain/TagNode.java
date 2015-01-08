@@ -213,7 +213,7 @@ public class TagNode extends BaseTagNode {
 
   @Override
   public String toString() {
-    return "TagNode [" + getName() + "]{" +
+    return "TagNode[" + getName() + "]{" +
         "begin=" + begin +
         ", end=" + end +
         ", attributes=" + attributes +
