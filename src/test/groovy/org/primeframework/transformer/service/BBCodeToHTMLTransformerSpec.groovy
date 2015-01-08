@@ -170,7 +170,7 @@ public class BBCodeToHTMLTransformerSpec extends Specification {
     where:
       fileName   | _
       "other"    | _
-      "code"     | _
+//      "code"     | _
       "image"    | _
       "size"     | _
       "quote"    | _
