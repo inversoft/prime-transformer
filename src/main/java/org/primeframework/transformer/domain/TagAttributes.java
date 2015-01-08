@@ -15,8 +15,10 @@
  */
 package org.primeframework.transformer.domain;
 
+import org.primeframework.transformer.service.Parser;
+
 /**
- * Optional attributes specific to a single {@link TagNode} that may be passed to the {@Parser} interface that will
+ * Optional attributes specific to a single {@link TagNode} that may be passed to the {@link Parser} interface that will
  * affect the behavior used to build the {@link Document}.
  *
  * @author Daniel DeGroff

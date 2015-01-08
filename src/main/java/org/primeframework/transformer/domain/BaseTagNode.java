@@ -30,10 +30,8 @@ public abstract class BaseTagNode extends BaseNode {
    * Add a node as a child to this node.
    *
    * @param node the node to be added to this nodes children.
-   *
-   * @return
    */
-  public abstract boolean addChild(Node node);
+  public abstract void addChild(Node node);
 
   /**
    * @return Return a {@link List} of {@link TagNode} objects.

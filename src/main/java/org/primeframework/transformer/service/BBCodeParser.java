@@ -45,8 +45,7 @@ public class BBCodeParser implements Parser {
   @Override
   public Document buildDocument(char[] source, Map<String, TagAttributes> tagAttributes) {
     Document document = new Document(source);
-    Deque<TagNode> nodes = new ArrayDeque<>();
-    parse(document, nodes, tagAttributes);
+    parse(document, tagAttributes);
     return document;
   }
 
@@ -54,16 +53,16 @@ public class BBCodeParser implements Parser {
    * Finite State Machine parser implementation.
    *
    * @param document      The document to add nodes to.
-   * @param nodes         The node queue for state management.
    * @param tagAttributes A map of tag attributes keyed by tag name.
    */
-  private void parse(Document document, Deque<TagNode> nodes, Map<String, TagAttributes> tagAttributes) {
+  private void parse(Document document, Map<String, TagAttributes> tagAttributes) {
 
-    final Map<String, TagAttributes> attributes = new HashMap<>();
+    Deque<TagNode> nodes = new ArrayDeque<>();
+
+    Map<String, TagAttributes> attributes = new HashMap<>();
     if (tagAttributes != null) {
       attributes.putAll(tagAttributes);
     }
-    // TODO Validate attributes
 
     int index = 0;
 
@@ -377,7 +376,7 @@ public class BBCodeParser implements Parser {
    * @return
    */
   private String lc(String string) {
-    return string == null ? string : string.toLowerCase();
+    return string == null ? null : string.toLowerCase();
   }
 
   private boolean eq(String s1, String s2) {
@@ -600,7 +599,7 @@ public class BBCodeParser implements Parser {
       } else {
         if (nodes.isEmpty()) {
           textNode.end = index;
-        } else if (!tagNode.children.isEmpty()) {
+        } else {
           textNode.end = ((BaseNode) tagNode.children.get(tagNode.children.size() - 1)).end;
         }
       }

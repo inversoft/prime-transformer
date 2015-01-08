@@ -302,6 +302,9 @@ class BBCodeParserTest {
         , ["[code] [b]b[/i] [xyz] [foo] [] b] [bar '''''' [[[ ]]] [/code]", " [b]b[/i] [xyz] [foo] [] b] [bar '''''' [[[ ]]] "]
         , ["[code] [b][u][/i] ** && == ++ [foo] [] b] [bar \"\"\" ]] [/code]", " [b][u][/i] ** && == ++ [foo] [] b] [bar \"\"\" ]] "]
         , ["[code]am.getProcessMemoryInfo([mySinglePID]);[/code]", "am.getProcessMemoryInfo([mySinglePID]);"]
+        , ["[code]new <type>[] { <list of values>};[/code]", "new <type>[] { <list of values>};"]
+        , ["[code]// Comment[/code]", "// Comment"]
+        , ["[code] // Comment[/code]", " // Comment"]
     ]
   }
 
@@ -310,6 +313,29 @@ class BBCodeParserTest {
     assertParse(str, [[0, 6], [str.length() - 7, 7]]) {
       TagNode(name: "code", start: 0, nameEnd: 5, bodyBegin: 6, bodyEnd: str.length() - 7, end: str.length()) {
         TextNode(body: body, start: 6, end: str.length() - 7)
+      }
+    }
+  }
+
+  @Test
+  void edgeCase_codeWithLineReturnsOutside() {
+    assertParse("\n[b]foo[/b]") {
+      TextNode(body: "\n", start: 0, end: 1)
+      TagNode(name: "b", start: 1, nameEnd: 3, bodyBegin: 4, bodyEnd: 7, end: 11) {
+        TextNode(body: "foo", start: 4, end: 7)
+      }
+    }
+  }
+
+  @Test
+  void edgeCase_codeWithLineReturnInBetweenTags() {
+    assertParse("[code]new <type>[] { <list of values>};[/code]\n[code]am.getProcessMemoryInfo([mySinglePID]);[/code]") {
+      TagNode(name: "code", start: 0, nameEnd: 5, bodyBegin: 6, bodyEnd: 39, end: 46) {
+        TextNode(body: "new <type>[] { <list of values>};", start: 6, end: 39)
+      }
+      TextNode(body: "\n", start: 46, end: 47)
+      TagNode(name: "code", start: 47, nameEnd: 52, bodyBegin: 53, bodyEnd: 92, end: 99) {
+        TextNode(body: "am.getProcessMemoryInfo([mySinglePID]);", start: 53, end: 92)
       }
     }
   }

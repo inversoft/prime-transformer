@@ -22,7 +22,7 @@ public interface Node {
    * <p>Example return value:
    * <pre> [url]http://foo.com[/url]</pre></p>
    *
-   * @return
+   * @return the raw string version of this node.
    */
   String getRawString();
 }

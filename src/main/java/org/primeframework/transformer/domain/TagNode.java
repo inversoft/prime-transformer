@@ -142,8 +142,8 @@ public class TagNode extends BaseTagNode {
   }
 
   @Override
-  public boolean addChild(Node node) {
-    return children.add(node);
+  public void addChild(Node node) {
+    children.add(node);
   }
 
   @Override
