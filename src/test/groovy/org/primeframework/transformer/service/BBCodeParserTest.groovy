@@ -201,6 +201,36 @@ class BBCodeParserTest {
   }
 
   @Test
+  void edgeCase_complexAttributeSpacesBeforeTwoDigits() {
+    assertParse("[font      size=55]blah[/font]", [[0, 19], [23, 7]], [[16, 2]]) {
+      TagNode(name: "font", start: 0, nameEnd: 5, attributesBegin: 11, bodyBegin: 19, bodyEnd: 23, end: 30,
+              attributes: ["size":"55"]) {
+        TextNode(body: "blah", start: 19, end: 23)
+      }
+    }
+  }
+
+  @Test
+  void edgeCase_complexAttributeDoubleQuotedValue() {
+    assertParse("[font      size=\"55\"]blah[/font]", [[0, 21], [25, 7]], [[17, 2]]) {
+      TagNode(name: "font", start: 0, nameEnd: 5, attributesBegin: 11, bodyBegin: 21, bodyEnd: 25, end: 32,
+              attributes: ["size":"55"]) {
+        TextNode(body: "blah", start: 21, end: 25)
+      }
+    }
+  }
+
+  @Test
+  void edgeCase_complexAttributeSingleQuotedValue() {
+    assertParse("[font      size='55']blah[/font]", [[0, 21], [25, 7]], [[17, 2]]) {
+      TagNode(name: "font", start: 0, nameEnd: 5, attributesBegin: 11, bodyBegin: 21, bodyEnd: 25, end: 32,
+              attributes: ["size":"55"]) {
+        TextNode(body: "blah", start: 21, end: 25)
+      }
+    }
+  }
+
+  @Test
   void edgeCase_SimpleAttributeQuotesContainsBracket() {
     assertParse("[font='values[\"size\"]']foo[/font]") {
       TagNode(name: "font", start: 0, nameEnd: 5, attributesBegin: 7, bodyBegin: 23, bodyEnd: 26, end: 33,
