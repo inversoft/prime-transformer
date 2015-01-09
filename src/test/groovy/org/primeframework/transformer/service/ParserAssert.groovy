@@ -14,6 +14,7 @@
  * language governing permissions and limitations under the License.
  */
 package org.primeframework.transformer.service
+
 import org.primeframework.transformer.domain.BaseTagNode
 import org.primeframework.transformer.domain.Document
 import org.primeframework.transformer.domain.Pair
@@ -21,6 +22,7 @@ import org.primeframework.transformer.domain.TagAttributes
 import org.primeframework.transformer.domain.TagNode
 import org.primeframework.transformer.domain.TextNode
 import org.testng.Assert
+
 /**
  * Provides an assertion DSL for asserting the parser results.
  *
@@ -28,16 +30,35 @@ import org.testng.Assert
  */
 class ParserAssert {
 
-  static attributes = [ '*' : new TagAttributes(true, false),
-                     code : new TagAttributes(false, true),
-                     noparse : new TagAttributes(false, true)]
+  static defaultAttributes = ['*'    : new TagAttributes(true, false),
+                              code   : new TagAttributes(false, true),
+                              noparse: new TagAttributes(false, true)]
+  /**
+   * Asserts the results of a parse. This uses a DSL via the closure. Uses the default tag attributes.
+   *
+   * @param str The String to parse.
+   * @param offsets
+   * @param attributeOffsets
+   * @param closure The closure for the DSL.
+   */
+  public static void assertParse(String str, List offsets = null, List attributeOffsets = null,
+                                 @DelegatesTo(NodeDelegate.class) Closure closure) {
+    assertParse(defaultAttributes, str, offsets, attributeOffsets, closure);
+  }
+
   /**
    * Asserts the results of a parse. This uses a DSL via the closure.
    *
+   * @param attributes the tag attributes used by the parser.
    * @param str The String to parse.
+   * @param offsets
+   * @param attributeOffsets
    * @param closure The closure for the DSL.
    */
-  public static void assertParse(String str, List offsets = null, List attributeOffsets = null, @DelegatesTo(NodeDelegate.class) Closure closure) {
+  public static void assertParse(Map<String, TagAttributes> attributes, String str, List offsets = null,
+                                               List attributeOffsets = null,
+                                               @DelegatesTo(NodeDelegate.class) Closure closure) {
+
     Document expected = new Document(str)
     closure.delegate = new NodeDelegate(expected)
     closure()

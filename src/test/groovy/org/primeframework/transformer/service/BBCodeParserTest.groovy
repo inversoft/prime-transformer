@@ -15,6 +15,7 @@
  */
 package org.primeframework.transformer.service
 
+import org.primeframework.transformer.domain.TagAttributes
 import org.testng.Assert
 import org.testng.annotations.DataProvider
 import org.testng.annotations.Test
@@ -204,7 +205,7 @@ class BBCodeParserTest {
   void edgeCase_complexAttributeSpacesBeforeTwoDigits() {
     assertParse("[font      size=55]blah[/font]", [[0, 19], [23, 7]], [[16, 2]]) {
       TagNode(name: "font", start: 0, nameEnd: 5, attributesBegin: 11, bodyBegin: 19, bodyEnd: 23, end: 30,
-              attributes: ["size":"55"]) {
+              attributes: ["size": "55"]) {
         TextNode(body: "blah", start: 19, end: 23)
       }
     }
@@ -214,7 +215,7 @@ class BBCodeParserTest {
   void edgeCase_complexAttributeDoubleQuotedValue() {
     assertParse("[font      size=\"55\"]blah[/font]", [[0, 21], [25, 7]], [[17, 2]]) {
       TagNode(name: "font", start: 0, nameEnd: 5, attributesBegin: 11, bodyBegin: 21, bodyEnd: 25, end: 32,
-              attributes: ["size":"55"]) {
+              attributes: ["size": "55"]) {
         TextNode(body: "blah", start: 21, end: 25)
       }
     }
@@ -224,7 +225,7 @@ class BBCodeParserTest {
   void edgeCase_complexAttributeSingleQuotedValue() {
     assertParse("[font      size='55']blah[/font]", [[0, 21], [25, 7]], [[17, 2]]) {
       TagNode(name: "font", start: 0, nameEnd: 5, attributesBegin: 11, bodyBegin: 21, bodyEnd: 25, end: 32,
-              attributes: ["size":"55"]) {
+              attributes: ["size": "55"]) {
         TextNode(body: "blah", start: 21, end: 25)
       }
     }
@@ -330,7 +331,8 @@ class BBCodeParserTest {
 
   @Test
   void edgeCase_codeWithLineReturnInBetweenTags() {
-    assertParse("\n[code]new <type>[] { <list of values>};[/code]\n[code]am.getProcessMemoryInfo([mySinglePID]);[/code]") {
+    assertParse(
+        "\n[code]new <type>[] { <list of values>};[/code]\n[code]am.getProcessMemoryInfo([mySinglePID]);[/code]") {
       TextNode(body: "\n", start: 0, end: 1)
       TagNode(name: "code", start: 1, nameEnd: 6, bodyBegin: 7, bodyEnd: 40, end: 47) {
         TextNode(body: "new <type>[] { <list of values>};", start: 7, end: 40)
@@ -344,9 +346,10 @@ class BBCodeParserTest {
 
   @Test
   void edgeCase_codeWithLineReturnInBetweenTagsAndEmbeddedScript() {
-    assertParse("\n[code]am.getProcessMemoryInfo([mySinglePID]);[/code]\n[code]<script> window.location.replace(\"http://foo.bar\"); </script> [/code]",
-                [[0, 7], [122, 9]],
-                []) {
+    assertParse(
+        "\n[code]am.getProcessMemoryInfo([mySinglePID]);[/code]\n[code]<script> window.location.replace(\"http://foo.bar\"); </script> [/code]",
+        [[0, 7], [122, 9]],
+        []) {
       TextNode(body: "\n", start: 0, end: 1)
       TagNode(name: "code", start: 1, nameEnd: 6, bodyBegin: 7, bodyEnd: 46, end: 53) {
         TextNode(body: "am.getProcessMemoryInfo([mySinglePID]);", start: 7, end: 46)
@@ -370,7 +373,7 @@ class BBCodeParserTest {
     }
   }
 
-  @Test(enabled = false)
+  @Test
   void edgeCase_tagWithoutClosingTagWithoutClosingParent() {
     Assert.fail("Not sure if this assertion is correct. Should it be a single text?")
     // TextNode(body: "[list][*][*]")
@@ -384,10 +387,8 @@ class BBCodeParserTest {
     }
   }
 
-  @Test(enabled = false)
+  @Test
   void edgeCase_tagWithoutClosingTagWithBodyWithoutClosingParent() {
-    Assert.fail("Not sure if this assertion is correct. Should it be a single text?")
-    // TextNode(body: "[list][*]abc[*] def ")
     assertParse("[list][*]abc[*] def ",
                 [[0, 6], [7, 3], [10, 3]],
                 []) {
@@ -400,7 +401,7 @@ class BBCodeParserTest {
   @Test
   void edgeCase_unclosedTags() {
     assertParse("[code] abc123 [baz] xyz456",
-                [],[]) {
+                [], []) {
       TextNode(body: "[code] abc123 [baz] xyz456", start: 0, end: 26)
     }
   }
@@ -472,6 +473,60 @@ class BBCodeParserTest {
       }
       TagNode(name: "*", start: 8, nameEnd: 10, bodyBegin: 11, bodyEnd: 16, end: 16) {
         TextNode(body: "item2", start: 11, end: 16)
+      }
+    }
+  }
+
+  @Test
+  void edge_noTagAttribute() {
+    assertParse([:], // Empty attribute map
+                "[list][*]item[*]item[/list]",
+                [[0, 6], [6, 3], [9, 3], [16, 4], [20, 3], [23, 3], [30, 4], [34, 7]]) {
+      TagNode(name: "list", start: 0, nameEnd: 5, bodyBegin: 6, bodyEnd: 34, end: 41) {
+        TextNode(body: "[*]item[*]item", start: 6, end: 20)
+      }
+    }
+  }
+
+  @Test
+  void edge_unexpectedTagAttributes_allDoNotRequireClosingTag() {
+    assertParse([list: new TagAttributes(true, true), // do not require closing tag, pre-formatted body
+                 '*' : new TagAttributes(true, false)], // do not require closing tag, normal body
+                "[list][*]item[*]item",
+                [[0, 6], [6, 3], [13, 3]], []) {
+      TagNode(name: "list", start: 0, nameEnd: 5, bodyBegin: 6, bodyEnd: 20, end: 20) {
+        TagNode(name: "*", start: 6, nameEnd: 8, bodyBegin: 9, bodyEnd: 13, end: 13) {
+          TextNode(body: "item", start: 9, end: 13)
+        }
+        TagNode(name: "*", start: 13, nameEnd: 15, bodyBegin: 16, bodyEnd: 20, end: 20) {
+          TextNode(body: "item", start: 16, end: 20)
+        }
+      }
+    }
+  }
+
+  @Test
+  void edge_unexpectedTagAttribute_doNotRequireClosingTagsButIncludeThem() {
+    assertParse([b: new TagAttributes(true, false),
+                 i: new TagAttributes(true, false)], // set both nodes to not require closing tag
+                "[b][i]italic[/i][/b]",
+                [[0, 3], [3, 3], [12, 4], [16, 4]], []) {
+      TagNode(name: "b", start: 0, nameEnd: 2, bodyBegin: 3, bodyEnd: 16, end: 20) {
+        TagNode(name: "i", start: 3, nameEnd: 5, bodyBegin: 6, bodyEnd: 12, end: 16) {
+          TextNode(body: "italic", start: 6, end: 12)
+        }
+      }
+    }
+  }
+
+  @Test
+  void edge_unexpectedTagAttribute_preFormatted_b_tag() {
+    assertParse([b: new TagAttributes(true, true), // do not require closing tag, pre-formatted body
+                 i: new TagAttributes(true, false)], // do not require closing tag, normal body
+                "[b][i]italic[/i][/b]",
+                [[0, 3], [16, 4]], []) {
+      TagNode(name: "b", start: 0, nameEnd: 2, bodyBegin: 3, bodyEnd: 16, end: 20) {
+        TextNode(body: "[i]italic[/i]", start: 3, end: 16)
       }
     }
   }
