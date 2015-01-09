@@ -16,7 +16,6 @@
 package org.primeframework.transformer.service
 
 import org.primeframework.transformer.domain.TagAttributes
-import org.testng.Assert
 import org.testng.annotations.DataProvider
 import org.testng.annotations.Test
 
@@ -374,27 +373,28 @@ class BBCodeParserTest {
   }
 
   @Test
-  void edgeCase_tagWithoutClosingTagWithoutClosingParent() {
-    Assert.fail("Not sure if this assertion is correct. Should it be a single text?")
-    // TextNode(body: "[list][*][*]")
-    assertParse("[list][*][*]",
-                [[0, 6], [7, 3], [10, 3]],
+  void edgeCase_tagWithoutClosingTagWithBodyWithoutClosingParent() {
+    assertParse("[list][*]abc[*] def ",
+                [],
                 []) {
-      TextNode(body: "[list]", start: 0, end: 6)
-      TagNode(name: "*", start: 6, nameEnd: 8, bodyBegin: 9, bodyEnd: 9, end: 9)
-      TagNode(name: "*", start: 9, nameEnd: 11, bodyBegin: 12, bodyEnd: 12, end: 12)
-
+      TextNode(body: "[list][*]abc[*] def ", start: 0, end: 20)
     }
   }
 
   @Test
-  void edgeCase_tagWithoutClosingTagWithBodyWithoutClosingParent() {
-    assertParse("[list][*]abc[*] def ",
-                [[0, 6], [7, 3], [10, 3]],
+  void edgeCase_tagWithoutClosingTagWithBodyWithoutClosingParent_withAttributes() {
+    assertParse(['*' : new TagAttributes(true, false), // does not require closing tag, normal body
+                 list: new TagAttributes(true, false)], // does not require closing tag, normal body
+                "[list][*]abc[*] def ",
+                [[0, 6], [6, 3], [12, 3]],
                 []) {
-      TextNode(body: "[list]", start: 0, end: 6)
-      TagNode(name: "*", start: 6, nameEnd: 8, bodyBegin: 9, bodyEnd: 12, end: 12)
-      TagNode(name: "*", start: 12, nameEnd: 14, bodyBegin: 15, bodyEnd: 20, end: 20)
+      TagNode(name: "list", start: 0, nameEnd: 5, bodyBegin: 6, end: 6)
+      TagNode(name: "*", start: 6, nameEnd: 8, bodyBegin: 9, bodyEnd: 12, end: 12) {
+        TextNode(body: "abc", start: 9, end: 12)
+      }
+      TagNode(name: "*", start: 12, nameEnd: 14, bodyBegin: 15, bodyEnd: 20, end: 20) {
+        TextNode(body: " def ", start: 15, end: 20)
+      }
     }
   }
 
@@ -481,8 +481,8 @@ class BBCodeParserTest {
   void edge_noTagAttribute() {
     assertParse([:], // Empty attribute map
                 "[list][*]item[*]item[/list]",
-                [[0, 6], [6, 3], [9, 3], [16, 4], [20, 3], [23, 3], [30, 4], [34, 7]]) {
-      TagNode(name: "list", start: 0, nameEnd: 5, bodyBegin: 6, bodyEnd: 34, end: 41) {
+                [[0, 6], [20, 7]], []) {
+      TagNode(name: "list", start: 0, nameEnd: 5, bodyBegin: 6, bodyEnd: 20, end: 27) {
         TextNode(body: "[*]item[*]item", start: 6, end: 20)
       }
     }
@@ -494,14 +494,25 @@ class BBCodeParserTest {
                  '*' : new TagAttributes(true, false)], // do not require closing tag, normal body
                 "[list][*]item[*]item",
                 [[0, 6], [6, 3], [13, 3]], []) {
-      TagNode(name: "list", start: 0, nameEnd: 5, bodyBegin: 6, bodyEnd: 20, end: 20) {
-        TagNode(name: "*", start: 6, nameEnd: 8, bodyBegin: 9, bodyEnd: 13, end: 13) {
-          TextNode(body: "item", start: 9, end: 13)
-        }
-        TagNode(name: "*", start: 13, nameEnd: 15, bodyBegin: 16, bodyEnd: 20, end: 20) {
-          TextNode(body: "item", start: 16, end: 20)
-        }
+      TagNode(name: "list", start: 0, nameEnd: 5, bodyBegin: 6, bodyEnd: 6, end: 6)
+      TagNode(name: "*", start: 6, nameEnd: 8, bodyBegin: 9, bodyEnd: 13, end: 13) {
+        TextNode(body: "item", start: 9, end: 13)
       }
+      TagNode(name: "*", start: 13, nameEnd: 15, bodyBegin: 16, bodyEnd: 20, end: 20) {
+        TextNode(body: "item", start: 16, end: 20)
+      }
+    }
+  }
+
+  @Test
+  void edge_unexpectedTagAttributes_allDoNotRequireClosingTagNoBody() {
+    assertParse([list: new TagAttributes(true, false), // do not require closing tag, normal body
+                 '*' : new TagAttributes(true, false)], // do not require closing tag, normal body
+                "[list][*][*]",
+                [[0, 6], [6, 3], [9, 3]], []) {
+      TagNode(name: "list", start: 0, nameEnd: 5, bodyBegin: 6, bodyEnd: 6, end: 6)
+      TagNode(name: "*", start: 6, nameEnd: 8, bodyBegin: 9, bodyEnd: 9, end: 9)
+      TagNode(name: "*", start: 9, nameEnd: 11, bodyBegin: 12, bodyEnd: 12, end: 12)
     }
   }
 
