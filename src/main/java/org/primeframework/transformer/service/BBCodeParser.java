@@ -141,7 +141,7 @@ public class BBCodeParser implements Parser {
    * @param tagNode    the tag to validate
    * @param attributes the tag attribute map
    *
-   * @return
+   * @return true if this tag does not require a closing tag.
    */
   private boolean doesNotRequireClosingTag(TagNode tagNode, Map<String, TagAttributes> attributes) {
     String name = lc(tagNode.getName());
@@ -152,12 +152,12 @@ public class BBCodeParser implements Parser {
    * Null safe case insensitive equals. Nulls will not evaluate to equal, if both values are null, false will be
    * returned.
    *
-   * @param s1
-   * @param s2
+   * @param s1 first string
+   * @param s2 second string
    *
-   * @return
+   * @return true if these two strings are equal, if both are <code>null</code> false is returned.
    */
-  private boolean equals(String s1, String s2) {
+  private boolean eq(String s1, String s2) {
     if (s1 == null && s2 == null) {
       // Intentionally evaluating to false when both are null.
       return false;
@@ -191,7 +191,7 @@ public class BBCodeParser implements Parser {
 
     TagNode current = nodes.peek();
     String closingTagName = closingName(document, index, current);
-    if (equals(current.getName(), closingTagName)) {
+    if (eq(current.getName(), closingTagName)) {
       current.end = index;
       if (current.hasClosingTag()) {
         // Set the end of this tag, and add to the document or its parent node.
@@ -261,7 +261,7 @@ public class BBCodeParser implements Parser {
     // no closing tag name was found, if tag has a closing tag, bail
     if (closingTagName == null && current.hasClosingTag()) {
       return;
-    } else if (equals(current.getName(), closingTagName)) {
+    } else if (eq(current.getName(), closingTagName)) {
       // found a matching closing tag name, bail
       return;
     }
@@ -328,7 +328,7 @@ public class BBCodeParser implements Parser {
 
     // Remove all child nodes, and add a single text node
     TagNode current = nodes.peek();
-    if (equals(preFormatted.peek(), current.getName())) {
+    if (eq(preFormatted.peek(), current.getName())) {
       current.children.clear();
       current.addChild(new TextNode(document, current.bodyBegin, current.bodyEnd));
       preFormatted.pop();
@@ -349,20 +349,17 @@ public class BBCodeParser implements Parser {
                                            Deque<TagNode> nodes, Deque<String> preFormatted) {
     while (!nodes.isEmpty()) {
 
-      // If we run into a pre-formatted tag, return unless we're at the end of the document.
+      // if this is the last node on the stack, bail if we find a closing tag, or a pre-formatted tag
       if (nodes.size() == 1) {
-        if (!preFormatted.isEmpty()) {
-          TagNode current = nodes.peek();
-          String closingName = closingName(document, index, current);
-          if (equals(current.getName(), preFormatted.peek()) && equals(closingName, current.getName())) {
-            return;
-          }
-        } else {
-          TagNode current = nodes.peek();
-          String closingName = closingName(document, index, current);
-          if (equals(closingName, current.getName())) {
-            return;
-          }
+        TagNode current = nodes.peek();
+        String closingName = closingName(document, index, current);
+        boolean closingTagFound = eq(closingName, current.getName());
+        // not in a pre-formatted tag, if closing tag name is found, bail
+        if (preFormatted.isEmpty() && closingTagFound) {
+          return;
+        } else if (eq(current.getName(), preFormatted.peek()) && closingTagFound) {
+          // if a closing tag is found for the pre-formatted tag, bail
+          return;
         }
       }
 
@@ -407,7 +404,7 @@ public class BBCodeParser implements Parser {
    * @param tagNode    the tag to validate
    * @param attributes the tag attribute map
    *
-   * @return
+   * @return true if this tag has a pre-formatted body
    */
   private boolean hasPreFormattedBody(TagNode tagNode, Map<String, TagAttributes> attributes) {
     String name = lc(tagNode.getName());

@@ -14,11 +14,8 @@
  * language governing permissions and limitations under the License.
  */
 package org.primeframework.transformer.service
-
-import org.primeframework.transformer.domain.Document
 import org.primeframework.transformer.domain.TagAttributes
 import org.primeframework.transformer.domain.TagNode
-import org.primeframework.transformer.domain.TextNode
 import spock.lang.Shared
 import spock.lang.Specification
 import spock.lang.Unroll
@@ -51,57 +48,6 @@ public class BBCodeToHTMLTransformerSpec extends Specification {
   def setupSpec() {
     bbCodeParser = new BBCodeParser()
     bbCodeToFreeMarkerTransformer = new BBCodeToHTMLTransformer()
-  }
-
-  // Covered in the Java test
-  def "No FreeMarker template for tag with strict mode disabled"() {
-
-    when: "A BBCodeParser is setup and a template has not been provided for a tag"
-      def document = bbCodeParser.buildDocument("[unknown]Testing[/unknown]", attributes)
-
-    and: "transform is bbCodeTransformer"
-      def html = bbCodeToFreeMarkerTransformer.transform(document, transformPredicate, null, null)
-
-    then: "the output should should equal the input"
-      html == "[unknown]Testing[/unknown]"
-  }
-
-  // Covered in the Java test
-  def "No FreeMarker template for tag with strict mode enabled in the constructor"() {
-
-    when: "A BBCodeParser is setup and a template has not been provided for a tag"
-      Document document = bbCodeParser.buildDocument("[unknown]Testing[/unknown]", attributes)
-
-    and: "transform is bbCodeTransformer"
-      def html = new BBCodeToHTMLTransformer(true).transform(document, transformPredicate, null, null)
-
-    then: "an exception should be thrown"
-      thrown TransformException
-
-    and: "html should be null"
-      html == null
-  }
-
-  // This is a parser tests not a transformer test
-  def "No closing BBCode tag"() {
-
-    when: "A BBCode string with a missing closing tag is parsed"
-      def document = bbCodeParser.buildDocument("[b]Testing", attributes);
-
-    then: "an exception is not thrown"
-      notThrown Exception
-
-    and: "document is not null"
-      document != null
-
-    and: "a single text node should exist in the document"
-      document.children.size() == 1
-      document.children.get(0) instanceof TextNode
-      def text = (TextNode) document.children.get(0)
-      text.begin == 0
-      text.end == 10
-      text.getBody() == "[b]Testing"
-
   }
 
   // This test seems solid. Though it isn't using the transform function for HTML replacement, so it is a bit light.
