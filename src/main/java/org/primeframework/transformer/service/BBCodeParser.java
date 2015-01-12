@@ -487,7 +487,6 @@ public class BBCodeParser implements Parser {
     TextNode textNode = null;
 
     boolean parsingEnabled = true;
-    String preFormattedTagName = null;
 
     Map<String, TagAttributes> attributes = new HashMap<>();
     if (tagAttributes != null) {
@@ -549,9 +548,6 @@ public class BBCodeParser implements Parser {
             if (state == State.openingTagEnd) {
               // disable parsing if tag has a pre-formatted body
               parsingEnabled = !hasPreFormattedBody(nodes.peek(), attributes);
-              if (!parsingEnabled) {
-                preFormattedTagName = lc(nodes.peek().getName());
-              }
               handleOpenTagCompleted(index + 1, nodes);
             }
           }
@@ -586,17 +582,17 @@ public class BBCodeParser implements Parser {
 
         case simpleAttribute:
           state = state.next(source[index]);
-          if (state == State.unQuotedSimpleAttributeValue) {
+          if (state == State.simpleUnQuotedValue) {
             attributeValueBegin = index;
-          } else if (state == State.singleQuotedSimpleAttributeValue || state == State.doubleQuotedSimpleAttributeValue) {
+          } else if (state == State.simpleSingleQuotedValue || state == State.simpleDoubleQuotedValue) {
             attributeValueBegin = index + 1;
           }
           index++;
           break;
 
-        case doubleQuotedSimpleAttributeValue:
-        case singleQuotedSimpleAttributeValue:
-        case unQuotedSimpleAttributeValue:
+        case simpleDoubleQuotedValue:
+        case simpleSingleQuotedValue:
+        case simpleUnQuotedValue:
           state = state.next(source[index]);
           if (state != previous) {
             addSimpleAttribute(document, attributeValueBegin, index, nodes);
@@ -629,17 +625,17 @@ public class BBCodeParser implements Parser {
           if (state == State.openingTagEnd) {
             nodes.peek().attributes.put(attributeName, "");  // No attribute value, store empty string
             document.attributeOffsets.add(new Pair<>(index, 0));
-          } else if (state == State.unQuotedAttributeValue) {
+          } else if (state == State.complexUnQuotedValue) {
             attributeValueBegin = index;
-          } else if (state == State.singleQuotedAttributeValue || state == State.doubleQuotedAttributeValue) {
+          } else if (state == State.complexSingleQuotedValue || state == State.complexDoubleQuotedValue) {
             attributeValueBegin = index + 1;
           }
           index++;
           break;
 
-        case doubleQuotedAttributeValue:
-        case singleQuotedAttributeValue:
-        case unQuotedAttributeValue:
+        case complexDoubleQuotedValue:
+        case complexSingleQuotedValue:
+        case complexUnQuotedValue:
           state = state.next(source[index]);
           if (state != previous) {
             nodes.peek().attributes.put(attributeName, document.getString(attributeValueBegin, index));
@@ -730,6 +726,65 @@ public class BBCodeParser implements Parser {
       }
     },
 
+    simpleAttribute {
+      @Override
+      public State next(char c) {
+        if (c == ']') {
+          return openingTagEnd;
+        } else if (c == '\'') {
+          return simpleSingleQuotedValue;
+        } else if (c == '"') {
+          return simpleDoubleQuotedValue;
+        } else {
+          return simpleUnQuotedValue;
+        }
+      }
+    },
+
+    simpleSingleQuotedValue {
+      @Override
+      public State next(char c) {
+        if (c == '\'') {
+          return simpleAttribute;
+        } else {
+          return simpleSingleQuotedValue;
+        }
+      }
+    },
+
+    simpleDoubleQuotedValue {
+      @Override
+      public State next(char c) {
+        if (c == '"') {
+          return simpleAttribute;
+        } else {
+          return simpleDoubleQuotedValue;
+        }
+      }
+    },
+
+    simpleUnQuotedValue {
+      @Override
+      public State next(char c) {
+        if (c == ']') {
+          return openingTagEnd;
+        } else {
+          return simpleUnQuotedValue;
+        }
+      }
+    },
+
+    simpleAttributeEnd {
+      @Override
+      public State next(char c) {
+        if (c == ']') {
+          return openingTagEnd;
+        } else {
+          return text; // tag was not closed
+        }
+      }
+    },
+
     complexAttribute {
       @Override
       public State next(char c) {
@@ -769,38 +824,38 @@ public class BBCodeParser implements Parser {
         } else if (c == ' ') {
           return complexAttribute;
         } else if (c == '\'') {
-          return singleQuotedAttributeValue;
+          return complexSingleQuotedValue;
         } else if (c == '\"') {
-          return doubleQuotedAttributeValue;
+          return complexDoubleQuotedValue;
         } else {
-          return unQuotedAttributeValue;
+          return complexUnQuotedValue;
         }
       }
     },
 
-    doubleQuotedAttributeValue {
+    complexDoubleQuotedValue {
       @Override
       public State next(char c) {
         if (c == '"') {
           return complexAttribute;
         } else {
-          return doubleQuotedAttributeValue;
+          return complexDoubleQuotedValue;
         }
       }
     },
 
-    singleQuotedAttributeValue {
+    complexSingleQuotedValue {
       @Override
       public State next(char c) {
         if (c == '\'') {
           return complexAttribute;
         } else {
-          return singleQuotedAttributeValue;
+          return complexSingleQuotedValue;
         }
       }
     },
 
-    unQuotedAttributeValue {
+    complexUnQuotedValue {
       @Override
       public State next(char c) {
         if (c == ' ') {
@@ -808,66 +863,7 @@ public class BBCodeParser implements Parser {
         } else if (c == ']') {
           return openingTagEnd;
         } else {
-          return unQuotedAttributeValue;
-        }
-      }
-    },
-
-    simpleAttribute {
-      @Override
-      public State next(char c) {
-        if (c == ']') {
-          return openingTagEnd;
-        } else if (c == '\'') {
-          return singleQuotedSimpleAttributeValue;
-        } else if (c == '"') {
-          return doubleQuotedSimpleAttributeValue;
-        } else {
-          return unQuotedSimpleAttributeValue;
-        }
-      }
-    },
-
-    singleQuotedSimpleAttributeValue {
-      @Override
-      public State next(char c) {
-        if (c == '\'') {
-          return simpleAttribute;
-        } else {
-          return singleQuotedSimpleAttributeValue;
-        }
-      }
-    },
-
-    doubleQuotedSimpleAttributeValue {
-      @Override
-      public State next(char c) {
-        if (c == '"') {
-          return simpleAttribute;
-        } else {
-          return doubleQuotedSimpleAttributeValue;
-        }
-      }
-    },
-
-    unQuotedSimpleAttributeValue {
-      @Override
-      public State next(char c) {
-        if (c == ']') {
-          return openingTagEnd;
-        } else {
-          return unQuotedSimpleAttributeValue;
-        }
-      }
-    },
-
-    simpleAttributeEnd {
-      @Override
-      public State next(char c) {
-        if (c == ']') {
-          return openingTagEnd;
-        } else {
-          return text; // tag was not closed
+          return complexUnQuotedValue;
         }
       }
     },

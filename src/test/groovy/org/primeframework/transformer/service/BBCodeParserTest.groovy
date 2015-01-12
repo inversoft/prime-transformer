@@ -382,6 +382,27 @@ class BBCodeParserTest {
   }
 
   @Test
+  void edgeCase_noparseClosingCodeTag() {
+    assertParse("[noparse][b]foo[/b][/code]",
+                [],
+                []) {
+      TextNode(body: "[noparse][b]foo[/b][/code]", start: 0, end: 26)
+    }
+  }
+
+  @Test
+  void edgeCase_noparseClosingCodeTag_closingTagNotRequired() {
+    assertParse([noparse: new TagAttributes(true, true)], // no closing tag, pre-formatted
+                "[noparse][b]foo[/b][/code]",
+                [[0, 9]],
+                []) {
+      TagNode(name: "noparse", start: 0, nameEnd: 8, bodyBegin: 9, bodyEnd: 26, end: 26) {
+        TextNode(body: "[b]foo[/b][/code]", start: 9, end: 26)
+      }
+    }
+  }
+
+  @Test
   void edgeCase_tagWithoutClosingTagWithBodyWithoutClosingParent() {
     assertParse("[list][*]abc[*] def ",
                 [],
