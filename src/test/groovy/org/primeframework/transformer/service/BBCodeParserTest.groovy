@@ -66,6 +66,15 @@ class BBCodeParserTest {
   }
 
   @Test
+  void noParseBasic() {
+    assertParse("[noparse][b]Bold[/b][/noparse]", [[0, 9], [20, 10]], []) {
+      TagNode(name: "noparse", start: 0, nameEnd: 8, bodyBegin: 9, bodyEnd: 20, end: 30) {
+        TextNode(body: "[b]Bold[/b]", start: 9, end: 20)
+      }
+    }
+  }
+
+  @Test
   void edgeCase_GoodTag_ThenOpen() {
     assertParse("[b]foo[/b] abc[def") {
       TagNode(name: "b", start: 0, nameEnd: 2, bodyBegin: 3, bodyEnd: 6, end: 10) {
@@ -241,7 +250,7 @@ class BBCodeParserTest {
   }
 
   @Test
-  void TagDoesNotRequireClosingTagHasParent() {
+  void normal_list() {
     assertParse("[list][*]item1[*]item2[/list]") {
       TagNode(name: "list", start: 0, nameEnd: 5, attributesBegin: -1, bodyBegin: 6, bodyEnd: 22, end: 29) {
         TagNode(name: "*", start: 6, nameEnd: 8, bodyBegin: 9, bodyEnd: 14, end: 14) {
@@ -277,8 +286,7 @@ class BBCodeParserTest {
   @DataProvider
   public Object[][] noParseData() {
     return [
-        ["[noparse]Example: [noparse]foo[/noparse][/noparse]", "Example: [noparse]foo[/noparse]"]
-        , ["[noparse] System.out.println(\"Hello World!\"); [/noparse]", " System.out.println(\"Hello World!\"); "]
+        ["[noparse] System.out.println(\"Hello World!\"); [/noparse]", " System.out.println(\"Hello World!\"); "]
         , ["[noparse] [b]b[/i] [xyz] [foo] [] b] [bar '''''' [[[ ]]] [/noparse]", " [b]b[/i] [xyz] [foo] [] b] [bar '''''' [[[ ]]] "]
         , ["[noparse] [b][u][/i] ** && == ++ [foo] [] b] [bar \"\"\" ]] [/noparse]", " [b][u][/i] ** && == ++ [foo] [] b] [bar \"\"\" ]] "]
         , ["[noparse]am.getProcessMemoryInfo([mySinglePID]);[/noparse]", "am.getProcessMemoryInfo([mySinglePID]);"]
@@ -286,7 +294,7 @@ class BBCodeParserTest {
   }
 
   @Test(dataProvider = "noParseData")
-  void edgeCase_noparseEmbeddedNoParse(String str, String body) {
+  void edgeCase_noparseEmbeddedBadBBCode(String str, String body) {
     assertParse(str, [[0, 9], [str.length() - 10, 10]]) {
       TagNode(name: "noparse", start: 0, nameEnd: 8, bodyBegin: 9, bodyEnd: str.length() - 10, end: str.length()) {
         TextNode(body: body, start: 9, end: str.length() - 10)
@@ -297,15 +305,16 @@ class BBCodeParserTest {
   @DataProvider
   public Object[][] codeData() {
     return [
-        ["[code]Example: [code]foo[/code][/code]", "Example: [code]foo[/code]"]
+        ["[code]Example: [code]foo[/code]", "Example: [code]foo"]
         , ["[code] System.out.println(\"Hello World!\"); [/code]", " System.out.println(\"Hello World!\"); "]
-        , ["[code] [b]b[/i] [xyz] [foo] [] b] [bar '''''' [[[ ]]] [/code]", " [b]b[/i] [xyz] [foo] [] b] [bar '''''' [[[ ]]] "]
+        , ["[code]  [b]b[/i] [xyz] [foo] [] b] [bar '''''' [[[ ]]] [/code]", "  [b]b[/i] [xyz] [foo] [] b] [bar '''''' [[[ ]]] "]
         , ["[code] [b][u][/i] ** && == ++ [foo] [] b] [bar \"\"\" ]] [/code]", " [b][u][/i] ** && == ++ [foo] [] b] [bar \"\"\" ]] "]
         , ["[code]am.getProcessMemoryInfo([mySinglePID]);[/code]", "am.getProcessMemoryInfo([mySinglePID]);"]
         , ["[code]new <type>[] { <list of values>};[/code]", "new <type>[] { <list of values>};"]
         , ["[code]// Comment[/code]", "// Comment"]
         , ["[code] // Comment[/code]", " // Comment"]
         , ["[code]<script> window.location.replace(\"http://foo.bar\"); </script> [/code]", "<script> window.location.replace(\"http://foo.bar\"); </script> "]
+        , ["[code] [noparse] System.out.println(\"<script> window.location.replace('http://foo.bar');</script>\"); [/noparse] [/code]", " [noparse] System.out.println(\"<script> window.location.replace('http://foo.bar');</script>\"); [/noparse] "]
     ]
   }
 
@@ -347,7 +356,7 @@ class BBCodeParserTest {
   void edgeCase_codeWithLineReturnInBetweenTagsAndEmbeddedScript() {
     assertParse(
         "\n[code]am.getProcessMemoryInfo([mySinglePID]);[/code]\n[code]<script> window.location.replace(\"http://foo.bar\"); </script> [/code]",
-        [[0, 7], [122, 9]],
+        [[1, 6], [46, 7], [54, 6], [122, 7]],
         []) {
       TextNode(body: "\n", start: 0, end: 1)
       TagNode(name: "code", start: 1, nameEnd: 6, bodyBegin: 7, bodyEnd: 46, end: 53) {
@@ -479,27 +488,21 @@ class BBCodeParserTest {
 
   @Test
   void edge_noTagAttribute() {
-    assertParse([:], // Empty attribute map
+    assertParse([:], // Empty attribute map, parser has no knowledge of these tag attributes
                 "[list][*]item[*]item[/list]",
-                [[0, 6], [20, 7]], []) {
-      TagNode(name: "list", start: 0, nameEnd: 5, bodyBegin: 6, bodyEnd: 20, end: 27) {
-        TextNode(body: "[*]item[*]item", start: 6, end: 20)
-      }
+                [], []) {
+      TextNode(body: "[list][*]item[*]item[/list]", start: 0, end: 27)
     }
   }
 
   @Test
-  void edge_unexpectedTagAttributes_allDoNotRequireClosingTag() {
+  void edge_TagAttributes_preFormattedWithAllDoNotRequireClosingTag() {
     assertParse([list: new TagAttributes(true, true), // do not require closing tag, pre-formatted body
                  '*' : new TagAttributes(true, false)], // do not require closing tag, normal body
                 "[list][*]item[*]item",
-                [[0, 6], [6, 3], [13, 3]], []) {
-      TagNode(name: "list", start: 0, nameEnd: 5, bodyBegin: 6, bodyEnd: 6, end: 6)
-      TagNode(name: "*", start: 6, nameEnd: 8, bodyBegin: 9, bodyEnd: 13, end: 13) {
-        TextNode(body: "item", start: 9, end: 13)
-      }
-      TagNode(name: "*", start: 13, nameEnd: 15, bodyBegin: 16, bodyEnd: 20, end: 20) {
-        TextNode(body: "item", start: 16, end: 20)
+                [[0, 6]], []) {
+      TagNode(name: "list", start: 0, nameEnd: 5, bodyBegin: 6, bodyEnd: 20, end: 20) {
+        TextNode(body: "[*]item[*]item", start: 6, end: 20)
       }
     }
   }
@@ -543,6 +546,39 @@ class BBCodeParserTest {
   }
 
   @Test
+  public void escape_OpenTagAndCloseTags() {
+    assertParse("Example BBCode: \\[code] foo \\[/code]", [], []) {
+      TextNode(body: "Example BBCode: ", start: 0, end: 16)
+      TextNode(body: "[code] foo ", start: 17, end: 28);
+      TextNode(body: "[/code]", start: 29, end: 36);
+    }
+  }
+
+  @Test
+  public void escape_OpenTagWithUnescapedCloseTag() {
+    assertParse("Example BBCode: \\[code] foo [/code]", [], []) {
+      TextNode(body: "Example BBCode: ", start: 0, end: 16)
+      TextNode(body: "[code] foo [/code]", start: 17, end: 35);
+    }
+  }
+
+  @Test
+  public void escape_OpenTag() {
+    assertParse("Example BBCode: \\[test]", [], []) {
+      TextNode(body: "Example BBCode: ", start: 0, end: 16)
+      TextNode(body: "[test]", start: 17, end: 23);
+    }
+  }
+
+  @Test
+  public void escape_Tags() {
+    assertParse("\\[b] foo \\[/b]", [], []) {
+      TextNode(body: "[b] foo ", start: 1, end: 9);
+      TextNode(body: "[/b]", start: 10, end: 14);
+    }
+  }
+
+  @Test
   public void offsets() {
     assertParse("z [b]abc defg [/b]hijk [ul][*]lmn opqr[*][/ul]",
                 [[2, 3], [14, 4], [23, 4], [27, 3], [38, 3], [41, 5]]) {
@@ -558,7 +594,6 @@ class BBCodeParserTest {
         TagNode(name: "*", start: 38, nameEnd: 40, bodyBegin: 41, bodyEnd: 41, end: 41)
       }
     }
-
     assertParse(
         "Example [code type=\"see the java oo\" syntax=\"java\"] System.out.println(\"Hello World!\"); [/code] ",
         [[8, 43], [88, 7]]) {

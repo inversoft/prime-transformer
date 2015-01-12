@@ -94,8 +94,9 @@ public class BBCodeToHTMLTransformerSpec extends Specification {
       "the <em>XY </em>Trainer"                                                                                               | "the [I]XY [/I]Trainer"
       "<span style=\"font-family: times new roman\">Matthew(not 69) (175) </span>"                                            | "[font=times new roman]Matthew(not 69) (175) [/font]"
       "<u>&lt;script&gt; var inject=true;&lt;/script&gt;</u>"                                                                 | "[u]<script> var inject=true;</script>[/u]"
-      "<div>Example: [noparse]foo[/noparse]</div>"                                                                            | "[noparse]Example: [noparse]foo[/noparse][/noparse]"
-
+      "<div>Example: [code]foo[/code]</div>"                                                                                  | "[noparse]Example: [code]foo[/code][/noparse]"
+      "Example: [code]foo[/code]"                                                                                             | "Example: \\[code]foo\\[/code]"
+      "Example: [code]foo[/code]"                                                                                             | "Example: \\[code]foo[/code]"
   }
 
   // Not sure what this test is doing. It doesn't look like it asserts anything

@@ -70,26 +70,6 @@ public class BBCodeParserSpec extends Specification {
       document.attributeOffsets.empty
   }
 
-  def "basic noparse tag"() {
-
-    when: "A document is constructed"
-      def source = "[noparse][b]Bold[/b][/noparse]"
-      def document = new BBCodeParser().buildDocument(source, attributes)
-
-    then:
-      document.children.size() == 1
-      document.children.get(0) instanceof TagNode
-      def tag = (TagNode) document.children.get(0)
-      tag.children.size() == 1
-      tag.children.get(0) instanceof TextNode
-      def text = (TextNode) tag.children.get(0)
-      text.getBody() == "[b]Bold[/b]"
-
-    and:
-      document.offsets == [new Pair<>(0, 9), new Pair<>(20, 10)] as TreeSet
-      document.attributeOffsets.empty
-  }
-
   def "noparse tag with bad body"() {
 
     when: "A document is constructed"
@@ -125,26 +105,6 @@ public class BBCodeParserSpec extends Specification {
 
     and:
       document.offsets.empty
-      document.attributeOffsets.empty
-  }
-
-  def "noparse tag with embedded noparse"() {
-
-    when: "A document is constructed"
-      def source = "[noparse]Example: [noparse] String test = null; [/noparse][/noparse]"
-      def document = new BBCodeParser().buildDocument(source, attributes)
-
-    then:
-      document.children.size() == 1
-      document.children.get(0) instanceof TagNode
-      def tag = (TagNode) document.children.get(0)
-      tag.children.size() == 1
-      tag.children.get(0) instanceof TextNode
-      def text = (TextNode) tag.children.get(0)
-      text.getBody() == "Example: [noparse] String test = null; [/noparse]"
-
-    and:
-      document.offsets == [new Pair<>(0, 9), new Pair<>(58, 10)] as TreeSet
       document.attributeOffsets.empty
   }
 
