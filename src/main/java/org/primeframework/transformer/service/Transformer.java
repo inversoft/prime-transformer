@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, Inversoft Inc., All Rights Reserved
+ * Copyright (c) 2015, Inversoft Inc., All Rights Reserved
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -133,6 +133,19 @@ public interface Transformer {
      * @return The transformed String.
      */
     String transform(TextNode node, String original);
+
+    /**
+     * An implementation of the TransformFunction that escapes HTML.
+     *
+     * @author Daniel DeGroff
+     */
+    public static class HTMLEscapeTransformFunction implements TransformFunction {
+      @Override
+      public String transform(TextNode node, String original) {
+        // Just re-used this for now, not much overhead with the offsets, throw them away
+        return new OffsetHTMLEscapeTransformFunction(new Offsets()).transform(node, original);
+      }
+    }
 
     /**
      * An implementation of the TransformFunction that escapes HTML but also manages the Offsets created by the
