@@ -48,22 +48,6 @@ public abstract class BaseTagNode extends BaseNode {
   }
 
   /**
-   * @return Return a {@link List} of TextNode objects.
-   */
-  public List<TextNode> getChildTextNodes() {
-    List<TextNode> textNodes = new ArrayList<>(getChildren().size());
-    getChildren().forEach(n -> {
-      if (n instanceof TextNode) {
-        textNodes.add((TextNode) n);
-      } else {
-        TagNode tag = (TagNode) n;
-        textNodes.addAll(tag.getChildTextNodes());
-      }
-    });
-    return textNodes;
-  }
-
-  /**
    * Return a {@link List} of {@link Node} objects.
    *
    * @return Return the child nodes. An empty list indicates this node has no children.
