@@ -513,12 +513,16 @@ public class BBCodeParser implements Parser {
       switch (state) {
 
         case initial:
-        case escape:
         case closingTagBegin:
         case simpleAttributeEnd:
           state = state.next(source[index]);
           index++;
           break;
+
+        case escape:
+          state = state.next(source[index]);
+          document.offsets.add(new Pair<>(index - 1, -1));
+          index++;
 
         case tagBegin:
           state = state.next(source[index]);

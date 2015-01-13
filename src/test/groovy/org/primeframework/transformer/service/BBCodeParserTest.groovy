@@ -615,7 +615,7 @@ class BBCodeParserTest {
 
   @Test
   void escape_OpenTagAndCloseTags() {
-    assertParse("Example BBCode: \\[code] foo \\[/code]", [], []) {
+    assertParse("Example BBCode: \\[code] foo \\[/code]", [[16, -1], [28, -1]], []) {
       TextNode(body: "Example BBCode: ", start: 0, end: 16)
       TextNode(body: "[code] foo ", start: 17, end: 28);
       TextNode(body: "[/code]", start: 29, end: 36);
@@ -624,7 +624,7 @@ class BBCodeParserTest {
 
   @Test
   void escape_OpenTagWithUnescapedCloseTag() {
-    assertParse("Example BBCode: \\[code] foo [/code]", [], []) {
+    assertParse("Example BBCode: \\[code] foo [/code]", [[16, -1]], []) {
       TextNode(body: "Example BBCode: ", start: 0, end: 16)
       TextNode(body: "[code] foo [/code]", start: 17, end: 35);
     }
@@ -632,7 +632,7 @@ class BBCodeParserTest {
 
   @Test
   void escape_OpenTag() {
-    assertParse("Example BBCode: \\[test]", [], []) {
+    assertParse("Example BBCode: \\[test]", [[16, -1]], []) {
       TextNode(body: "Example BBCode: ", start: 0, end: 16)
       TextNode(body: "[test]", start: 17, end: 23);
     }
@@ -640,7 +640,7 @@ class BBCodeParserTest {
 
   @Test
   void escape_Tags() {
-    assertParse("\\[b] foo \\[/b]", [], []) {
+    assertParse("\\[b] foo \\[/b]", [[0, -1], [9, -1]], []) {
       TextNode(body: "[b] foo ", start: 1, end: 9);
       TextNode(body: "[/b]", start: 10, end: 14);
     }
