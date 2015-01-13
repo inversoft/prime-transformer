@@ -49,6 +49,7 @@ public class TextTransformerTest {
     assertTransform("Example [code type=\"see the java oo\" syntax=\"java\"] System.out.println(\"Hello World!\"); [/code] ", "Example  System.out.println(\"Hello World!\");  ", (node) -> true);
     assertTransform("[foo bar=\"blah blah\"]Some ordinary text.[/foo] [font=\"verdana\"]Hello[/font]", "[foo bar=\"blah blah\"]Some ordinary text.[/foo] [font=\"verdana\"]Hello[/font]", (node) -> false);
     assertTransform("[list] [*] foo [*] bar [/list] [b]bold[/b]", "[list] [*] foo [*] bar [/list] bold", (node) -> !node.getName().equals("list"));
+    assertTransform("\\[b]Hello World\\[/b]", "[b]Hello World[/b]", (node) -> true);
   }
 
   private void assertTransform(String str, String expected, Predicate<TagNode> transformPredicate) throws Exception {

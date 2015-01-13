@@ -33,7 +33,13 @@
   </component>
   <component name="Encoding" useUTFGuessing="true" native2AsciiForPropertiesFiles="false" />
   <component name="EntryPointsManager">
-    <entry_points version="2.0" />
+    <entry_points version="2.0">
+      <entry_point TYPE="method" FQNAME="org.primeframework.transformer.domain.BaseTagNode java.util.List&lt;org.primeframework.transformer.domain.TextNode&gt; getChildTextNodes()" />
+      <entry_point TYPE="method" FQNAME="org.primeframework.transformer.domain.BaseTagNode java.util.List&lt;org.primeframework.transformer.domain.TagNode&gt; getChildTagNodes()" />
+      <entry_point TYPE="method" FQNAME="org.primeframework.transformer.domain.BaseTagNode void addChild(org.primeframework.transformer.domain.Node node)" />
+      <entry_point TYPE="method" FQNAME="org.primeframework.transformer.service.BBCodeToHTMLTransformer BBCodeToHTMLTransformer()" />
+      <entry_point TYPE="method" FQNAME="org.primeframework.transformer.service.BBCodeToHTMLTransformer BBCodeToHTMLTransformer(boolean strict)" />
+    </entry_points>
   </component>
   <component name="FrameworkDetectionExcludesConfiguration">
     <file type="web" url="file://$PROJECT_DIR$" />
@@ -962,6 +968,7 @@
       </value>
     </option>
     <option name="USE_PER_PROJECT_SETTINGS" value="true" />
+    <option name="PREFERRED_PROJECT_CODE_STYLE" value="Uber" />
   </component>
   <component name="ProjectModuleManager">
     <modules>
