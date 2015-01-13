@@ -50,7 +50,7 @@ public class BBCodeToHTMLTransformerSpec extends Specification {
     bbCodeToFreeMarkerTransformer = new BBCodeToHTMLTransformer()
   }
 
-  // This test seems solid. Though it isn't using the transform function for HTML replacement, so it is a bit light.
+  // This isn't using the transform function for HTML replacement, so it is a bit light. Could add another column to validate offsets as well?
   //@Unroll("BBCode to HTML : #html")
   def "BBCode to HTML - simple"() {
 
@@ -99,7 +99,6 @@ public class BBCodeToHTMLTransformerSpec extends Specification {
       "Example: [code]foo[/code]"                                                                                             | "Example: \\[code]foo[/code]"
   }
 
-  // Not sure what this test is doing. It doesn't look like it asserts anything
   @Unroll("BBCode to HTML : #fileName")
   def "BBCode to HTML - complex"() {
 
