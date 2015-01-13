@@ -92,9 +92,28 @@ class BBCodeParserTest {
   }
 
   @Test
+  void edgeCase_wrongClosingTagTag() {
+    assertParse("[b]foo[/i]", [], []) {
+      TextNode(body: "[b]foo[/i]", start: 0, end: 10)
+    }
+  }
+
+  @Test
   void edgeCase_BadTagName() {
     assertParse("[b[b[b[b] foo") {
       TextNode(body: "[b[b[b[b] foo", start: 0, end: 13)
+    }
+  }
+
+  @Test
+  void edgeCase_mixedCaseTags() {
+    assertParse("[b]foo[/B][I]bar[/i]") {
+      TagNode(name: "b", start: 0, nameEnd: 2, bodyBegin: 3, bodyEnd: 6, end: 10) {
+        TextNode(body: "foo", start: 3, end: 6)
+      }
+      TagNode(name: "I", start: 10, nameEnd: 12, bodyBegin: 13, bodyEnd: 16, end: 20) {
+        TextNode(body: "bar", start: 13, end: 16)
+      }
     }
   }
 
@@ -264,6 +283,20 @@ class BBCodeParserTest {
   }
 
   @Test
+  void normal_list_b() { // something other than [list]
+    assertParse("[b][*]item1[*]item2[/b]") {
+      TagNode(name: "b", start: 0, nameEnd: 2, attributesBegin: -1, bodyBegin: 3, bodyEnd: 19, end: 23) {
+        TagNode(name: "*", start: 3, nameEnd: 5, bodyBegin: 6, bodyEnd: 11, end: 11) {
+          TextNode(body: "item1", start: 6, end: 11)
+        }
+        TagNode(name: "*", start: 11, nameEnd: 13, bodyBegin: 14, bodyEnd: 19, end: 19) {
+          TextNode(body: "item2", start: 14, end: 19)
+        }
+      }
+    }
+  }
+
+  @Test
   void edgeCase_SimpleAttributeQuotesInside() {
     assertParse("[font=values{'12'}]foo[/font]") {
       TagNode(name: "font", start: 0, nameEnd: 5, attributesBegin: 6, bodyBegin: 19, bodyEnd: 22, end: 29,
@@ -274,7 +307,7 @@ class BBCodeParserTest {
   }
 
   @Test
-  public void attributes() {
+  void attributes() {
     assertParse("[d testattr=33]xyz[/d]") {
       TagNode(name: "d", start: 0, nameEnd: 2, attributesBegin: 3, bodyBegin: 15, bodyEnd: 18, end: 22,
               attributes: ["testattr": "33"]) {
@@ -567,7 +600,21 @@ class BBCodeParserTest {
   }
 
   @Test
-  public void escape_OpenTagAndCloseTags() {
+  void embeddedTags_quote() {
+    assertParse("[quote][quote][quote]Hot pocket in a hot pocket[/quote][/quote][/quote]",
+        [[0, 7], [7, 7], [14, 7], [47, 8], [55, 8], [63, 8]], []) {
+      TagNode(name: "quote", start: 0, nameEnd: 6, bodyBegin: 7, bodyEnd: 63, end: 71) {
+        TagNode(name: "quote", start: 7, nameEnd: 13, bodyBegin: 14, bodyEnd: 55, end: 63) {
+          TagNode(name: "quote", start: 14, nameEnd: 20, bodyBegin: 21, bodyEnd: 47, end: 55) {
+            TextNode(body: "Hot pocket in a hot pocket", start: 21, end: 47)
+          }
+        }
+      }
+    }
+  }
+
+  @Test
+  void escape_OpenTagAndCloseTags() {
     assertParse("Example BBCode: \\[code] foo \\[/code]", [], []) {
       TextNode(body: "Example BBCode: ", start: 0, end: 16)
       TextNode(body: "[code] foo ", start: 17, end: 28);
@@ -576,7 +623,7 @@ class BBCodeParserTest {
   }
 
   @Test
-  public void escape_OpenTagWithUnescapedCloseTag() {
+  void escape_OpenTagWithUnescapedCloseTag() {
     assertParse("Example BBCode: \\[code] foo [/code]", [], []) {
       TextNode(body: "Example BBCode: ", start: 0, end: 16)
       TextNode(body: "[code] foo [/code]", start: 17, end: 35);
@@ -584,7 +631,7 @@ class BBCodeParserTest {
   }
 
   @Test
-  public void escape_OpenTag() {
+  void escape_OpenTag() {
     assertParse("Example BBCode: \\[test]", [], []) {
       TextNode(body: "Example BBCode: ", start: 0, end: 16)
       TextNode(body: "[test]", start: 17, end: 23);
@@ -592,7 +639,7 @@ class BBCodeParserTest {
   }
 
   @Test
-  public void escape_Tags() {
+  void escape_Tags() {
     assertParse("\\[b] foo \\[/b]", [], []) {
       TextNode(body: "[b] foo ", start: 1, end: 9);
       TextNode(body: "[/b]", start: 10, end: 14);
@@ -600,7 +647,7 @@ class BBCodeParserTest {
   }
 
   @Test
-  public void offsets() {
+  void offsets() {
     assertParse("z [b]abc defg [/b]hijk [ul][*]lmn opqr[*][/ul]",
                 [[2, 3], [14, 4], [23, 4], [27, 3], [38, 3], [41, 5]]) {
       TextNode(body: "z ", start: 0, end: 2)
