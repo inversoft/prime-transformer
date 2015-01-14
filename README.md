@@ -4,6 +4,8 @@ prime-transformer
 Prime Transformer is a BBCode parser and transformation library. Additional implementations may be added support additional source or target markup languages.
 The parser returns a light weight document object model of the source BBCode consisting mostly of index values and offsets that can be utilized by the transformer.
 
+Prime Transformer is actively developed and is being utilized in high performance commercial products.
+
 ##### Example:
 
 ```java
