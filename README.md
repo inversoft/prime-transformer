@@ -4,7 +4,9 @@ prime-transformer
 Prime Transformer is a BBCode parser and transformation library. Additional implementations may be added support additional source or target markup languages.
 The parser returns a light weight document object model of the source BBCode consisting mostly of index values and offsets that can be utilized by the transformer.
 
-Prime Transformer is actively developed and is being utilized in high performance commercial products. This project uses the Savant build tool, for more information checkout the [savant-core](https://github.com/inversoft/savant-core) project.
+Prime Transformer is actively developed and is being utilized in high performance commercial products.
+
+**Note:** This project uses the Savant build tool, for more information checkout the [savant-core](https://github.com/inversoft/savant-core) project.
 
 ##### Example:
 
