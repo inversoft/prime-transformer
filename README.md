@@ -12,7 +12,7 @@ Prime Transformer is actively developed and is being utilized in high performanc
 
 ```java
 String source = "[b]Hello World![/b]";
-Document document = new BBCodeParser().buildDocument(source);
+Document document = new BBCodeParser().buildDocument(source, null);
 String html = new BBCodeToHTMLTransformer().transform(document, (node) -> {
   // transform predicate, returning false will cause this node to not be transformed
   return true;
