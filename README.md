@@ -23,7 +23,9 @@ This function is provided in the library, the caller can provide their own imple
 ##### Features:
 * Written in Java 8
 * No regular expressions, implementation uses a finite state machine... it's fast
-* Supports passing tag attributes to identify tags with a pre-formatted body or not requiring a closing tag
+* Supports tag attributes
+ * Tag does not require a closing tag. (e.g. [*])
+ * Tag has a pre-formatted body (e.g. [code] or [noparse])
 * Supports escape character.
  * Normal: ```[b]foo\[/b]``` --> **foo**
  * Escaped: ```\[b]foo\[/b]``` --> ```[b]foo[/b]```
