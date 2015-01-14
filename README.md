@@ -12,7 +12,7 @@ Document document = new BBCodeParser().buildDocument(source);
 String html = new BBCodeToHTMLTransformer().transform(document, (node) -> {
   // transform predicate, returning false will cause this node to not be transformed
   return true;
-  }, new HTMLEscapeTransformFunction(), null).result;
+}, new HTMLEscapeTransformFunction(), null).result;
 ```
 
 Result:
@@ -29,5 +29,5 @@ Features:
 * No regular expressions, implementation uses a finite state machine... it's fast
 * Supports passing tag attributes to identify tags with a pre-formatted body or not requiring a closing tag
 * Supports escape character
- * Without escape: ```[b]foo\[/b]``` -> **foo[/b]**
- * With escape: ```\[b]foo\[/b]``` -> ```[b]foo[/b]```
+ * Normal: ```[b]foo\[/b]``` -> **foo**
+ * Escaped: ```\[b]foo\[/b]``` -> ```[b]foo[/b]```
