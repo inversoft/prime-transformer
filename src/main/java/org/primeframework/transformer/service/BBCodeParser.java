@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, Inversoft Inc., All Rights Reserved
+ * Copyright (c) 2015, Inversoft Inc., All Rights Reserved
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -497,7 +497,7 @@ public class BBCodeParser implements Parser {
     int attributeNameBegin = 0;
     int attributeValueBegin = 0;
 
-    State state = State.initial;
+    State state = State.start;
     State previous;
 
     int index = 0;
@@ -512,7 +512,7 @@ public class BBCodeParser implements Parser {
 
       switch (state) {
 
-        case initial:
+        case start:
         case escape:
         case closingTagBegin:
         case simpleAttributeEnd:
@@ -658,7 +658,7 @@ public class BBCodeParser implements Parser {
           index++;
           break;
 
-        case complete:
+        case complete: // accepting state
           handleDocumentCleanup(document, attributes, index, nodes, textNode);
           index++;
           break;
@@ -672,7 +672,7 @@ public class BBCodeParser implements Parser {
    */
   private enum State {
 
-    initial {
+    start {
       @Override
       public State next(char c) {
         if (c == '[') {

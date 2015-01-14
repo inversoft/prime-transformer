@@ -1,17 +1,15 @@
 prime-transformer
 =================
 
-Prime Transformer is a markup parser and transformation library. Written initially for parsing BBCode and transforming to HTML, additional implementations may be added support additional source or target markup languages.
-
-
-Prime transformer is designed to be able to parse any markup and transform to any other markup language. The document object can then be passed to any Transformer implementation.
+Prime Transformer is a BBCode parser and transformation library. Additional implementations may be added support additional source or target markup languages.
+The parser returns a light weight document object model of the source BBCode consisting mostly of index values and offsets that can be utilized by the transformer.
 
 Example:
 
 ```java
 String source = "[b]Hello World![/b]";
 Document document = new BBCodeParser().buildDocument(source);
-String html = new BBCodeToHTMLTransformer().transform(document, null, null, null).result;
+String html = new BBCodeToHTMLTransformer().transform(document, (node) -> true, new HTMLEscapeTransformFunction(), null).result;
 ```
 
 Result:
@@ -20,4 +18,9 @@ Input: [b]Hello World![/b]
 Output: <strong>Hello World!</strong>
 ```
 
-
+Features:
+* Written in Java 8
+* No regular expressions, implementation uses a finite state machine... it's fast
+* Supports passing tag attributes to identify tags with a pre-formatted body or not requiring a closing tag
+* Supports escape character
+ * example: ```\[b]foo\[/b]``` -> ```[b]foo[/b]```
