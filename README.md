@@ -28,6 +28,6 @@ Features:
 * Written in Java 8
 * No regular expressions, implementation uses a finite state machine... it's fast
 * Supports passing tag attributes to identify tags with a pre-formatted body or not requiring a closing tag
-* Supports escape character
- * Normal: ```[b]foo\[/b]``` -> **foo**
- * Escaped: ```\[b]foo\[/b]``` -> ```[b]foo[/b]```
+* Supports escape character.
+ * Normal: ```[b]foo\[/b]``` --> **foo**
+ * Escaped: ```\[b]foo\[/b]``` --> ```[b]foo[/b]```
