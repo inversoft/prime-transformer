@@ -75,6 +75,35 @@ class BBCodeParserTest {
   }
 
   @Test
+  void noParse_WithAttribute() {
+    assertParse("[noparse][size=5]Bold[/size][/noparse]", [[0, 9], [28, 10]], []) {
+      TagNode(name: "noparse", start: 0, nameEnd: 8, bodyBegin: 9, bodyEnd: 28, end: 38) {
+        TextNode(body: "[size=5]Bold[/size]", start: 9, end: 28)
+      }
+    }
+  }
+
+  @Test
+  void noParse_WithComplexAttributes() {
+    assertParse("[noparse][size foo=5 bar=\"g\"]Bold[/size][/noparse]", [[0, 9], [40, 10]], []) {
+      TagNode(name: "noparse", start: 0, nameEnd: 8, bodyBegin: 9, bodyEnd: 40, end: 50) {
+        TextNode(body: "[size foo=5 bar=\"g\"]Bold[/size]", start: 9, end: 40)
+      }
+    }
+  }
+
+  @Test
+  void noParse_Nested() {
+    assertParse("[b][noparse][size foo=5 bar=\"g\"]Bold[/size][/noparse][/b]", [[0, 3], [3, 9], [43, 10], [53, 4]], []) {
+      TagNode(name: "b", start: 0, nameEnd: 2, bodyBegin: 3, bodyEnd: 53, end: 57) {
+        TagNode(name: "noparse", start: 3, nameEnd: 11, bodyBegin: 12, bodyEnd: 43, end: 53) {
+          TextNode(body: "[size foo=5 bar=\"g\"]Bold[/size]", start: 12, end: 43)
+        }
+      }
+    }
+  }
+
+  @Test
   void edgeCase_GoodTag_ThenOpen() {
     assertParse("[b]foo[/b] abc[def") {
       TagNode(name: "b", start: 0, nameEnd: 2, bodyBegin: 3, bodyEnd: 6, end: 10) {
@@ -411,6 +440,21 @@ class BBCodeParserTest {
         TextNode(body: "Example: [noparse []foo", start: 9, end: 32)
       }
       TextNode(body: "[/noparse]", start: 42, end: 52)
+    }
+  }
+
+  @Test
+  void edgeCase_DoubleEmbedded() {
+    assertParse("[size=5][color=rgb(0,176,80)][size=5][color=rgb(0,176,80)]SEASON 1 WINNER: LUXUSS!![/color][/size][/color][/size]") {
+      TagNode(name: "size", start: 0, nameEnd: 5, bodyBegin: 8, bodyEnd: 106, end: 113, attribute: "5") {
+        TagNode(name: "color", start: 8, nameEnd: 14, bodyBegin: 29, bodyEnd: 98, end: 106, attribute: "rgb(0,176,80)") {
+          TagNode(name: "size", start: 29, nameEnd: 34, bodyBegin: 37, bodyEnd: 91, end: 98, attribute: "5") {
+            TagNode(name: "color", start: 37, nameEnd: 43, bodyBegin: 58, bodyEnd: 83, end: 91, attribute: "rgb(0,176,80)") {
+              TextNode(body: "SEASON 1 WINNER: LUXUSS!!", start: 58, end: 83)
+            }
+          }
+        }
+      }
     }
   }
 

@@ -206,7 +206,7 @@ public class BBCodeParser implements Parser {
     }
   }
 
-  private void handleClosingTagName(Document document, Map<String, TagAttributes> attributes, int index,
+  private boolean handleClosingTagName(Document document, Map<String, TagAttributes> attributes, int index,
                                     Deque<TagNode> nodes, boolean parsingEnabled) {
     String closingName = closingName(document, index, nodes.peek());
     if (eq(closingName, nodes.peek().getName())) {
@@ -215,11 +215,14 @@ public class BBCodeParser implements Parser {
         handleCompletedTagNode(document, attributes, index, nodes);
       } else {
         handlePreFormattedClosingTag(document, attributes, nodes);
+        return true; // Re-enable parsing because we just closed the noparse tag
       }
     } else if (parsingEnabled) {
       handleExpectedUnclosedTags(document, attributes, nodes);
       handleCompletedTagNode(document, attributes, index, nodes);
     }
+
+    return parsingEnabled;
   }
 
   /**
@@ -269,6 +272,11 @@ public class BBCodeParser implements Parser {
       textNode.end = index;
       addNode(document, attributes, textNode, nodes);
     }
+
+    if (!nodes.isEmpty() && nodes.peek().bodyBegin == -1) {
+      handleOpenTagCompleted(index, nodes);
+    }
+
     handleUnclosedPreFormattedTag(document, attributes, index, nodes);
     handleUnExpectedUnclosedTag(document, attributes, index, nodes);
     handleAdjacentTextNodes(document);
@@ -515,7 +523,6 @@ public class BBCodeParser implements Parser {
         case start:
         case escape:
         case closingTagBegin:
-        case simpleAttributeEnd:
           state = state.next(source[index]);
           index++;
           break;
@@ -545,20 +552,19 @@ public class BBCodeParser implements Parser {
             } else if (state != State.tagName) {
               nodes.peek().nameEnd = index;
             }
-            if (state == State.openingTagEnd) {
-              // disable parsing if tag has a pre-formatted body
-              parsingEnabled = !hasPreFormattedBody(nodes.peek(), attributes);
-              handleOpenTagCompleted(index + 1, nodes);
-            }
           }
           index++;
           break;
 
         case openingTagEnd:
-          state = state.next(source[index]);
-          if (state == State.text && parsingEnabled) {
-            nodes.peek().bodyBegin = index;
+          // Since parsing is enabled (this is not a noparse tag), we can update the bodyBegin, end, etc indexes. We can
+          // also determine if we should disable the parsing based on the tagName
+          if (parsingEnabled) {
+            handleOpenTagCompleted(index, nodes);
+            parsingEnabled = !hasPreFormattedBody(nodes.peek(), attributes);
           }
+
+          state = state.next(source[index]);
           index++;
           break;
 
@@ -566,9 +572,7 @@ public class BBCodeParser implements Parser {
           state = state.next(source[index]);
           index++;
           if (state == State.closingTagEnd) {
-            handleClosingTagName(document, attributes, index, nodes, parsingEnabled);
-            // if parsing was already enabled or if now nodes is empty
-            parsingEnabled = parsingEnabled || nodes.isEmpty();
+            parsingEnabled = handleClosingTagName(document, attributes, index, nodes, parsingEnabled);
           }
           break;
 
@@ -582,10 +586,12 @@ public class BBCodeParser implements Parser {
 
         case simpleAttribute:
           state = state.next(source[index]);
-          if (state == State.simpleUnQuotedValue) {
-            attributeValueBegin = index;
-          } else if (state == State.simpleSingleQuotedValue || state == State.simpleDoubleQuotedValue) {
-            attributeValueBegin = index + 1;
+          if (parsingEnabled) {
+            if (state == State.simpleUnQuotedValue) {
+              attributeValueBegin = index;
+            } else if (state == State.simpleSingleQuotedValue || state == State.simpleDoubleQuotedValue) {
+              attributeValueBegin = index + 1;
+            }
           }
           index++;
           break;
@@ -594,41 +600,49 @@ public class BBCodeParser implements Parser {
         case simpleSingleQuotedValue:
         case simpleUnQuotedValue:
           state = state.next(source[index]);
-          if (state != previous) {
-            addSimpleAttribute(document, attributeValueBegin, index, nodes);
+          if (parsingEnabled) {
+            if (state != previous) {
+              addSimpleAttribute(document, attributeValueBegin, index, nodes);
+            }
           }
           index++;
           break;
 
         case complexAttribute:
           state = state.next(source[index]);
-          if (state == State.complexAttributeName) {
-            attributeNameBegin = index;
-          } else if (state == State.text && parsingEnabled) {
-            handleUnexpectedState(document, attributes, index, nodes);
+          if (parsingEnabled) {
+            if (state == State.complexAttributeName) {
+              attributeNameBegin = index;
+            } else if (state == State.text && parsingEnabled) {
+              handleUnexpectedState(document, attributes, index, nodes);
+            }
           }
           index++;
           break;
 
         case complexAttributeName:
           state = state.next(source[index]);
-          if (state == State.complexAttributeValue) {
-            attributeName = document.getString(attributeNameBegin, index);
-          } else if (state == State.text && parsingEnabled) {
-            handleUnexpectedState(document, attributes, index, nodes);
+          if (parsingEnabled) {
+            if (state == State.complexAttributeValue) {
+              attributeName = document.getString(attributeNameBegin, index);
+            } else if (state == State.text) {
+              handleUnexpectedState(document, attributes, index, nodes);
+            }
           }
           index++;
           break;
 
         case complexAttributeValue:
           state = state.next(source[index]);
-          if (state == State.openingTagEnd) {
-            nodes.peek().attributes.put(attributeName, "");  // No attribute value, store empty string
-            document.attributeOffsets.add(new Pair<>(index, 0));
-          } else if (state == State.complexUnQuotedValue) {
-            attributeValueBegin = index;
-          } else if (state == State.complexSingleQuotedValue || state == State.complexDoubleQuotedValue) {
-            attributeValueBegin = index + 1;
+          if (parsingEnabled) {
+            if (state == State.openingTagEnd) {
+              nodes.peek().attributes.put(attributeName, "");  // No attribute value, store empty string
+              document.attributeOffsets.add(new Pair<>(index, 0));
+            } else if (state == State.complexUnQuotedValue) {
+              attributeValueBegin = index;
+            } else if (state == State.complexSingleQuotedValue || state == State.complexDoubleQuotedValue) {
+              attributeValueBegin = index + 1;
+            }
           }
           index++;
           break;
@@ -637,9 +651,11 @@ public class BBCodeParser implements Parser {
         case complexSingleQuotedValue:
         case complexUnQuotedValue:
           state = state.next(source[index]);
-          if (state != previous) {
-            nodes.peek().attributes.put(attributeName, document.getString(attributeValueBegin, index));
-            document.attributeOffsets.add(new Pair<>(attributeValueBegin, index - attributeValueBegin));
+          if (parsingEnabled) {
+            if (state != previous) {
+              nodes.peek().attributes.put(attributeName, document.getString(attributeValueBegin, index));
+              document.attributeOffsets.add(new Pair<>(attributeValueBegin, index - attributeValueBegin));
+            }
           }
           index++;
           break;
@@ -770,17 +786,6 @@ public class BBCodeParser implements Parser {
           return openingTagEnd;
         } else {
           return simpleUnQuotedValue;
-        }
-      }
-    },
-
-    simpleAttributeEnd {
-      @Override
-      public State next(char c) {
-        if (c == ']') {
-          return openingTagEnd;
-        } else {
-          return text; // tag was not closed
         }
       }
     },
