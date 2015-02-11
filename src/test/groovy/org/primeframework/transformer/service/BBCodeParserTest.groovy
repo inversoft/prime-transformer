@@ -29,7 +29,7 @@ import static org.primeframework.transformer.service.ParserAssert.assertParse
 class BBCodeParserTest {
   @Test
   void edgeCase_BadNesting() {
-    assertParse("abc[list][[[def[/list]") {
+    assertParse("abc[list][[[def[/list]", [[3, 6], [15, 7]], []) {
       TextNode(body: "abc", start: 0, end: 3)
       TagNode(name: "list", start: 3, nameEnd: 8, bodyBegin: 9, bodyEnd: 15, end: 22) {
         TextNode(body: "[[[def", start: 9, end: 15)
@@ -39,28 +39,28 @@ class BBCodeParserTest {
 
   @Test
   void edgeCase_Code() {
-    assertParse("char[] ca = new char[1024]") {
+    assertParse("char[] ca = new char[1024]", [], []) {
       TextNode(body: "char[] ca = new char[1024]", start: 0, end: 26)
     }
   }
 
   @Test
   void edgeCase_SingleBracket() {
-    assertParse("abc[def") {
+    assertParse("abc[def", [], []) {
       TextNode(body: "abc[def", start: 0, end: 7)
     }
   }
 
   @Test
   void edgeCase_MultipleBrackets() {
-    assertParse("abc[[[def") {
+    assertParse("abc[[[def", [], []) {
       TextNode(body: "abc[[[def", start: 0, end: 9)
     }
   }
 
   @Test
   void edgeCase_GoodStart_ThenOpen() {
-    assertParse("[foo][def") {
+    assertParse("[foo][def", [], []) {
       TextNode(body: "[foo][def", start: 0, end: 9)
     }
   }
@@ -105,7 +105,7 @@ class BBCodeParserTest {
 
   @Test
   void edgeCase_GoodTag_ThenOpen() {
-    assertParse("[b]foo[/b] abc[def") {
+    assertParse("[b]foo[/b] abc[def", [[0, 3], [6, 4]], []) {
       TagNode(name: "b", start: 0, nameEnd: 2, bodyBegin: 3, bodyEnd: 6, end: 10) {
         TextNode(body: "foo", start: 3, end: 6)
       }
@@ -115,28 +115,31 @@ class BBCodeParserTest {
 
   @Test
   void edgeCase_OnlyClosingTag() {
-    assertParse("[/b] foo") {
+    assertParse("[/b] foo", [], []) {
       TextNode(body: "[/b] foo", start: 0, end: 8)
     }
   }
 
   @Test
   void edgeCase_wrongClosingTagTag() {
-    assertParse("[b]foo[/i]", [], []) {
-      TextNode(body: "[b]foo[/i]", start: 0, end: 10)
+    assertParse("[foo]bar[/foo][b]foo[b]bar[/b][/i]", [[0, 5], [8, 6]], []) {
+      TagNode(name: "foo", start: 0, nameEnd: 4, bodyBegin: 5, bodyEnd: 8, end: 14) {
+        TextNode(body: "bar", start: 5, end: 8)
+      }
+      TextNode(body: "[b]foo[b]bar[/b][/i]", start: 14, end: 34)
     }
   }
 
   @Test
   void edgeCase_BadTagName() {
-    assertParse("[b[b[b[b] foo") {
+    assertParse("[b[b[b[b] foo", [], []) {
       TextNode(body: "[b[b[b[b] foo", start: 0, end: 13)
     }
   }
 
   @Test
   void edgeCase_mixedCaseTags() {
-    assertParse("[b]foo[/B][I]bar[/i]") {
+    assertParse("[b]foo[/B][I]bar[/i]", [[0, 3], [6, 4], [10, 3], [16, 4]], []) {
       TagNode(name: "b", start: 0, nameEnd: 2, bodyBegin: 3, bodyEnd: 6, end: 10) {
         TextNode(body: "foo", start: 3, end: 6)
       }
@@ -148,7 +151,7 @@ class BBCodeParserTest {
 
   @Test
   void edgeCase_TagOpeningEndBracketInAttributeWithQuote() {
-    assertParse("[font size=']']foo[/font]") {
+    assertParse("[font size=']']foo[/font]", [[0, 15], [18, 7]], [[12, 1]]) {
       TagNode(name: "font", start: 0, nameEnd: 5, attributesBegin: 6, bodyBegin: 15, bodyEnd: 18, end: 25,
               attributes: [size: "]"]) {
         TextNode(body: "foo", start: 15, end: 18)
@@ -158,7 +161,7 @@ class BBCodeParserTest {
 
   @Test
   void edgeCase_TagOpeningEndBracketInAttributeWithoutQuote() {
-    assertParse("[font size=]]foo[/font]") {
+    assertParse("[font size=]]foo[/font]", [[0, 12], [16, 7]], [[11, 0]]) {
       TagNode(name: "font", start: 0, nameEnd: 5, attributesBegin: 6, bodyBegin: 12, bodyEnd: 16, end: 23,
               attributes: [size: ""]) {
         TextNode(body: "]foo", start: 12, end: 16)
@@ -168,21 +171,21 @@ class BBCodeParserTest {
 
   @Test
   void edgeCase_MismatchedOpenAndCloseTags() {
-    assertParse("[font size=12]foo[/b]") {
+    assertParse("[font size=12]foo[/b]", [], []) {
       TextNode(body: "[font size=12]foo[/b]", start: 0, end: 21)
     }
   }
 
   @Test
   void edgeCase_CloseTagNoName() {
-    assertParse("[font size=12]foo[/]") {
+    assertParse("[font size=12]foo[/]", [], []) {
       TextNode(body: "[font size=12]foo[/]", start: 0, end: 20)
     }
   }
 
   @Test
   void edgeCase_StrangeAttributeName() {
-    assertParse("[font ,;_!=;_l;!]foo[/font]") {
+    assertParse("[font ,;_!=;_l;!]foo[/font]", [[0, 17], [20, 7]], [[11, 5]]) {
       TagNode(name: "font", start: 0, nameEnd: 5, attributesBegin: 6, bodyBegin: 17, bodyEnd: 20, end: 27,
               attributes: [",;_!": ";_l;!"]) {
         TextNode(body: "foo", start: 17, end: 20)
@@ -192,7 +195,7 @@ class BBCodeParserTest {
 
   @Test
   void edgeCase_StrangeAttributeNameWithQuote() {
-    assertParse("[font ,;'!=;l;!]foo[/font]") {
+    assertParse("[font ,;'!=;l;!]foo[/font]", [[0, 16], [19, 7]], [[11, 4]]) {
       TagNode(name: "font", start: 0, nameEnd: 5, attributesBegin: 6, bodyBegin: 16, bodyEnd: 19, end: 26,
               attributes: [",;'!": ";l;!"]) {
         TextNode(body: "foo", start: 16, end: 19)
@@ -289,7 +292,7 @@ class BBCodeParserTest {
 
   @Test
   void edgeCase_SimpleAttributeQuotesContainsBracket() {
-    assertParse("[font='values[\"size\"]']foo[/font]") {
+    assertParse("[font='values[\"size\"]']foo[/font]", [[0, 23], [26, 7]], [[7, 14]]) {
       TagNode(name: "font", start: 0, nameEnd: 5, attributesBegin: 7, bodyBegin: 23, bodyEnd: 26, end: 33,
               attribute: "values[\"size\"]") {
         TextNode(body: "foo", start: 23, end: 26)
@@ -299,7 +302,7 @@ class BBCodeParserTest {
 
   @Test
   void normal_list() {
-    assertParse("[list][*]item1[*]item2[/list]") {
+    assertParse("[list][*]item1[*]item2[/list]", [[0, 6], [6, 3], [14, 3], [22, 7]], []) {
       TagNode(name: "list", start: 0, nameEnd: 5, attributesBegin: -1, bodyBegin: 6, bodyEnd: 22, end: 29) {
         TagNode(name: "*", start: 6, nameEnd: 8, bodyBegin: 9, bodyEnd: 14, end: 14) {
           TextNode(body: "item1", start: 9, end: 14)
@@ -313,7 +316,7 @@ class BBCodeParserTest {
 
   @Test
   void normal_list_b() { // something other than [list]
-    assertParse("[b][*]item1[*]item2[/b]") {
+    assertParse("[b][*]item1[*]item2[/b]", [[0,3], [3, 3], [11, 3], [19,4]], []) {
       TagNode(name: "b", start: 0, nameEnd: 2, attributesBegin: -1, bodyBegin: 3, bodyEnd: 19, end: 23) {
         TagNode(name: "*", start: 3, nameEnd: 5, bodyBegin: 6, bodyEnd: 11, end: 11) {
           TextNode(body: "item1", start: 6, end: 11)
@@ -327,7 +330,7 @@ class BBCodeParserTest {
 
   @Test
   void edgeCase_SimpleAttributeQuotesInside() {
-    assertParse("[font=values{'12'}]foo[/font]") {
+    assertParse("[font=values{'12'}]foo[/font]", [[0, 19], [22, 7]], [[6, 12]]) {
       TagNode(name: "font", start: 0, nameEnd: 5, attributesBegin: 6, bodyBegin: 19, bodyEnd: 22, end: 29,
               attribute: "values{'12'}") {
         TextNode(body: "foo", start: 19, end: 22)
@@ -337,7 +340,7 @@ class BBCodeParserTest {
 
   @Test
   void attributes() {
-    assertParse("[d testattr=33]xyz[/d]") {
+    assertParse("[d testattr=33]xyz[/d]", [[0, 15], [18, 4]], [[12, 2]]) {
       TagNode(name: "d", start: 0, nameEnd: 2, attributesBegin: 3, bodyBegin: 15, bodyEnd: 18, end: 22,
               attributes: ["testattr": "33"]) {
         TextNode(body: "xyz", start: 15, end: 18)
@@ -391,7 +394,7 @@ class BBCodeParserTest {
 
   @Test
   void edgeCase_codeWithLineReturnsOutside() {
-    assertParse("\n[b]foo[/b]") {
+    assertParse("\n[b]foo[/b]", [[1, 3], [7, 4]], []) {
       TextNode(body: "\n", start: 0, end: 1)
       TagNode(name: "b", start: 1, nameEnd: 3, bodyBegin: 4, bodyEnd: 7, end: 11) {
         TextNode(body: "foo", start: 4, end: 7)
@@ -402,7 +405,8 @@ class BBCodeParserTest {
   @Test
   void edgeCase_codeWithLineReturnInBetweenTags() {
     assertParse(
-        "\n[code]new <type>[] { <list of values>};[/code]\n[code]am.getProcessMemoryInfo([mySinglePID]);[/code]") {
+        "\n[code]new <type>[] { <list of values>};[/code]\n[code]am.getProcessMemoryInfo([mySinglePID]);[/code]",
+        [[1, 6], [40, 7], [48, 6], [93, 7]], []) {
       TextNode(body: "\n", start: 0, end: 1)
       TagNode(name: "code", start: 1, nameEnd: 6, bodyBegin: 7, bodyEnd: 40, end: 47) {
         TextNode(body: "new <type>[] { <list of values>};", start: 7, end: 40)
@@ -445,7 +449,9 @@ class BBCodeParserTest {
 
   @Test
   void edgeCase_DoubleEmbedded() {
-    assertParse("[size=5][color=rgb(0,176,80)][size=5][color=rgb(0,176,80)]SEASON 1 WINNER: LUXUSS!![/color][/size][/color][/size]") {
+    assertParse("[size=5][color=rgb(0,176,80)][size=5][color=rgb(0,176,80)]SEASON 1 WINNER: LUXUSS!![/color][/size][/color][/size]",
+                [[0, 8], [8, 21], [29, 8], [37, 21], [83, 8], [91, 7], [98, 8], [106, 7]],
+                [[6, 1], [15, 13], [35, 1], [44, 13]]) {
       TagNode(name: "size", start: 0, nameEnd: 5, bodyBegin: 8, bodyEnd: 106, end: 113, attribute: "5") {
         TagNode(name: "color", start: 8, nameEnd: 14, bodyBegin: 29, bodyEnd: 98, end: 106, attribute: "rgb(0,176,80)") {
           TagNode(name: "size", start: 29, nameEnd: 34, bodyBegin: 37, bodyEnd: 91, end: 98, attribute: "5") {
@@ -574,7 +580,7 @@ class BBCodeParserTest {
 
   @Test
   void edge_tagWithoutClosingTagContainingEmbeddedTags() {
-    assertParse("[*]item1[*]item2") {
+    assertParse("[*]item1[*]item2", [[0, 3], [8, 3]], []) {
       TagNode(name: "*", start: 0, nameEnd: 2, bodyBegin: 3, bodyEnd: 8, end: 8) {
         TextNode(body: "item1", start: 3, end: 8)
       }
@@ -691,9 +697,32 @@ class BBCodeParserTest {
   }
 
   @Test
+  void noClosingTag_offsetsCleared() {
+    assertParse("[foo] [font=verdana]foo[/font] [b]bar[/b] [color=red] red[/color]", [], []) {
+      TextNode(body: "[foo] [font=verdana]foo[/font] [b]bar[/b] [color=red] red[/color]", start: 0, end: 65);
+    }
+  }
+
+  @Test
+  void unexpectedCloseTag_offsetsCleared() {
+    assertParse("[foo] abc [b]def[/b] [/bar]", [], []) {
+      TextNode(body: "[foo] abc [b]def[/b] [/bar]", start: 0, end: 27);
+    }
+  }
+
+  @Test
+  void preFormattedTag_offsetsCleared() {
+    assertParse("[code] [font=verdana]foo[/font] [/code]", [[0, 6], [32, 7]], []) {
+      TagNode(name: "code", start: 0, nameEnd: 5, bodyBegin: 6, bodyEnd: 32, end: 39) {
+        TextNode(body: " [font=verdana]foo[/font] ", start: 6, end: 32);
+      }
+    }
+  }
+
+  @Test
   void offsets() {
     assertParse("z [b]abc defg [/b]hijk [ul][*]lmn opqr[*][/ul]",
-                [[2, 3], [14, 4], [23, 4], [27, 3], [38, 3], [41, 5]]) {
+                [[2, 3], [14, 4], [23, 4], [27, 3], [38, 3], [41, 5]], []) {
       TextNode(body: "z ", start: 0, end: 2)
       TagNode(name: "b", start: 2, nameEnd: 4, bodyBegin: 5, bodyEnd: 14, end: 18) {
         TextNode(body: "abc defg ", start: 5, end: 14)
@@ -708,7 +737,7 @@ class BBCodeParserTest {
     }
     assertParse(
         "Example [code type=\"see the java oo\" syntax=\"java\"] System.out.println(\"Hello World!\"); [/code] ",
-        [[8, 43], [88, 7]]) {
+        [[8, 43], [88, 7]], [[20, 15], [45, 4]]) {
       TextNode(body: "Example ", start: 0, end: 8)
       TagNode(name: "code", start: 8, nameEnd: 13, attributesBegin: 14, bodyBegin: 51, bodyEnd: 88, end: 95,
               attributes: ["type": "see the java oo", "syntax": "java"]) {

@@ -16,7 +16,7 @@
 
 savantVersion = "0.3.0"
 
-project(group: "org.primeframework", name: "prime-transformer", version: "2.0.1", licenses: ["ApacheV2_0"]) {
+project(group: "org.primeframework", name: "prime-transformer", version: "2.0.2", licenses: ["ApacheV2_0"]) {
 
   workflow {
     standard()
