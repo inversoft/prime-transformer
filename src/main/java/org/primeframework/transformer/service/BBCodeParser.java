@@ -270,14 +270,31 @@ public class BBCodeParser implements Parser {
       addNode(document, attributes, textNode, nodes);
     }
 
+    // Complete an open tag
     if (!nodes.isEmpty() && nodes.peek().bodyBegin == -1) {
       handleOpenTagCompleted(index, nodes);
+    }
+
+    // Complete a standalone tag
+    if (!nodes.isEmpty() && isStandalone(nodes.peek(), attributes)) {
+      TagNode tagNode = nodes.pop();
+      tagNode.end = index;
+      addNode(document, attributes, tagNode, nodes);
     }
 
     handleUnclosedPreFormattedTag(document, attributes, index, nodes);
     if (!nodes.isEmpty()) {
       handleUnexpectedState(document, attributes, index, nodes);
     }
+
+    // last tag end should be equal to the index, handle remaining text
+    if (!document.children.isEmpty()) {
+      BaseNode last = (BaseNode) document.children.get(document.children.size() - 1);
+      if (last.end < index) {
+        addNode(document, attributes, new TextNode(document, last.end, index), nodes);
+      }
+    }
+
     handleAdjacentTextNodes(document);
   }
 
@@ -535,7 +552,7 @@ public class BBCodeParser implements Parser {
           break;
 
         case openingTagEnd:
-          // Since parsing is enabled (this is not a noparse tag), we can update the bodyBegin, end, etc indexes. We can
+          // Since parsing is enabled (this is not a no-parse tag), we can update the bodyBegin, end, etc indexes. We can
           // also determine if we should disable the parsing based on the tagName
           if (parsingEnabled) {
             handleOpenTagCompleted(index, nodes);

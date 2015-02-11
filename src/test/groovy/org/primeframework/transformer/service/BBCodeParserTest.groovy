@@ -38,6 +38,17 @@ class BBCodeParserTest {
   }
 
   @Test
+  void edgeCase_BadNesting_TrailingText() {
+    assertParse("abc[list][[[def[/list] ", [[3, 6], [15, 7]], []) {
+      TextNode(body: "abc", start: 0, end: 3)
+      TagNode(name: "list", start: 3, nameEnd: 8, bodyBegin: 9, bodyEnd: 15, end: 22) {
+        TextNode(body: "[[[def", start: 9, end: 15)
+      }
+      TextNode(body: " ", start: 22, end: 23)
+    }
+  }
+
+  @Test
   void edgeCase_Code() {
     assertParse("char[] ca = new char[1024]", [], []) {
       TextNode(body: "char[] ca = new char[1024]", start: 0, end: 26)
@@ -75,6 +86,36 @@ class BBCodeParserTest {
   }
 
   @Test
+  void noParseBasic_TrailingText() {
+    assertParse("[noparse][b]Bold[/b][/noparse] ", [[0, 9], [20, 10]], []) {
+      TagNode(name: "noparse", start: 0, nameEnd: 8, bodyBegin: 9, bodyEnd: 20, end: 30) {
+        TextNode(body: "[b]Bold[/b]", start: 9, end: 20)
+      }
+      TextNode(body: " ", start: 30, end: 31)
+    }
+  }
+
+  @Test
+  void noParseBasic_TrailingOpenCharacter() {
+    assertParse("[noparse][b]Bold[/b][/noparse][", [[0, 9], [20, 10]], []) {
+      TagNode(name: "noparse", start: 0, nameEnd: 8, bodyBegin: 9, bodyEnd: 20, end: 30) {
+        TextNode(body: "[b]Bold[/b]", start: 9, end: 20)
+      }
+      TextNode(body: "[", start: 30, end: 31)
+    }
+  }
+
+  @Test
+  void noParseBasic_TrailingCloseCharacter() {
+    assertParse("[noparse][b]Bold[/b][/noparse]]", [[0, 9], [20, 10]], []) {
+      TagNode(name: "noparse", start: 0, nameEnd: 8, bodyBegin: 9, bodyEnd: 20, end: 30) {
+        TextNode(body: "[b]Bold[/b]", start: 9, end: 20)
+      }
+      TextNode(body: "]", start: 30, end: 31)
+    }
+  }
+
+  @Test
   void noParse_WithAttribute() {
     assertParse("[noparse][size=5]Bold[/size][/noparse]", [[0, 9], [28, 10]], []) {
       TagNode(name: "noparse", start: 0, nameEnd: 8, bodyBegin: 9, bodyEnd: 28, end: 38) {
@@ -94,7 +135,8 @@ class BBCodeParserTest {
 
   @Test
   void noParse_Nested() {
-    assertParse("[b][noparse][size foo=5 bar=\"g\"]Bold[/size][/noparse][/b]", [[0, 3], [3, 9], [43, 10], [53, 4]], []) {
+    assertParse("[b][noparse][size foo=5 bar=\"g\"]Bold[/size][/noparse][/b]", [[0, 3], [3, 9], [43, 10], [53, 4]],
+                []) {
       TagNode(name: "b", start: 0, nameEnd: 2, bodyBegin: 3, bodyEnd: 53, end: 57) {
         TagNode(name: "noparse", start: 3, nameEnd: 11, bodyBegin: 12, bodyEnd: 43, end: 53) {
           TextNode(body: "[size foo=5 bar=\"g\"]Bold[/size]", start: 12, end: 43)
@@ -316,7 +358,7 @@ class BBCodeParserTest {
 
   @Test
   void normal_list_b() { // something other than [list]
-    assertParse("[b][*]item1[*]item2[/b]", [[0,3], [3, 3], [11, 3], [19,4]], []) {
+    assertParse("[b][*]item1[*]item2[/b]", [[0, 3], [3, 3], [11, 3], [19, 4]], []) {
       TagNode(name: "b", start: 0, nameEnd: 2, attributesBegin: -1, bodyBegin: 3, bodyEnd: 19, end: 23) {
         TagNode(name: "*", start: 3, nameEnd: 5, bodyBegin: 6, bodyEnd: 11, end: 11) {
           TextNode(body: "item1", start: 6, end: 11)
@@ -449,13 +491,16 @@ class BBCodeParserTest {
 
   @Test
   void edgeCase_DoubleEmbedded() {
-    assertParse("[size=5][color=rgb(0,176,80)][size=5][color=rgb(0,176,80)]SEASON 1 WINNER: LUXUSS!![/color][/size][/color][/size]",
-                [[0, 8], [8, 21], [29, 8], [37, 21], [83, 8], [91, 7], [98, 8], [106, 7]],
-                [[6, 1], [15, 13], [35, 1], [44, 13]]) {
+    assertParse(
+        "[size=5][color=rgb(0,176,80)][size=5][color=rgb(0,176,80)]SEASON 1 WINNER: LUXUSS!![/color][/size][/color][/size]",
+        [[0, 8], [8, 21], [29, 8], [37, 21], [83, 8], [91, 7], [98, 8], [106, 7]],
+        [[6, 1], [15, 13], [35, 1], [44, 13]]) {
       TagNode(name: "size", start: 0, nameEnd: 5, bodyBegin: 8, bodyEnd: 106, end: 113, attribute: "5") {
-        TagNode(name: "color", start: 8, nameEnd: 14, bodyBegin: 29, bodyEnd: 98, end: 106, attribute: "rgb(0,176,80)") {
+        TagNode(name: "color", start: 8, nameEnd: 14, bodyBegin: 29, bodyEnd: 98, end: 106,
+                attribute: "rgb(0,176,80)") {
           TagNode(name: "size", start: 29, nameEnd: 34, bodyBegin: 37, bodyEnd: 91, end: 98, attribute: "5") {
-            TagNode(name: "color", start: 37, nameEnd: 43, bodyBegin: 58, bodyEnd: 83, end: 91, attribute: "rgb(0,176,80)") {
+            TagNode(name: "color", start: 37, nameEnd: 43, bodyBegin: 58, bodyEnd: 83, end: 91,
+                    attribute: "rgb(0,176,80)") {
               TextNode(body: "SEASON 1 WINNER: LUXUSS!!", start: 58, end: 83)
             }
           }
@@ -652,7 +697,7 @@ class BBCodeParserTest {
   @Test
   void embeddedTags_quote() {
     assertParse("[quote][quote][quote]Hot pocket in a hot pocket[/quote][/quote][/quote]",
-        [[0, 7], [7, 7], [14, 7], [47, 8], [55, 8], [63, 8]], []) {
+                [[0, 7], [7, 7], [14, 7], [47, 8], [55, 8], [63, 8]], []) {
       TagNode(name: "quote", start: 0, nameEnd: 6, bodyBegin: 7, bodyEnd: 63, end: 71) {
         TagNode(name: "quote", start: 7, nameEnd: 13, bodyBegin: 14, bodyEnd: 55, end: 63) {
           TagNode(name: "quote", start: 14, nameEnd: 20, bodyBegin: 21, bodyEnd: 47, end: 55) {
@@ -697,6 +742,14 @@ class BBCodeParserTest {
   }
 
   @Test
+  void escape_Tags_WithTrailingText() {
+    assertParse("\\[b] foo \\[/b] ", [], []) {
+      TextNode(body: "[b] foo ", start: 1, end: 9)
+      TextNode(body: "[/b] ", start: 10, end: 15)
+    }
+  }
+
+  @Test
   void noClosingTag_offsetsCleared() {
     assertParse("[foo] [font=verdana]foo[/font] [b]bar[/b] [color=red] red[/color]", [], []) {
       TextNode(body: "[foo] [font=verdana]foo[/font] [b]bar[/b] [color=red] red[/color]", start: 0, end: 65)
@@ -721,6 +774,16 @@ class BBCodeParserTest {
 
   @Test
   void standalone_tags() {
+    assertParse("[emoji][b]Have a nice day![/b]", [[0, 7], [7, 3], [26, 4]], []) {
+      TagNode(name: "emoji", start: 0, nameEnd: 6, bodyBegin: 7, bodyEnd: 7, end: 7)
+      TagNode(name: "b", start: 7, nameEnd: 9, bodyBegin: 10, bodyEnd: 26, end: 30) {
+        TextNode(body: "Have a nice day!", start: 10, end: 26)
+      }
+    }
+  }
+
+  @Test
+  void standalone_tagsWithText() {
     assertParse("[emoji] [b]Have a nice day![/b]", [[0, 7], [8, 3], [27, 4]], []) {
       TagNode(name: "emoji", start: 0, nameEnd: 6, bodyBegin: 7, bodyEnd: 7, end: 7)
       TextNode(body: " ", start: 7, end: 8)
@@ -731,7 +794,49 @@ class BBCodeParserTest {
   }
 
   @Test
-  void embedded_standalone() {
+  void standalone_lastTag() {
+    assertParse("[b]Have a nice day![/b][emoji]", [[0, 3], [19, 4], [23, 7]], []) {
+      TagNode(name: "b", start: 0, nameEnd: 2, bodyBegin: 3, bodyEnd: 19, end: 23) {
+        TextNode(body: "Have a nice day!", start: 3, end: 19)
+      }
+      TagNode(name: "emoji", start: 23, nameEnd: 29, bodyBegin: 30, bodyEnd: 30, end: 30)
+    }
+  }
+
+  @Test
+  void standalone_lastTagWithText() {
+    assertParse("[b]Have a nice day![/b] [emoji]", [[0, 3], [19, 4], [24, 7]], []) {
+      TagNode(name: "b", start: 0, nameEnd: 2, bodyBegin: 3, bodyEnd: 19, end: 23) {
+        TextNode(body: "Have a nice day!", start: 3, end: 19)
+      }
+      TextNode(body: " ", start: 23, end: 24)
+      TagNode(name: "emoji", start: 24, nameEnd: 30, bodyBegin: 31, bodyEnd: 31, end: 31)
+    }
+  }
+
+  @Test
+  void standalone_lastTagWithTextTrailingText() {
+    assertParse("[b]Have a nice day![/b] [emoji] ", [[0, 3], [19, 4], [24, 7]], []) {
+      TagNode(name: "b", start: 0, nameEnd: 2, bodyBegin: 3, bodyEnd: 19, end: 23) {
+        TextNode(body: "Have a nice day!", start: 3, end: 19)
+      }
+      TextNode(body: " ", start: 23, end: 24)
+      TagNode(name: "emoji", start: 24, nameEnd: 30, bodyBegin: 31, bodyEnd: 31, end: 31)
+      TextNode(body: " ", start: 31, end: 32)
+    }
+  }
+
+  @Test
+  void standalone_embedded() {
+    assertParse("[quote][emoji][/quote]", [[0, 7], [7, 7], [14, 8]], []) {
+      TagNode(name: "quote", start: 0, nameEnd: 6, bodyBegin: 7, bodyEnd: 14, end: 22) {
+        TagNode(name: "emoji", start: 7, nameEnd: 13, bodyBegin: 14, bodyEnd: 14, end: 14)
+      }
+    }
+  }
+
+  @Test
+  void standalone_embeddedWithText() {
     assertParse("[quote] [emoji] [/quote]", [[0, 7], [8, 7], [16, 8]], []) {
       TagNode(name: "quote", start: 0, nameEnd: 6, bodyBegin: 7, bodyEnd: 16, end: 24) {
         TextNode(body: " ", start: 7, end: 8)
@@ -742,13 +847,27 @@ class BBCodeParserTest {
   }
 
   @Test
-  void embedded_standaloneWithAttribute() {
+  void standalone_embeddedWithAttribute() {
     assertParse("[quote] [emoji=sad] [/quote]", [[0, 7], [8, 11], [20, 8]], [[15, 3]]) {
       TagNode(name: "quote", start: 0, nameEnd: 6, bodyBegin: 7, bodyEnd: 20, end: 28) {
         TextNode(body: " ", start: 7, end: 8)
-        TagNode(name: "emoji", start: 8, nameEnd: 14, attributesBegin: 15, bodyBegin: 19, bodyEnd: 19, end: 19, attribute: "sad")
+        TagNode(name: "emoji", start: 8, nameEnd: 14, attributesBegin: 15, bodyBegin: 19, bodyEnd: 19, end: 19,
+                attribute: "sad")
         TextNode(body: " ", start: 19, end: 20)
       }
+    }
+  }
+
+  @Test
+  void standalone_embeddedWithAttribute_WithTrailingText() {
+    assertParse("[quote] [emoji=sad] [/quote] ", [[0, 7], [8, 11], [20, 8]], [[15, 3]]) {
+      TagNode(name: "quote", start: 0, nameEnd: 6, bodyBegin: 7, bodyEnd: 20, end: 28) {
+        TextNode(body: " ", start: 7, end: 8)
+        TagNode(name: "emoji", start: 8, nameEnd: 14, attributesBegin: 15, bodyBegin: 19, bodyEnd: 19, end: 19,
+                attribute: "sad")
+        TextNode(body: " ", start: 19, end: 20)
+      }
+      TextNode(body: " ", start: 28, end: 29)
     }
   }
 
