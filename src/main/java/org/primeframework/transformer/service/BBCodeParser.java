@@ -713,11 +713,8 @@ public class BBCodeParser implements Parser {
       public State next(char c) {
         if (c == '/') {
           return closingTagBegin;
-        } else if (c == ']') {
+        } else if (Character.isWhitespace(c) || c == '[' || c == ']') {
           // No tag name exists, i.e. [], treat as text.
-          return text;
-        } else if (c == ' ') {
-          // No tag name exists, i.e. '[ ' - illegal.
           return text;
         } else {
           return tagName;

@@ -180,6 +180,16 @@ class BBCodeParserTest {
   }
 
   @Test
+  void edgeCase_MultipleOpens() {
+    assertParse("[b[b[b[b] foo[/b]", [[6, 3], [13, 4]], []) {
+      TextNode(body: "[b[b[b", start: 0, end: 6)
+      TagNode(name: "b", start: 6, nameEnd: 8, bodyBegin: 9, bodyEnd: 13, end: 17) {
+        TextNode(body: " foo", start: 9, end: 13)
+      }
+    }
+  }
+
+  @Test
   void edgeCase_mixedCaseTags() {
     assertParse("[b]foo[/B][I]bar[/i]", [[0, 3], [6, 4], [10, 3], [16, 4]], []) {
       TagNode(name: "b", start: 0, nameEnd: 2, bodyBegin: 3, bodyEnd: 6, end: 10) {
@@ -669,6 +679,29 @@ class BBCodeParserTest {
   }
 
   @Test
+  void edge_unexpectedTagAttributes_NestedLists() {
+    assertParse("[list][*]one[*]two[list][*]three[*]four[/list][/list]",
+                [[0, 6], [6, 3], [12, 3], [18, 6], [24, 3], [32, 3], [39, 7], [46, 7]], []) {
+      TagNode(name: "list", start: 0, nameEnd: 5, bodyBegin: 6, bodyEnd: 46, end: 53) {
+        TagNode(name: "*", start: 6, nameEnd: 8, bodyBegin: 9, bodyEnd: 12, end: 12) {
+          TextNode(body: "one", start: 9, end: 12)
+        }
+        TagNode(name: "*", start: 12, nameEnd: 14, bodyBegin: 15, bodyEnd: 46, end: 46) {
+          TextNode(body: "two", start: 15, end: 18)
+          TagNode(name: "list", start: 18, nameEnd: 23, bodyBegin: 24, bodyEnd: 39, end: 46) {
+            TagNode(name: "*", start: 24, nameEnd: 26, bodyBegin: 27, bodyEnd: 32, end: 32) {
+              TextNode(body: "three", start: 27, end: 32)
+            }
+            TagNode(name: "*", start: 32, nameEnd: 34, bodyBegin: 35, bodyEnd: 39, end: 39) {
+              TextNode(body: "four", start: 35, end: 39)
+            }
+          }
+        }
+      }
+    }
+  }
+
+  @Test
   void edge_unexpectedTagAttribute_doNotRequireClosingTagsButIncludeThem() {
     assertParse([b: new TagAttributes(true, false, false),
                  i: new TagAttributes(true, false, false)], // set both nodes to not require closing tag
@@ -789,6 +822,30 @@ class BBCodeParserTest {
       TextNode(body: " ", start: 7, end: 8)
       TagNode(name: "b", start: 8, nameEnd: 10, bodyBegin: 11, bodyEnd: 27, end: 31) {
         TextNode(body: "Have a nice day!", start: 11, end: 27)
+      }
+    }
+  }
+
+  @Test
+  void standalone_tagsWithBadTagStart() {
+    assertParse("[emoji][[b]Have a nice day![/b]", [[0, 7], [8, 3], [27, 4]], []) {
+      TagNode(name: "emoji", start: 0, nameEnd: 6, bodyBegin: 7, bodyEnd: 7, end: 7)
+      TextNode(body: "[", start: 7, end: 8)
+      TagNode(name: "b", start: 8, nameEnd: 10, bodyBegin: 11, bodyEnd: 27, end: 31) {
+        TextNode(body: "Have a nice day!", start: 11, end: 27)
+      }
+    }
+  }
+
+  @Test
+  void standalone_NestedInsideUnclosedTag() {
+    assertParse("[list][*]one[emoji]two[/list]", [[0, 6], [6, 3], [12, 7], [22, 7]], []) {
+      TagNode(name: "list", start: 0, nameEnd: 5, bodyBegin: 6, bodyEnd: 22, end: 29) {
+        TagNode(name: "*", start: 6, nameEnd: 8, bodyBegin: 9, bodyEnd: 22, end: 22) {
+          TextNode(body: "one", start: 9, end: 12)
+          TagNode(name: "emoji", start: 12, nameEnd: 18, bodyBegin: 19, bodyEnd: 19, end: 19)
+          TextNode(body: "two", start: 19, end: 22)
+        }
       }
     }
   }
