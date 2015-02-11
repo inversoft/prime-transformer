@@ -56,8 +56,7 @@ public class BBCodeToHTMLTransformerSpec extends Specification {
 
     expect: "when HTML transformer is called with bbCode properly formatted HTML is returned"
       def document = bbCodeParser.buildDocument(bbCode, attributes)
-      Transformer.Offsets offsets = new Transformer.Offsets();
-      def transformFunction = new Transformer.TransformFunction.OffsetHTMLEscapeTransformFunction(offsets)
+      def transformFunction = new Transformer.TransformFunction.HTMLEscapeTransformFunction()
       bbCodeToFreeMarkerTransformer.transform(document, transformPredicate, transformFunction, null).replaceAll(" ", "").replaceAll("<br>", "").replaceAll("&nbsp;", "") == html.replaceAll(" ", "");
 
     where:
@@ -107,8 +106,7 @@ public class BBCodeToHTMLTransformerSpec extends Specification {
       def bbCode = this.getClass().getResourceAsStream("/org/primeframework/transformer/bbcode/" + fileName).getText();
       def html = this.getClass().getResourceAsStream("/org/primeframework/transformer/html/" + fileName).getText();
 
-      Transformer.Offsets offsets = new Transformer.Offsets();
-      def transformFunction = new Transformer.TransformFunction.OffsetHTMLEscapeTransformFunction(offsets)
+      def transformFunction = new Transformer.TransformFunction.HTMLEscapeTransformFunction()
       def document = bbCodeParser.buildDocument(bbCode, attributes)
       // assert the transformed content equals the expected HTML
       bbCodeToFreeMarkerTransformer.transform(document, transformPredicate, transformFunction, null).replaceAll("<br/>", "").replaceAll("\\s+", "") == html.replaceAll("\\s+", "")
