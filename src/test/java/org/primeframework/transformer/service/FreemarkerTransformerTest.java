@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, Inversoft Inc., All Rights Reserved
+ * Copyright (c) 2015, Inversoft Inc., All Rights Reserved
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -336,9 +336,9 @@ public class FreemarkerTransformerTest {
   private Document parseDocument(String string) throws Exception {
     Parser parser = new BBCodeParser();
     Map<String, TagAttributes> attributes = new HashMap<>();
-    attributes.put("noparse", new TagAttributes(false, true));
-    attributes.put("code", new TagAttributes(false, true));
-    attributes.put("*", new TagAttributes(true, false));
+    attributes.put("noparse", new TagAttributes(false, true, false));
+    attributes.put("code", new TagAttributes(false, true, false));
+    attributes.put("*", new TagAttributes(true, false, false));
 
     return parser.buildDocument(string, attributes);
   }

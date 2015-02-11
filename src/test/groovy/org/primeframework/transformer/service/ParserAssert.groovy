@@ -30,9 +30,10 @@ import org.testng.Assert
  */
 class ParserAssert {
 
-  static defaultAttributes = ['*'    : new TagAttributes(true, false),
-                              code   : new TagAttributes(false, true),
-                              noparse: new TagAttributes(false, true)]
+  static defaultAttributes = ['*'    : new TagAttributes(true, false, false),
+                              code   : new TagAttributes(false, true, false),
+                              noparse: new TagAttributes(false, true, false),
+                              emoji  : new TagAttributes(false, false, true)]
   /**
    * Asserts the results of a parse. This uses a DSL via the closure. Uses the default tag attributes.
    *
@@ -62,6 +63,11 @@ class ParserAssert {
     Document expected = new Document(str)
     closure.delegate = new NodeDelegate(expected)
     closure()
+
+    // Make sure we've build the Tag Attributes correctly
+    //attributes.each { attribute ->
+    //  Assert.assertTrue(attribute.getValue().validate(), "TagAttribute [" + attribute.getKey() + "] failed validation.")
+    //}
 
     Document actual = new BBCodeParser().buildDocument(str, attributes);
     if (offsets != null) {

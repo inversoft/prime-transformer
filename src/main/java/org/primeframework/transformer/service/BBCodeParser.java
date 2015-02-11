@@ -437,6 +437,19 @@ public class BBCodeParser implements Parser {
   }
 
   /**
+   * Return true if the provided {@link TagNode} has an attribute indicating it is a standalone tag.
+   *
+   * @param tagNode    the tag to validate
+   * @param attributes the tag attribute map
+   *
+   * @return true if this tag is a standalone.
+   */
+  private boolean isStandalone(TagNode tagNode, Map<String, TagAttributes> attributes) {
+    String name = lc(tagNode.getName());
+    return attributes.containsKey(name) && attributes.get(name).standalone;
+  }
+
+  /**
    * Null safe lowercase.
    *
    * @param string string input to return as a lowercase.
@@ -527,6 +540,11 @@ public class BBCodeParser implements Parser {
           if (parsingEnabled) {
             handleOpenTagCompleted(index, nodes);
             parsingEnabled = !hasPreFormattedBody(nodes.peek(), attributes);
+            if (parsingEnabled && isStandalone(nodes.peek(), attributes)) {
+              TagNode tagNode = nodes.pop();
+              tagNode.end = index;
+              addNode(document, attributes, tagNode, nodes);
+            }
           }
 
           state = state.next(source[index]);

@@ -52,13 +52,34 @@ public class TagAttributes {
    */
   public boolean hasPreFormattedBody;
 
-  public TagAttributes(boolean doesNotRequireClosingTag, boolean hasPreFormattedBody) {
+  /**
+   * Indicates a {@link TagNode} does not have a body and no closing tag.
+   * <pre>
+   *   [emoji]
+   * </pre>
+   */
+  public boolean standalone;
+
+  public TagAttributes(boolean doesNotRequireClosingTag, boolean hasPreFormattedBody, boolean standalone) {
     this.doesNotRequireClosingTag = doesNotRequireClosingTag;
     this.hasPreFormattedBody = hasPreFormattedBody;
+    this.standalone = standalone;
   }
 
   public boolean validate() {
-    // these two attributes are mutually exclusive.
-    return hasPreFormattedBody && !doesNotRequireClosingTag;
+    // If you have a pre-formatted body, you must have a closing tag and must not be standalone
+    if (hasPreFormattedBody) {
+      if (doesNotRequireClosingTag) {
+        return false;
+      } else if (standalone) {
+        return false;
+      }
+    }
+
+    // If you do not require a closing tag you must not be standalone
+    if (doesNotRequireClosingTag) {
+      return !standalone;
+    }
+    return true;
   }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, Inversoft Inc., All Rights Reserved
+ * Copyright (c) 2015, Inversoft Inc., All Rights Reserved
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,9 +30,9 @@ public class BBCodeToHTMLTransformerSpec extends Specification {
   def bbCodeToFreeMarkerTransformer;
 
   @Shared
-  def attributes = [ '*' : new TagAttributes(true, false),
-                     code : new TagAttributes(false, true),
-                     noparse : new TagAttributes(false, true)]
+  def attributes = [ '*' : new TagAttributes(true, false, false),
+                     code : new TagAttributes(false, true, false),
+                     noparse : new TagAttributes(false, true, false)]
 
   /**
    * No lambdas until Groovy v3.
