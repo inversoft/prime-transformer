@@ -15,13 +15,10 @@
  */
 package org.primeframework.transformer.service;
 
-import java.util.Set;
-import java.util.TreeSet;
 import java.util.function.Predicate;
 
 import org.primeframework.transformer.domain.Document;
 import org.primeframework.transformer.domain.Node;
-import org.primeframework.transformer.domain.Pair;
 import org.primeframework.transformer.domain.TagNode;
 import org.primeframework.transformer.domain.TextNode;
 
@@ -39,7 +36,9 @@ public interface Transformer {
    *                           node will not be transformed.
    * @param transformFunction  A function that can be optionally provided to transform text nodes.
    * @param nodeConsumer       A consumer that accepts each node as they are traversed during the transformation.
+   *
    * @return The transformer result.
+   *
    * @throws TransformException If the transformation fails for any reason.
    */
   String transform(Document document, Predicate<TagNode> transformPredicate, TransformFunction transformFunction,
@@ -73,6 +72,7 @@ public interface Transformer {
      *
      * @param node     The node.
      * @param original The original body of the node.
+     *
      * @return The transformed String.
      */
     String transform(TextNode node, String original);
