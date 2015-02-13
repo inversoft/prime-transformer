@@ -530,7 +530,7 @@ class BBCodeParserTest {
 
   @Test
   void edgeCase_noparseClosingCodeTag_closingTagNotRequired() {
-    assertParse([noparse: new TagAttributes(true, true, false)], // no closing tag, pre-formatted
+    assertParse([noparse: new TagAttributes(true, true, false, true)], // no closing tag, pre-formatted
                 "[noparse][b]foo[/b][/code]",
                 [[0, 9]],
                 []) {
@@ -551,8 +551,8 @@ class BBCodeParserTest {
 
   @Test
   void edgeCase_tagWithoutClosingTagWithBodyWithoutClosingParent_withAttributes() {
-    assertParse(['*' : new TagAttributes(true, false, false), // does not require closing tag, normal body
-                 list: new TagAttributes(true, false, false)], // does not require closing tag, normal body
+    assertParse(['*' : new TagAttributes(true, false, false, true), // does not require closing tag, normal body
+                 list: new TagAttributes(true, false, false, true)], // does not require closing tag, normal body
                 "[list][*]abc[*] def ",
                 [[0, 6], [6, 3], [12, 3]],
                 []) {
@@ -656,8 +656,8 @@ class BBCodeParserTest {
 
   @Test
   void edge_TagAttributes_preFormattedWithAllDoNotRequireClosingTag() {
-    assertParse([list: new TagAttributes(true, true, false), // do not require closing tag, pre-formatted body
-                 '*' : new TagAttributes(true, false, false)], // do not require closing tag, normal body
+    assertParse([list: new TagAttributes(true, true, false, true), // do not require closing tag, pre-formatted body
+                 '*' : new TagAttributes(true, false, false, true)], // do not require closing tag, normal body
                 "[list][*]item[*]item",
                 [[0, 6]], []) {
       TagNode(name: "list", start: 0, nameEnd: 5, bodyBegin: 6, bodyEnd: 20, end: 20) {
@@ -668,8 +668,8 @@ class BBCodeParserTest {
 
   @Test
   void edge_unexpectedTagAttributes_allDoNotRequireClosingTagNoBody() {
-    assertParse([list: new TagAttributes(true, false, false), // do not require closing tag, normal body
-                 '*' : new TagAttributes(true, false, false)], // do not require closing tag, normal body
+    assertParse([list: new TagAttributes(true, false, false, true), // do not require closing tag, normal body
+                 '*' : new TagAttributes(true, false, false, true)], // do not require closing tag, normal body
                 "[list][*][*]",
                 [[0, 6], [6, 3], [9, 3]], []) {
       TagNode(name: "list", start: 0, nameEnd: 5, bodyBegin: 6, bodyEnd: 6, end: 6)
@@ -703,8 +703,8 @@ class BBCodeParserTest {
 
   @Test
   void edge_unexpectedTagAttribute_doNotRequireClosingTagsButIncludeThem() {
-    assertParse([b: new TagAttributes(true, false, false),
-                 i: new TagAttributes(true, false, false)], // set both nodes to not require closing tag
+    assertParse([b: new TagAttributes(true, false, false, true),
+                 i: new TagAttributes(true, false, false, true)], // set both nodes to not require closing tag
                 "[b][i]italic[/i][/b]",
                 [[0, 3], [3, 3], [12, 4], [16, 4]], []) {
       TagNode(name: "b", start: 0, nameEnd: 2, bodyBegin: 3, bodyEnd: 16, end: 20) {
@@ -717,8 +717,8 @@ class BBCodeParserTest {
 
   @Test
   void edge_unexpectedTagAttribute_preFormatted_b_tag() {
-    assertParse([b: new TagAttributes(true, true, false), // do not require closing tag, pre-formatted body
-                 i: new TagAttributes(true, false, false)], // do not require closing tag, normal body
+    assertParse([b: new TagAttributes(true, true, false, true), // do not require closing tag, pre-formatted body
+                 i: new TagAttributes(true, false, false, true)], // do not require closing tag, normal body
                 "[b][i]italic[/i][/b]",
                 [[0, 3], [16, 4]], []) {
       TagNode(name: "b", start: 0, nameEnd: 2, bodyBegin: 3, bodyEnd: 16, end: 20) {

@@ -13,7 +13,6 @@
  * either express or implied. See the License for the specific
  * language governing permissions and limitations under the License.
  */
-
 package org.primeframework.transformer.domain;
 
 /**
@@ -33,14 +32,46 @@ package org.primeframework.transformer.domain;
  * </pre>
  */
 public class TextNode extends BaseNode {
-  public TextNode(Document document, int begin, int end) {
+  public TagNode parent;
+
+  public TextNode(Document document, TagNode parent, int begin, int end) {
     this.document = document;
+    this.parent = parent;
     this.begin = begin;
     this.end = end;
   }
 
   public String getBody() {
     return document.getString(begin, end);
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    if (!super.equals(o)) {
+      return false;
+    }
+
+    TextNode textNode = (TextNode) o;
+
+    if (parent != null ? textNode.parent == null || parent.begin != textNode.parent.begin || parent.end != textNode.parent.end : textNode.parent != null) {
+      return false;
+    }
+
+    return true;
+  }
+
+  @Override
+  public int hashCode() {
+    int result = super.hashCode();
+    result = 31 * result + (parent != null ? parent.begin : 0);
+    result = 31 * result + (parent != null ? parent.end : 0);
+    return result;
   }
 
   @Override

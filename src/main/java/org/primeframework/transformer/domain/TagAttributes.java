@@ -60,10 +60,17 @@ public class TagAttributes {
    */
   public boolean standalone;
 
-  public TagAttributes(boolean doesNotRequireClosingTag, boolean hasPreFormattedBody, boolean standalone) {
+  /**
+   * Determines if newlines should be transformed during transformation.
+   */
+  public boolean transformNewLines;
+
+  public TagAttributes(boolean doesNotRequireClosingTag, boolean hasPreFormattedBody, boolean standalone,
+                       boolean transformNewLines) {
     this.doesNotRequireClosingTag = doesNotRequireClosingTag;
     this.hasPreFormattedBody = hasPreFormattedBody;
     this.standalone = standalone;
+    this.transformNewLines = transformNewLines;
   }
 
   public boolean validate() {

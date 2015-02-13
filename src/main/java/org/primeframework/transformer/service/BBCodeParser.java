@@ -63,9 +63,22 @@ public class BBCodeParser implements Parser {
 
     if (nodes.isEmpty()) {
       document.addChild(node);
+
+      if (node instanceof TagNode) {
+        ((TagNode) node).parent = null;
+      } else if (node instanceof TextNode) {
+        ((TextNode) node).parent = null;
+      }
     } else {
       TagNode current = nodes.peek();
       current.addChild(node);
+
+      if (node instanceof TagNode) {
+        ((TagNode) node).parent = current;
+      } else if (node instanceof TextNode) {
+        ((TextNode) node).parent = current;
+      }
+
       // Adjust parent indexes, they must be at least large enough to contain the child
       current.bodyEnd = ((BaseNode) node).end;
       if (doesNotRequireClosingTag(current, attributes)) {
@@ -291,7 +304,7 @@ public class BBCodeParser implements Parser {
     if (!document.children.isEmpty()) {
       BaseNode last = (BaseNode) document.children.get(document.children.size() - 1);
       if (last.end < index) {
-        addNode(document, attributes, new TextNode(document, last.end, index), nodes);
+        addNode(document, attributes, new TextNode(document, nodes.peek(), last.end, index), nodes);
       }
     }
 
@@ -373,7 +386,7 @@ public class BBCodeParser implements Parser {
                                             Deque<TagNode> nodes) {
     TagNode tagNode = nodes.pop();
     // Add a single text node for the entire body
-    tagNode.addChild(new TextNode(document, tagNode.bodyBegin, tagNode.bodyEnd));
+    tagNode.addChild(new TextNode(document, tagNode, tagNode.bodyBegin, tagNode.bodyEnd));
     addNode(document, attributes, tagNode, nodes);
   }
 
@@ -409,7 +422,7 @@ public class BBCodeParser implements Parser {
     }
 
     if (hasPreFormattedBody(nodes.peek(), attributes)) {
-      addNode(document, attributes, new TextNode(document, nodes.peek().bodyBegin, index), nodes);
+      addNode(document, attributes, new TextNode(document, nodes.peek(), nodes.peek().bodyBegin, index), nodes);
     }
     if (doesNotRequireClosingTag(nodes.peek(), attributes)) {
       handleExpectedUnclosedTags(document, attributes, nodes);
@@ -528,7 +541,7 @@ public class BBCodeParser implements Parser {
           if (state == State.closingTagBegin && nodes.isEmpty()) {
             state = State.text;
           } else if (state == State.tagName && parsingEnabled) {
-            nodes.push(new TagNode(document, index - 1));
+            nodes.push(new TagNode(document, nodes.peek(), index - 1));
           }
           if (!nodes.isEmpty()) {
             nodes.peek().bodyEnd = index - 1;
@@ -579,7 +592,7 @@ public class BBCodeParser implements Parser {
         case closingTagEnd:
           state = state.next(source[index]);
           if (state == State.text && textNode == null && parsingEnabled) {
-            textNode = new TextNode(document, index, index + 1);
+            textNode = new TextNode(document, nodes.peek(), index, index + 1);
           }
           index++;
           break;
@@ -664,7 +677,7 @@ public class BBCodeParser implements Parser {
           state = state.next(source[index]);
           // start a text node
           if (textNode == null && parsingEnabled) {
-            textNode = new TextNode(document, index - 1, index);
+            textNode = new TextNode(document, nodes.peek(), index - 1, index);
           }
           if (state != State.text && parsingEnabled) {
             textNode.end = index;

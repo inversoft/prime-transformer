@@ -34,9 +34,9 @@ public class TextTransformerTest {
 
   private static Map<String, TagAttributes> attributes = new HashMap<>();
   static {
-    attributes.put("*", new TagAttributes(true, false, false));
-    attributes.put("code", new TagAttributes(false, true, false));
-    attributes.put("noparse", new TagAttributes(false, true, false));
+    attributes.put("*", new TagAttributes(true, false, false, true));
+    attributes.put("code", new TagAttributes(false, true, false, true));
+    attributes.put("noparse", new TagAttributes(false, true, false, true));
   }
 
   @Test

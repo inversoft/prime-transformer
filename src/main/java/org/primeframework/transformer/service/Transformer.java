@@ -15,10 +15,13 @@
  */
 package org.primeframework.transformer.service;
 
+import java.util.Map;
 import java.util.function.Predicate;
 
 import org.primeframework.transformer.domain.Document;
 import org.primeframework.transformer.domain.Node;
+import org.primeframework.transformer.domain.Offsets;
+import org.primeframework.transformer.domain.TagAttributes;
 import org.primeframework.transformer.domain.TagNode;
 import org.primeframework.transformer.domain.TextNode;
 
@@ -78,11 +81,26 @@ public interface Transformer {
     String transform(TextNode node, String original);
 
     /**
-     * An implementation of the TransformFunction that escapes HTML.
+     * An implementation of the TransformFunction that escapes HTML. Can handle offsets and ignoring newline
+     * transformation.
      *
      * @author Daniel DeGroff
      */
-    public static class HTMLEscapeTransformFunction implements TransformFunction {
+    public static class HTMLTransformFunction implements TransformFunction {
+      private final Map<String, TagAttributes> attributes;
+
+      private final Offsets offsets;
+
+      public HTMLTransformFunction() {
+        this.offsets = null;
+        this.attributes = null;
+      }
+
+      public HTMLTransformFunction(Offsets offsets, Map<String, TagAttributes> attributes) {
+        this.offsets = offsets;
+        this.attributes = attributes;
+      }
+
       @Override
       public String transform(TextNode node, String original) {
         StringBuilder build = new StringBuilder();
@@ -91,20 +109,44 @@ public interface Transformer {
           switch (ca[i]) {
             case '&':
               build.append("&amp;");
+              if (offsets != null) {
+                offsets.add(node.begin + i, 4);
+              }
               break;
             case '<':
               build.append("&lt;");
+              if (offsets != null) {
+                offsets.add(node.begin + i, 3);
+              }
               break;
             case '>':
               build.append("&gt;");
+              if (offsets != null) {
+                offsets.add(node.begin + i, 3);
+              }
               break;
             case '"':
               build.append("&quot;");
+              if (offsets != null) {
+                offsets.add(node.begin + i, 5);
+              }
               break;
             case '\n':
             case '\r':
+              String parentTagNode = node.parent != null ? node.parent.getName().toLowerCase() : null;
+              if (parentTagNode != null && attributes != null && attributes.containsKey(parentTagNode) &&
+                  !attributes.get(parentTagNode).transformNewLines) {
+                break;
+              }
+
               if (i + 1 < ca.length && ((ca[i] == '\n' && ca[i + 1] == '\r') || (ca[i] == '\r' && ca[i + 1] == '\n'))) {
+                if (offsets != null) {
+                  offsets.add(node.begin + i, 3);
+                }
+
                 i++;
+              } else if (offsets != null) {
+                offsets.add(node.begin + i, 4);
               }
 
               build.append("<br/>");
@@ -113,6 +155,7 @@ public interface Transformer {
               build.append(ca[i]);
           }
         }
+
         return build.toString();
       }
     }

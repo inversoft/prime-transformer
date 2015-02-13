@@ -64,6 +64,8 @@ public class TagNode extends BaseTagNode {
 
   public final List<Node> children = new ArrayList<>();
 
+  public TagNode parent;
+
   /**
    * Support for a simple attribute. Example: [tag=foo]bar[/tag]
    */
@@ -118,14 +120,16 @@ public class TagNode extends BaseTagNode {
    */
   public int nameEnd = -1;
 
-  public TagNode(Document document, int begin) {
+  public TagNode(Document document, TagNode parent, int begin) {
     this.document = document;
+    this.parent = parent;
     this.begin = begin;
   }
 
-  public TagNode(Document document, int begin, int nameEnd, int bodyBegin, int bodyEnd,
+  public TagNode(Document document, TagNode parent, int begin, int nameEnd, int bodyBegin, int bodyEnd,
                  int end, String attribute, Map<String, String> attributes) {
     this.document = document;
+    this.parent = parent;
     this.begin = begin;
     this.nameEnd = nameEnd;
     this.bodyBegin = bodyBegin;
@@ -175,6 +179,9 @@ public class TagNode extends BaseTagNode {
     if (!children.equals(tagNode.children)) {
       return false;
     }
+    if (parent != null ? tagNode.parent == null || parent.begin != tagNode.parent.begin || parent.end != tagNode.parent.end : tagNode.parent != null) {
+      return false;
+    }
 
     return true;
   }
@@ -203,6 +210,8 @@ public class TagNode extends BaseTagNode {
   public int hashCode() {
     int result = super.hashCode();
     result = 31 * result + (attribute != null ? attribute.hashCode() : 0);
+    result = 31 * result + (parent != null ? parent.begin : 0);
+    result = 31 * result + (parent != null ? parent.end : 0);
     result = 31 * result + attributes.hashCode();
     result = 31 * result + bodyBegin;
     result = 31 * result + bodyEnd;
@@ -226,6 +235,6 @@ public class TagNode extends BaseTagNode {
   }
 
   public TextNode toTextNode() {
-    return new TextNode(document, begin, end);
+    return new TextNode(document, parent, begin, end);
   }
 }

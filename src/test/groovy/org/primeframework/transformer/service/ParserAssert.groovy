@@ -30,10 +30,10 @@ import org.testng.Assert
  */
 class ParserAssert {
 
-  static defaultAttributes = ['*'    : new TagAttributes(true, false, false),
-                              code   : new TagAttributes(false, true, false),
-                              noparse: new TagAttributes(false, true, false),
-                              emoji  : new TagAttributes(false, false, true)]
+  static defaultAttributes = ['*'    : new TagAttributes(true, false, false, true),
+                              code   : new TagAttributes(false, true, false, true),
+                              noparse: new TagAttributes(false, true, false, true),
+                              emoji  : new TagAttributes(false, false, true, true)]
   /**
    * Asserts the results of a parse. This uses a DSL via the closure. Uses the default tag attributes.
    *
@@ -57,8 +57,8 @@ class ParserAssert {
    * @param closure The closure for the DSL.
    */
   public static void assertParse(Map<String, TagAttributes> attributes, String str, List offsets = null,
-                                               List attributeOffsets = null,
-                                               @DelegatesTo(NodeDelegate.class) Closure closure) {
+                                 List attributeOffsets = null,
+                                 @DelegatesTo(NodeDelegate.class) Closure closure) {
 
     Document expected = new Document(str)
     closure.delegate = new NodeDelegate(expected)
@@ -101,7 +101,10 @@ class ParserAssert {
       Objects.requireNonNull(attributes['start'], 'The [start] attribute is required')
       Objects.requireNonNull(attributes['end'], 'The [end] attribute is required')
 
-      def textNode = new TextNode(node.document, attributes['start'], attributes['end'])
+      def textNode = new TextNode(node.document,
+                                  node instanceof TagNode ? node : null,
+                                  attributes['start'],
+                                  attributes['end'])
       node.children.add(textNode)
       Assert.assertEquals(textNode.body, attributes['body'])
     }
@@ -114,6 +117,7 @@ class ParserAssert {
       Objects.requireNonNull(attributes['end'], 'The [end] attribute is required')
 
       TagNode child = new TagNode(node.document,
+                                  node instanceof TagNode ? node : null,
                                   attributes['start'],
                                   attributes['nameEnd'],
                                   attributes['bodyBegin'],
