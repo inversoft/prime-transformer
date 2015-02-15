@@ -136,6 +136,7 @@ public interface Transformer {
               String parentTagNode = node.parent != null ? node.parent.getName().toLowerCase() : null;
               if (parentTagNode != null && attributes != null && attributes.containsKey(parentTagNode) &&
                   !attributes.get(parentTagNode).transformNewLines) {
+                build.append(ca[i]);
                 break;
               }
 

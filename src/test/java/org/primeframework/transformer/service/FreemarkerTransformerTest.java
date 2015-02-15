@@ -238,7 +238,7 @@ public class FreemarkerTransformerTest {
   @Test(dataProvider = "strictness")
   public void withEmbeddingNewlineTransformDisabled(boolean strict) throws Exception {
     Document doc = parseDocument("[list]\n\t[*]item1\n\t[*]item2\n[/list]");
-    String expected = "<ul>\t<li>item1\t</li><li>item2</li></ul>";
+    String expected = "<ul>\n\t<li>item1\n\t</li><li>item2\n</li></ul>";
 
     Offsets expectedOffsets = new Offsets();
 
