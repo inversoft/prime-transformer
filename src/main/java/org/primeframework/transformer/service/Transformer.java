@@ -96,6 +96,11 @@ public interface Transformer {
         this.attributes = null;
       }
 
+      public HTMLTransformFunction(Map<String, TagAttributes> attributes) {
+        this.offsets = null;
+        this.attributes = attributes;
+      }
+
       public HTMLTransformFunction(Offsets offsets, Map<String, TagAttributes> attributes) {
         this.offsets = offsets;
         this.attributes = attributes;
