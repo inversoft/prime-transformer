@@ -893,6 +893,13 @@ class BBCodeParserTest {
   }
 
   @Test
+  void noBody_simpleAttribute() {
+    assertParse("[color=#000000][/color]", [[0, 15], [15, 8]], [[7, 7]]) {
+      TagNode(name: "color", start: 0, nameEnd: 6, bodyBegin: 15, bodyEnd: 15, end: 23, attribute: "#000000")
+    }
+  }
+
+  @Test
   void standalone_embeddedWithText() {
     assertParse("[quote] [emoji] [/quote]", [[0, 7], [8, 7], [16, 8]], []) {
       TagNode(name: "quote", start: 0, nameEnd: 6, bodyBegin: 7, bodyEnd: 16, end: 24) {
