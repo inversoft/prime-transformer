@@ -16,9 +16,9 @@ Document document = new BBCodeParser().buildDocument(source, null);
 String html = new BBCodeToHTMLTransformer().transform(document, (node) -> {
   // transform predicate, returning false will cause this node to not be transformed
   return true;
-}, new HTMLEscapeTransformFunction(), null).result;
+}, new HTMLTransformFunction(), null);
 
-Assert.assertEquals(html, "<strong>Hello World!</strong>";
+Assert.assertEquals(html, "<strong>Hello World!</strong>");
 ```
 
 In the above example, we also provided a transform function as the third parameter. This parameter is optional, but most users will wish to escape HTML characters.
