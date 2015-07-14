@@ -861,6 +861,27 @@ class BBCodeParserTest {
   }
 
   @Test
+  void containsHTML() {
+    assertParse(
+        "[size=5][b]Pricing Guide:[/b][/size]<br><br><br>[font=Roboto]Phantom Force Cards[/font]<br><br>[font=Roboto]Phantom Forces Pokemon EX[/font]",
+        [[0, 8], [8, 3], [25, 4], [29, 7], [48, 13], [80, 7], [95, 13], [133, 7]], [[6, 1], [54, 6], [101, 6]]) {
+      TagNode(name: "size", start: 0, nameEnd: 5, bodyBegin: 8, bodyEnd: 29, end: 36, attribute: "5") {
+        TagNode(name: "b", start: 8, nameEnd: 10, bodyBegin: 11, bodyEnd: 25, end: 29) {
+          TextNode(body: "Pricing Guide:", start: 11, end: 25)
+        }
+      }
+      TextNode(body: "<br><br><br>", start: 36, end: 48)
+      TagNode(name: "font", start: 48, nameEnd: 53, bodyBegin: 61, bodyEnd: 80, end: 87, attribute: "Roboto") {
+        TextNode(body: "Phantom Force Cards", start: 61, end: 80)
+      }
+      TextNode(body: "<br><br>", start: 87, end: 95)
+      TagNode(name: "font", start: 95, nameEnd: 100, bodyBegin: 108, bodyEnd: 133, end: 140, attribute: "Roboto") {
+        TextNode(body: "Phantom Forces Pokemon EX", start: 108, end: 133)
+      }
+    }
+  }
+
+  @Test
   void standalone_lastTagWithText() {
     assertParse("[b]Have a nice day![/b] [emoji]", [[0, 3], [19, 4], [24, 7]], []) {
       TagNode(name: "b", start: 0, nameEnd: 2, bodyBegin: 3, bodyEnd: 19, end: 23) {

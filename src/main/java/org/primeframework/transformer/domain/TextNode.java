@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, Inversoft Inc., All Rights Reserved
+ * Copyright (c) 2014-2015, Inversoft Inc., All Rights Reserved
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,10 +41,6 @@ public class TextNode extends BaseNode {
     this.end = end;
   }
 
-  public String getBody() {
-    return document.getString(begin, end);
-  }
-
   @Override
   public boolean equals(Object o) {
     if (this == o) {
@@ -64,6 +60,10 @@ public class TextNode extends BaseNode {
     }
 
     return true;
+  }
+
+  public String getBody() {
+    return document.getString(begin, end);
   }
 
   @Override

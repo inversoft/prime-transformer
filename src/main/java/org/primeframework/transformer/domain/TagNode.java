@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, Inversoft Inc., All Rights Reserved
+ * Copyright (c) 2014-2015, Inversoft Inc., All Rights Reserved
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -64,8 +64,6 @@ public class TagNode extends BaseTagNode {
 
   public final List<Node> children = new ArrayList<>();
 
-  public TagNode parent;
-
   /**
    * Support for a simple attribute. Example: [tag=foo]bar[/tag]
    */
@@ -119,6 +117,8 @@ public class TagNode extends BaseTagNode {
    * </pre>
    */
   public int nameEnd = -1;
+
+  public TagNode parent;
 
   public TagNode(Document document, TagNode parent, int begin) {
     this.document = document;
@@ -222,16 +222,9 @@ public class TagNode extends BaseTagNode {
 
   @Override
   public String toString() {
-    return "TagNode[" + getName() + "]{" +
-        "begin=" + begin +
-        ", end=" + end +
-        ", attributes=" + attributes +
-        ", children=" + children +
-        ", attribute='" + attribute + '\'' +
-        ", bodyBegin=" + bodyBegin +
-        ", bodyEnd=" + bodyEnd +
-        ", nameEnd=" + nameEnd +
-        '}';
+    return "TagNode[" + getName() + "] {" +
+        "body=" + document.getString(bodyBegin, bodyEnd) +
+        "}";
   }
 
   public TextNode toTextNode() {
