@@ -223,7 +223,7 @@ public class TagNode extends BaseTagNode {
   @Override
   public String toString() {
     return "TagNode[" + getName() + "] {" +
-        "body=" + document.getString(bodyBegin, bodyEnd) +
+        "body=" + (hasBody() ? (document.getString(bodyBegin, bodyEnd)) : "") +
         "}";
   }
 
