@@ -1,5 +1,4 @@
-prime-transformer
-=================
+## Prime Transformer ![semver 2.0.0 compliant](http://img.shields.io/badge/semver-2.0.0-brightgreen.svg?style=flat-square)
 
 Prime Transformer is a BBCode parser and transformation library. Additional implementations may be added support additional source or target markup languages.
 The parser returns a light weight document object model of the source BBCode consisting mostly of index values and offsets that can be utilized by the transformer.
