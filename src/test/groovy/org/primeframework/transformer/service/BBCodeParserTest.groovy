@@ -488,6 +488,27 @@ class BBCodeParserTest {
   }
 
   @Test
+  void edgeCase_badTable() {
+    assertParse(
+        "[table][tr][td]1[/td][/tr][/tr][/td][tr][td]2[/td][/tr][/table]",
+        [[0, 7], [7, 4], [11, 4], [16, 5], [21, 5], [36, 4], [40, 4], [45, 5], [50, 5], [55, 8]],
+        []) {
+      TagNode(name: "table", start: 0, nameEnd: 6, bodyBegin: 7, bodyEnd: 55, end: 63) {
+        TagNode(name: "tr", start: 7, nameEnd: 10, bodyBegin: 11, bodyEnd: 21, end: 26) {
+          TagNode(name: "td", start: 11, nameEnd: 14, bodyBegin: 15, bodyEnd: 16, end: 21) {
+            TextNode(body: "1", start: 15, end: 16)
+          }
+        }
+        TagNode(name: "tr", start: 36, nameEnd: 39, bodyBegin: 40, bodyEnd: 50, end: 55) {
+          TagNode(name: "td", start: 40, nameEnd: 43, bodyBegin: 44, bodyEnd: 45, end: 50) {
+            TextNode(body: "2", start: 44, end: 45)
+          }
+        }
+      }
+    }
+  }
+
+  @Test
   void edgeCase_noparseEmbeddedMalformedNoParse() {
     assertParse("[noparse]Example: [noparse []foo[/noparse][/noparse]",
                 [[0, 9], [32, 10]],

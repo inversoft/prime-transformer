@@ -19,8 +19,10 @@ import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.primeframework.transformer.domain.BaseNode;
 import org.primeframework.transformer.domain.BaseTagNode;
@@ -297,7 +299,23 @@ public class BBCodeParser implements Parser {
 
     handleUnclosedPreFormattedTag(document, attributes, index, nodes);
     if (!nodes.isEmpty()) {
-      handleUnexpectedState(document, attributes, index, nodes);
+
+      // Reverse the nodes
+      Deque<TagNode> stack = new ArrayDeque<>();
+      while (!nodes.isEmpty()) {
+        stack.push(nodes.pop());
+      }
+
+      TagNode tag = stack.pop();
+      while (!stack.isEmpty()) {
+        tag.addChild(stack.pop());
+      }
+
+      handleRemovingOffsets(document.offsets, tag.begin, index);
+      handleRemovingOffsets(document.attributeOffsets, tag.begin, index);
+      TextNode text = tag.toTextNode();
+      text.end = index;
+      addNode(document, attributes, text, nodes);
     }
 
     // last tag end should be equal to the index, handle remaining text
@@ -445,12 +463,33 @@ public class BBCodeParser implements Parser {
    */
   private void handleUnexpectedState(Document document, Map<String, TagAttributes> attributes, int index,
                                      Deque<TagNode> nodes) {
-    TagNode tagNode = nodes.pop();
-    handleRemovingOffsets(document.offsets, tagNode.begin, index);
-    handleRemovingOffsets(document.attributeOffsets, tagNode.begin, index);
-    TextNode textNode = tagNode.toTextNode();
-    textNode.end = index;
-    addNode(document, attributes, textNode, nodes);
+
+    TagNode current = nodes.peek();
+    List<Node> unclosed = current.children.stream().filter((node) -> {
+      if (!(node instanceof TagNode)) {
+        return false;
+      }
+
+      TagNode tag = (TagNode) node;
+      if (doesNotRequireClosingTag(tag, attributes)) {
+        return false;
+      }
+
+      if (tag.hasClosingTag()) {
+        return false;
+      }
+
+      return true;
+    }).collect(Collectors.toList());
+
+    if (!unclosed.isEmpty()) {
+      TagNode tagNode = nodes.pop();
+      handleRemovingOffsets(document.offsets, tagNode.begin, index);
+      handleRemovingOffsets(document.attributeOffsets, tagNode.begin, index);
+      TextNode textNode = tagNode.toTextNode();
+      textNode.end = index;
+      addNode(document, attributes, textNode, nodes);
+    }
   }
 
   /**
