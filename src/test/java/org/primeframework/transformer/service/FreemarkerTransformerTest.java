@@ -105,7 +105,7 @@ public class FreemarkerTransformerTest {
   @Test(dataProvider = "strictness")
   public void escapeHTMLWithOffsets(boolean strict) throws Exception {
     Document doc = parseDocument("A<>B&C<>D [b] f(x) = x < y > z &\r\n f(y) = \"Yo!\"\n [/b] A<>B&C<>D");
-    String expected = "A&lt;&gt;B&amp;C&lt;&gt;D <bbbbbb> f(x) = x &lt; y &gt; z &amp;<br/> f(y) = &quot;Yo!&quot;<br/> </bbbbbb> A&lt;&gt;B&amp;C&lt;&gt;D";
+    String expected = "A&lt;&gt;B&amp;C&lt;&gt;D <bbbbbb> f(x) = x &lt; y &gt; z &amp;<br> f(y) = &quot;Yo!&quot;<br> </bbbbbb> A&lt;&gt;B&amp;C&lt;&gt;D";
 
     Offsets expectedOffsets = new Offsets();
     // HTML
@@ -117,10 +117,10 @@ public class FreemarkerTransformerTest {
     expectedOffsets.add(23, 3); // <
     expectedOffsets.add(27, 3); // >
     expectedOffsets.add(31, 4); // &
-    expectedOffsets.add(32, 3); // \r\n
+    expectedOffsets.add(32, 2); // \r\n
     expectedOffsets.add(42, 5); // "
     expectedOffsets.add(46, 5); // "
-    expectedOffsets.add(47, 4); // \n
+    expectedOffsets.add(47, 3); // \n
     expectedOffsets.add(55, 3); // <
     expectedOffsets.add(56, 3); // >
     expectedOffsets.add(58, 4); // &

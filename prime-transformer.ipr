@@ -31,7 +31,9 @@
   <component name="DependencyValidationManager">
     <option name="SKIP_IMPORT_STATEMENTS" value="false" />
   </component>
-  <component name="Encoding" useUTFGuessing="true" native2AsciiForPropertiesFiles="false" />
+  <component name="Encoding" useUTFGuessing="true" native2AsciiForPropertiesFiles="false">
+    <file url="PROJECT" charset="UTF-8" />
+  </component>
   <component name="EntryPointsManager">
     <entry_points version="2.0">
       <entry_point TYPE="method" FQNAME="org.primeframework.transformer.domain.BaseTagNode java.util.List&lt;org.primeframework.transformer.domain.TextNode&gt; getChildTextNodes()" />

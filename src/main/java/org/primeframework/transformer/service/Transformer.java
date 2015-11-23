@@ -53,7 +53,7 @@ public interface Transformer {
    *
    * @author Brian Pontarelli
    */
-  public interface NodeConsumer {
+  interface NodeConsumer {
     /**
      * Accepts the given node and its transformed result.
      *
@@ -147,15 +147,15 @@ public interface Transformer {
 
               if (i + 1 < ca.length && ((ca[i] == '\n' && ca[i + 1] == '\r') || (ca[i] == '\r' && ca[i + 1] == '\n'))) {
                 if (offsets != null) {
-                  offsets.add(node.begin + i, 3);
+                  offsets.add(node.begin + i, 2);
                 }
 
                 i++;
               } else if (offsets != null) {
-                offsets.add(node.begin + i, 4);
+                offsets.add(node.begin + i, 3);
               }
 
-              build.append("<br/>");
+              build.append("<br>");
               break;
             default:
               build.append(ca[i]);
