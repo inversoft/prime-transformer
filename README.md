@@ -5,8 +5,6 @@ The parser returns a light weight document object model of the source BBCode con
 
 Prime Transformer is actively developed and is being utilized in high performance commercial products.
 
-**Note:** This project uses the Savant build tool, for more information checkout the [savant-core](https://github.com/inversoft/savant-core) project.
-
 ##### Example:
 
 ```java
@@ -32,3 +30,22 @@ This function is provided in the library, the caller can provide their own imple
 * Supports escape character.
  * Normal: ```[b]foo\[/b]``` --> **foo**
  * Escaped: ```\[b]foo\[/b]``` --> ```[b]foo[/b]```
+ 
+ 
+**Note:** This project uses the Savant build tool. To compile using using Savant, follow these instructions:
+ 
+```bash
+$ mkdir ~/savant
+$ cd ~/savant
+$ wget http://savant.inversoft.org/org/savantbuild/savant-core/0.4.4/savant-0.4.4.tar.gz
+$ tar xvfz savant-0.4.4.tar.gz
+$ ln -s ./savant-0.4.4 current
+$ export PATH=$PATH:~/savant/current/bin/
+```
+
+Then, perform an integration build of the project by running:
+```bash
+$ sb int
+```
+
+For more information, checkout [savantbuild.org](http://savantbuild.org/).
