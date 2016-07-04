@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015, Inversoft Inc., All Rights Reserved
+ * Copyright (c) 2015-2016, Inversoft Inc., All Rights Reserved
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -435,6 +435,19 @@ class BBCodeParserTest {
     ]
   }
 
+  @DataProvider
+  public Object[][] singleCharacter() {
+    return [
+        ["a", "a"],
+        ["[", "["],
+        ["]", "]"],
+        ["=", "="],
+        [",", ","],
+        ["\\", "\\"],
+        ["/", "/"]
+    ]
+  }
+
   @Test(dataProvider = "codeData")
   void edgeCase_codeEmbeddedCode(String str, String body) {
     assertParse(str, [[0, 6], [str.length() - 7, 7]]) {
@@ -823,6 +836,13 @@ class BBCodeParserTest {
       TagNode(name: "b", start: 8, nameEnd: 10, bodyBegin: 11, bodyEnd: 27, end: 31) {
         TextNode(body: "Have a nice day!", start: 11, end: 27)
       }
+    }
+  }
+
+  @Test(dataProvider = "singleCharacter")
+  void singleCharacter_Text(String string, String body) {
+    assertParse(string, [], []) {
+      TextNode(body: body, start: 0, end: 1)
     }
   }
 

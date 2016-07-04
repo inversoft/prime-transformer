@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015, Inversoft Inc., All Rights Reserved
+ * Copyright (c) 2015-2016, Inversoft Inc., All Rights Reserved
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -221,7 +221,7 @@ public class BBCodeParser implements Parser {
   }
 
   private boolean handleClosingTagName(Document document, Map<String, TagAttributes> attributes, int index,
-                                    Deque<TagNode> nodes, boolean parsingEnabled) {
+                                       Deque<TagNode> nodes, boolean parsingEnabled) {
     String closingName = closingName(document, index, nodes.peek());
     if (eq(closingName, nodes.peek().getName())) {
       nodes.peek().end = index;
@@ -269,11 +269,11 @@ public class BBCodeParser implements Parser {
   /**
    * Handle document cleanup, intended to be called once all other processing is complete.
    *
-   * @param document            the document where the node will be added.
-   * @param attributes          the tag attribute map
-   * @param index               the current index of the parser state
-   * @param nodes               the stack of nodes being used for temporary storage
-   * @param textNode            the text node being used for temporary storage
+   * @param document   the document where the node will be added.
+   * @param attributes the tag attribute map
+   * @param index      the current index of the parser state
+   * @param nodes      the stack of nodes being used for temporary storage
+   * @param textNode   the text node being used for temporary storage
    */
   private void handleDocumentCleanup(Document document, Map<String, TagAttributes> attributes, int index,
                                      Deque<TagNode> nodes, TextNode textNode) {
@@ -281,6 +281,11 @@ public class BBCodeParser implements Parser {
     if (textNode != null) {
       textNode.end = index;
       addNode(document, attributes, textNode, nodes);
+    }
+
+    // Special case of a string length of 1.
+    if (index == 1) {
+      addNode(document, attributes, new TextNode(document, nodes.peek(), index - 1, index), nodes);
     }
 
     // Complete an open tag
@@ -394,8 +399,8 @@ public class BBCodeParser implements Parser {
    * Remove offsets between the beginning and ending index provided.
    *
    * @param offsets the set of offsets to remove from
-   * @param begin the starting index
-   * @param end the ending index
+   * @param begin   the starting index
+   * @param end     the ending index
    */
   private void handleRemovingOffsets(Set<Pair<Integer, Integer>> offsets, int begin, int end) {
     Iterator<Pair<Integer, Integer>> iter = offsets.iterator();
