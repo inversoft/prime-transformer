@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015, Inversoft Inc., All Rights Reserved
+ * Copyright (c) 2015-2016, Inversoft Inc., All Rights Reserved
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 
 savantVersion = "0.4.4"
 
-project(group: "org.primeframework", name: "prime-transformer", version: "2.0.6", licenses: ["ApacheV2_0"]) {
+project(group: "org.primeframework", name: "prime-transformer", version: "2.0.7", licenses: ["ApacheV2_0"]) {
 
   workflow {
     standard()
