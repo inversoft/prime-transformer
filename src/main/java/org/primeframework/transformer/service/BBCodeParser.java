@@ -528,6 +528,10 @@ public class BBCodeParser implements Parser {
       previous = state;
 
       if (index == source.length) {
+        //When there is only 1 char is the input string
+        if (state == State.text && textNode == null) {
+          textNode = new TextNode(document, nodes.peek(), index - 1, index);
+        }
         state = State.complete;
       }
 
