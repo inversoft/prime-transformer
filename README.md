@@ -31,6 +31,11 @@ This function is provided in the library, the caller can provide their own imple
  * Normal: ```[b]foo\[/b]``` --> **foo**
  * Escaped: ```\[b]foo\[/b]``` --> ```[b]foo[/b]```
  
+
+##### Download:
+Released versions can be downloaded from the Savant Repository.
+ 
+ * http://savant.inversoft.org/org/primeframework/prime-transformer/
  
 **Note:** This project uses the Savant build tool. To compile using using Savant, follow these instructions:
  
