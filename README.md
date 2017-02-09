@@ -32,11 +32,12 @@ This function is provided in the library, the caller can provide their own imple
  * Escaped: ```\[b]foo\[/b]``` --> ```[b]foo[/b]```
  
 
-##### Download:
+## Downloading
 Released versions can be downloaded from the Savant Repository.
  
  * http://savant.inversoft.org/org/primeframework/prime-transformer/
  
+## Building 
 **Note:** This project uses the Savant build tool. To compile using using Savant, follow these instructions:
  
 ```bash
