@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2015, Inversoft Inc., All Rights Reserved
+ * Copyright (c) 2014-2017, Inversoft Inc., All Rights Reserved
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,12 +23,12 @@ import java.util.Map;
 /**
  * The <code>TagNode</code> holds index values to the document source to outline the start and end of the tag and the
  * body of the tag.
- * <p>
+ *
  * The following is an example in BBCode, but the same applies to other tags.
  * <pre>
  *     [url=http://foo.com] http://foo.com [/url]
  *     ^   ^                               ^    ^
- *     1   2               3 <--  body --> 4    5
+ *     1   2               3 &lt;--  body --&gt; 4    5
  *
  *  Between index 1 and 2 is the opening tag.
  *  Between index 2 and 3 is the tag body.
@@ -43,12 +43,12 @@ import java.util.Map;
  * The body of the tag is contained in the children collection. A child may be either another <code>TagNode</code> or a
  * <code>TextNode</code>. The <code>TagNode</code> itself does not have a body, the body will be contained in a child
  * <code>TextNode</code>.
- * <p>
+ *
  * The two boolean hasBody and hasClosingTag states indicate what was found when the BBCode was parsed, not necessarily
  * what is required for a specific TagNode.<br>
- * <p>
+ *
  * Expected Variations of these two boolean states:
- * <p>
+ * 
  * <ol>
  * <li>Has closing tag and a body: <pre>[b]foo[/b]</pre></li>
  * <li>Has closing tag and no body: <pre>[gameCard][/gameCard]</pre></li>
@@ -71,7 +71,7 @@ public class TagNode extends BaseTagNode {
 
   /**
    * Always equal to the index where the opening tag ends (exclusive), even if the tag doesn't have a body:
-   * <p>
+   *
    * <pre>
    *   [b]foo[/b]
    *      ^
@@ -88,7 +88,7 @@ public class TagNode extends BaseTagNode {
   /**
    * If the body is empty or the tag has no body, this will be equal to bodyBegin. Otherwise, this will be the index at
    * the end of the body (exclusive):
-   * <p>
+   *
    * <pre>
    *   [b]foo[/b]
    *         ^
@@ -104,7 +104,7 @@ public class TagNode extends BaseTagNode {
 
   /**
    * The index (exclusive) where the name of the opening tag ends:
-   * <p>
+   *
    * <pre>
    *   [b]foo[/b]
    *     ^

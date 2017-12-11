@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, Inversoft Inc., All Rights Reserved
+ * Copyright (c) 2014-2017, Inversoft Inc., All Rights Reserved
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@ public abstract class BaseNode implements Node {
 
   /**
    * The index of the beginning of this node (inclusive):
-   * <p>
+   *
    * <pre>
    *   foo [b] bar [/b]
    *       ^
@@ -30,7 +30,7 @@ public abstract class BaseNode implements Node {
 
   /**
    * The index of the end of this node (exclusive):
-   * <p>
+   *
    * <pre>
    *   foo [b] bar [/b]
    *                   ^

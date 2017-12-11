@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, Inversoft Inc., All Rights Reserved
+ * Copyright (c) 2014-2017, Inversoft Inc., All Rights Reserved
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,7 +30,7 @@ import java.util.stream.Collectors;
 public class Document extends BaseTagNode {
   /**
    * Set of attribute offsets, first value is the beginning of the attribute, the second value is the length.
-   * <p>
+   *
    * <pre>
    * Example:
    *    a [font size="10" family="verdana"] testing [/font]
@@ -48,7 +48,7 @@ public class Document extends BaseTagNode {
   /**
    * Set of offsets, first value is the beginning of the tag, the second value is the length. With these values the
    * original string can be reconstructed.
-   * <p>
+   *
    * <pre>
    * Example:
    *    a [b] testing [/b]

@@ -32,12 +32,27 @@ This function is provided in the library, the caller can provide their own imple
  * Escaped: ```\[b]foo\[/b]``` --> ```[b]foo[/b]```
  
 
-## Downloading
+### Download from Maven 
+```xml
+<dependency>
+  <groupId>com.inversoft</groupId>
+  <artifactId>prime-transformer</artifactId>
+  <version>2.0.8</version>
+</dependency>
+```
+
+### Building in Maven
+
+```bash
+$ mvn install
+```
+
+### Downloading from Savant
 Released versions can be downloaded from the Savant Repository.
  
  * http://savant.inversoft.org/org/primeframework/prime-transformer/
  
-## Building 
+### Building in Savant
 **Note:** This project uses the Savant build tool. To compile using using Savant, follow these instructions:
  
 ```bash

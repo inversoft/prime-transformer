@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, Inversoft Inc., All Rights Reserved
+ * Copyright (c) 2014-2017, Inversoft Inc., All Rights Reserved
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,8 +19,10 @@ package org.primeframework.transformer.domain;
 public interface Node {
   /**
    * Return the raw string representing the node in the document source. This will include the full tag and body.
-   * <p>Example return value:
-   * <pre> [url]http://foo.com[/url]</pre></p>
+   *
+   * Example return value:
+   *
+   * <pre> [url]http://foo.com[/url]</pre>
    *
    * @return the raw string version of this node.
    */

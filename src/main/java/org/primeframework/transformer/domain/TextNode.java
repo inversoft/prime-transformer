@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2015, Inversoft Inc., All Rights Reserved
+ * Copyright (c) 2014-2017, Inversoft Inc., All Rights Reserved
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,12 +18,12 @@ package org.primeframework.transformer.domain;
 /**
  * The <code>TextNode</code> holds index values to the document source to outline the start and end of the plain text
  * body.
- * <p>
+ * 
  * The following is an example in BBCode, but the same applies to other tags.
  * <pre>
  *     [url] http://foo.com [/url]
  *     ^   ^                ^    ^
- *         1 <--- body ---> 2
+ *         1 &lt;--- body ---&gt; 2
  *
  *  Between index 1 and 2 is the tag body.
  *
