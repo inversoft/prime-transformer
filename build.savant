@@ -94,6 +94,12 @@ target(name: "test-spock", description: "Runs the project's Spock specifications
   spock.test()
 }
 
+target(name: "mvn-deploy", description: "Publish to MVN repo", dependsOn: ["clean", "compile"]) {
+  if (new ProcessBuilder('mvn', 'deploy', '-Prelease').inheritIO().start().waitFor() != 0) {
+    fail("deploy failed")
+  }
+}
+
 target(name: "doc", description: "Generate the project's JavaDoc", dependsOn: ["jar"]) {
   java.document()
   groovy.document()
