@@ -85,6 +85,25 @@ class HTMLParserTest {
     }
   }
 
+
+  @Test
+  void control_embeddedTags() {
+    asserter.assertParse("<div><span>foo</span></div>", [[0, 5], [5, 6], [14, 7], [21, 6]], []) {
+      TagNode(name: "div", start: 0, nameEnd: 4, bodyBegin: 5, bodyEnd: 21, end: 27) {
+        TagNode(name: "span", start: 5, nameEnd: 10, bodyBegin: 11, bodyEnd: 14, end: 21) {
+          TextNode(body: "foo", start: 11, end: 14)
+        }
+      }
+    }
+  }
+
+  @Test
+  void notClosed() {
+    asserter.assertParse("<div><span>foo</span>", [], []) {
+      TextNode(body: "<div><span>foo</span>", start: 0, end: 21)
+    }
+  }
+
   @Test
   void invalidHtml() {
     asserter.assertParse("<not a tag<a></a> <p>", [], []) {

@@ -120,26 +120,6 @@ public class HTMLParser implements Parser {
   }
 
   /**
-   * Add a simple attribute value to the {@link TagNode} and add the offsets to the {@link Document}.
-   *
-   * @param document            the document where the node will be added.
-   * @param attributeValueBegin the index where the value begins
-   * @param index               the current index of the parser state
-   * @param nodes               the stack of nodes being used for temporary storage
-   */
-  private void addSimpleAttribute(Document document, int attributeValueBegin, int index, Deque<TagNode> nodes) {
-    TagNode current = nodes.peek();
-    String name = document.getString(attributeValueBegin, index);
-    // Ignore trailing space. e.g. [foo size=5    ] bar[/foo]
-    int length = name.length();
-    name = name.trim();
-
-    // Keep the trimmed value and account for the shortened value in the offset
-    document.attributeOffsets.add(new Pair<>(attributeValueBegin, index - attributeValueBegin - (length - name.length())));
-    current.attribute = name;
-  }
-
-  /**
    * Return the closing tag name if it can be determined.
    *
    * @param document the document where the node will be added.
@@ -960,19 +940,19 @@ public class HTMLParser implements Parser {
       Source: https://stackoverflow.com/questions/3741896/what-do-you-call-tags-that-need-no-ending-tag
    */
 
-    DEFAULT_TAG_ATTRIBUTES = new HashMap<>();
+    Map<String, TagAttributes> tagAttributesHashMap = new HashMap<>();
 
     // Setup void tags
     TagAttributes voidTagAttributes = new TagAttributes(true, false, true, true);
     Stream.of("area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "param", "source", "track", "wbr")
-          .forEach(tag -> DEFAULT_TAG_ATTRIBUTES.put(tag, voidTagAttributes));
+          .forEach(tag -> tagAttributesHashMap.put(tag, voidTagAttributes));
 
     // Skipping templates, very free form but it still makes sense to try to parse them, they will fallback to text
 
     // Setup raw text elements
     TagAttributes rawTextElements = new TagAttributes(false, true, false, false);
     Stream.of("script", "style")
-          .forEach(tag -> DEFAULT_TAG_ATTRIBUTES.put(tag, rawTextElements));
+          .forEach(tag -> tagAttributesHashMap.put(tag, rawTextElements));
 
     // Skipping escapable raw text elements
 
@@ -980,6 +960,6 @@ public class HTMLParser implements Parser {
 
     // Everything else has a good default mode.
 
-    DEFAULT_TAG_ATTRIBUTES = Collections.unmodifiableMap(DEFAULT_TAG_ATTRIBUTES);
+    DEFAULT_TAG_ATTRIBUTES = Collections.unmodifiableMap(tagAttributesHashMap);
   }
 }
