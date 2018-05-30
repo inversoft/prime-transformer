@@ -721,14 +721,18 @@ public class HTMLParser implements Parser {
     tagName {
       @Override
       public State next(char c) {
-        if (c == ' ') {
-          return attribute;
-        } else if (c == '>') {
-          return openingTagEnd;
-        } else if (c == '<') {
-          return tagBegin;
-        } else {
-          return tagName;
+        switch (c) {
+          case '\t':
+          case '\n':
+          case '\r':
+          case ' ':
+            return attribute;
+          case '>':
+            return openingTagEnd;
+          case '<':
+            return tagBegin;
+          default:
+            return tagName;
         }
       }
     },
@@ -736,17 +740,22 @@ public class HTMLParser implements Parser {
     attribute {
       @Override
       public State next(char c) {
-        if (c == '>') {
-          return openingTagEnd;
-        } else if (c == '/') {
-          return openingTagSelfClose;
-        } else if (c == ' ') {
-          // Ignore whitespace
-          return attribute;
-        } else if (c == '<') {
-          return text; // tag is not closed properly
-        } else {
-          return attributeName;
+        switch (c) {
+          case '>':
+            return openingTagEnd;
+          case '/':
+            return openingTagSelfClose;
+          case '\t':
+          case '\n':
+          case '\r':
+          case ' ':
+            // Ignore whitespace
+            return attribute;
+          case '<':
+            return text; // tag is not closed properly
+
+          default:
+            return attributeName;
         }
       }
     },
@@ -754,17 +763,21 @@ public class HTMLParser implements Parser {
     attributeName {
       @Override
       public State next(char c) {
-        if (c == '=') {
-          return attributeValue;
-        } else if (c == ' ') {
-          // Ignore whitespace
-          return attributeName;
-        } else if (c == '>') {
-          return openingTagEnd;
-        } else if (c == '/') {
-          return openingTagSelfClose;
-        } else {
-          return attributeName;
+        switch (c) {
+          case '=':
+            return attributeValue;
+          case '\t':
+          case '\n':
+          case '\r':
+          case ' ':
+            // Ignore whitespace
+            return attributeName;
+          case '>':
+            return openingTagEnd;
+          case '/':
+            return openingTagSelfClose;
+          default:
+            return attributeName;
         }
       }
     },
@@ -772,18 +785,22 @@ public class HTMLParser implements Parser {
     attributeValue {
       @Override
       public State next(char c) {
-        if (c == '>') {
-          return openingTagEnd;
-        } else if (c == '/') {
-          return openingTagSelfClose;
-        } else if (c == ' ') {
-          return attribute;
-        } else if (c == '\'') {
-          return singleQuotedAttributeValue;
-        } else if (c == '\"') {
-          return doubleQuotedAttributeValue;
-        } else {
-          return unquotedAttributeValue;
+        switch (c) {
+          case '>':
+            return openingTagEnd;
+          case '/':
+            return openingTagSelfClose;
+          case '\t':
+          case '\n':
+          case '\r':
+          case ' ':
+            return attribute;
+          case '\'':
+            return singleQuotedAttributeValue;
+          case '\"':
+            return doubleQuotedAttributeValue;
+          default:
+            return unquotedAttributeValue;
         }
       }
     },
@@ -810,17 +827,28 @@ public class HTMLParser implements Parser {
       }
     },
 
+    // Source: https://mothereff.in/unquoted-attributes
     unquotedAttributeValue {
       @Override
       public State next(char c) {
-        if (c == ' ') {
-          return attribute;
-        } else if (c == '>') {
-          return openingTagEnd;
-        } else if (c == '/') {
-          return openingTagSelfClose;
-        } else {
-          return unquotedAttributeValue;
+        switch (c) {
+          case '"':
+          case '\'':
+          case '=':
+          case '<':
+          case '`':
+            // Disallowed characters in unquoted attribute (won't render properly anyways, so will likely become text or get erased by a browser)
+            return text;
+          case '\t':
+          case '\n':
+          case '\r':
+          case ' ':
+            // Any whitespace ends the attribute value
+            return attribute;
+          case '>':
+            return openingTagEnd;
+          default:
+            return unquotedAttributeValue;
         }
       }
     },
@@ -828,10 +856,10 @@ public class HTMLParser implements Parser {
     openingTagSelfClose {
       @Override
       public State next(char c) {
-        if (c != '>') {
-          return text;
-        } else {
+        if (c == '>') {
           return openingTagEnd;
+        } else {
+          return text;
         }
       }
     },
