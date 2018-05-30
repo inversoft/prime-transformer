@@ -37,30 +37,6 @@ import org.primeframework.transformer.domain.TextNode;
  * @author Tyler Scott
  */
 public class HTMLParser implements Parser {
-
-  /*
-  HTML has several classes of elements.
-
-  Void elements: (Elements with nothing inside)
-  [area, base, br, col, embed, hr, img, input, link, meta, param, source, track, wbr]
-
-  Template elements: (Define elements for a shadow dom)
-
-  Raw text elements: (The text is literal text, effectively a nested text document)
-  [script, style]
-
-  Escapable raw text elements: (The text is displayed and special characters need to be html escaped, no other html elements can go inside)
-  [textarea, title]
-
-  Foreign Elements: (Non html but still xmlish)
-  [MathML, svg]
-
-  Normal elements: (Everything else)
-
-  Source: http://w3c.github.io/html/syntax.html#void-elements
-  Source: https://stackoverflow.com/questions/3741896/what-do-you-call-tags-that-need-no-ending-tag
-   */
-
   private static Map<String, TagAttributes> DEFAULT_TAG_ATTRIBUTES;
 
   @Override
@@ -623,6 +599,7 @@ public class HTMLParser implements Parser {
           }
           break;
 
+        case openingTagSelfClose:
         case closingTagEnd:
           state = state.next(source[index]);
           if (state == State.text && textNode == null && parsingEnabled) {
@@ -631,34 +608,10 @@ public class HTMLParser implements Parser {
           index++;
           break;
 
-        case simpleAttribute:
+        case attribute:
           state = state.next(source[index]);
           if (parsingEnabled) {
-            if (state == State.simpleUnQuotedValue) {
-              attributeValueBegin = index;
-            } else if (state == State.simpleSingleQuotedValue || state == State.simpleDoubleQuotedValue) {
-              attributeValueBegin = index + 1;
-            }
-          }
-          index++;
-          break;
-
-        case simpleDoubleQuotedValue:
-        case simpleSingleQuotedValue:
-        case simpleUnQuotedValue:
-          state = state.next(source[index]);
-          if (parsingEnabled) {
-            if (state != previous) {
-              addSimpleAttribute(document, attributeValueBegin, index, nodes);
-            }
-          }
-          index++;
-          break;
-
-        case complexAttribute:
-          state = state.next(source[index]);
-          if (parsingEnabled) {
-            if (state == State.complexAttributeName) {
+            if (state == State.attributeName) {
               attributeNameBegin = index;
             } else if (state == State.text && parsingEnabled) {
               handleUnexpectedState(document, attributes, index, nodes);
@@ -667,36 +620,41 @@ public class HTMLParser implements Parser {
           index++;
           break;
 
-        case complexAttributeName:
+        case attributeName:
           state = state.next(source[index]);
           if (parsingEnabled) {
-            if (state == State.complexAttributeValue) {
+            if (state == State.attributeValue) {
               attributeName = document.getString(attributeNameBegin, index);
             } else if (state == State.text) {
               handleUnexpectedState(document, attributes, index, nodes);
+            } else if (state == State.openingTagEnd || state == State.openingTagSelfClose) {
+              // Boolean attribute
+              attributeName = document.getString(attributeNameBegin, index);
+              nodes.peek().attributes.put(attributeName, "true");
+              document.attributeOffsets.add(new Pair<>(index, 0));
             }
           }
           index++;
           break;
 
-        case complexAttributeValue:
+        case attributeValue:
           state = state.next(source[index]);
           if (parsingEnabled) {
             if (state == State.openingTagEnd) {
               nodes.peek().attributes.put(attributeName, "");  // No attribute value, store empty string
               document.attributeOffsets.add(new Pair<>(index, 0));
-            } else if (state == State.complexUnQuotedValue) {
+            } else if (state == State.unquotedAttributeValue) {
               attributeValueBegin = index;
-            } else if (state == State.complexSingleQuotedValue || state == State.complexDoubleQuotedValue) {
+            } else if (state == State.singleQuotedAttributeValue || state == State.doubleQuotedAttributeValue) {
               attributeValueBegin = index + 1;
             }
           }
           index++;
           break;
 
-        case complexDoubleQuotedValue:
-        case complexSingleQuotedValue:
-        case complexUnQuotedValue:
+        case doubleQuotedAttributeValue:
+        case singleQuotedAttributeValue:
+        case unquotedAttributeValue:
           state = state.next(source[index]);
           if (parsingEnabled) {
             if (state != previous) {
@@ -763,10 +721,8 @@ public class HTMLParser implements Parser {
     tagName {
       @Override
       public State next(char c) {
-        if (c == '=') {
-          return simpleAttribute;
-        } else if (c == ' ') {
-          return complexAttribute;
+        if (c == ' ') {
+          return attribute;
         } else if (c == '>') {
           return openingTagEnd;
         } else if (c == '<') {
@@ -777,133 +733,105 @@ public class HTMLParser implements Parser {
       }
     },
 
-    simpleAttribute {
+    attribute {
       @Override
       public State next(char c) {
         if (c == '>') {
           return openingTagEnd;
-        } else if (c == '\'') {
-          return simpleSingleQuotedValue;
-        } else if (c == '"') {
-          return simpleDoubleQuotedValue;
-        } else {
-          return simpleUnQuotedValue;
-        }
-      }
-    },
-
-    simpleSingleQuotedValue {
-      @Override
-      public State next(char c) {
-        if (c == '\'') {
-          return simpleAttribute;
-        } else {
-          return simpleSingleQuotedValue;
-        }
-      }
-    },
-
-    simpleDoubleQuotedValue {
-      @Override
-      public State next(char c) {
-        if (c == '"') {
-          return simpleAttribute;
-        } else {
-          return simpleDoubleQuotedValue;
-        }
-      }
-    },
-
-    simpleUnQuotedValue {
-      @Override
-      public State next(char c) {
-        if (c == '>') {
-          return openingTagEnd;
-        } else {
-          return simpleUnQuotedValue;
-        }
-      }
-    },
-
-    complexAttribute {
-      @Override
-      public State next(char c) {
-        if (c == '>') {
-          return openingTagEnd;
+        } else if (c == '/') {
+          return openingTagSelfClose;
         } else if (c == ' ') {
           // Ignore whitespace
-          return complexAttribute;
+          return attribute;
         } else if (c == '<') {
           return text; // tag is not closed properly
         } else {
-          return complexAttributeName;
+          return attributeName;
         }
       }
     },
 
-    complexAttributeName {
+    attributeName {
       @Override
       public State next(char c) {
         if (c == '=') {
-          return complexAttributeValue;
+          return attributeValue;
         } else if (c == ' ') {
-          return text; // no spaces allowed between name and equals
+          // Ignore whitespace
+          return attributeName;
         } else if (c == '>') {
-          return text; // missing name and value of attribute
+          return openingTagEnd;
+        } else if (c == '/') {
+          return openingTagSelfClose;
         } else {
-          return complexAttributeName;
+          return attributeName;
         }
       }
     },
 
-    complexAttributeValue {
+    attributeValue {
       @Override
       public State next(char c) {
         if (c == '>') {
           return openingTagEnd;
+        } else if (c == '/') {
+          return openingTagSelfClose;
         } else if (c == ' ') {
-          return complexAttribute;
+          return attribute;
         } else if (c == '\'') {
-          return complexSingleQuotedValue;
+          return singleQuotedAttributeValue;
         } else if (c == '\"') {
-          return complexDoubleQuotedValue;
+          return doubleQuotedAttributeValue;
         } else {
-          return complexUnQuotedValue;
+          return unquotedAttributeValue;
         }
       }
     },
 
-    complexDoubleQuotedValue {
+    doubleQuotedAttributeValue {
       @Override
       public State next(char c) {
         if (c == '"') {
-          return complexAttribute;
+          return attribute;
         } else {
-          return complexDoubleQuotedValue;
+          return doubleQuotedAttributeValue;
         }
       }
     },
 
-    complexSingleQuotedValue {
+    singleQuotedAttributeValue {
       @Override
       public State next(char c) {
         if (c == '\'') {
-          return complexAttribute;
+          return attribute;
         } else {
-          return complexSingleQuotedValue;
+          return singleQuotedAttributeValue;
         }
       }
     },
 
-    complexUnQuotedValue {
+    unquotedAttributeValue {
       @Override
       public State next(char c) {
         if (c == ' ') {
-          return complexAttribute;
+          return attribute;
         } else if (c == '>') {
           return openingTagEnd;
+        } else if (c == '/') {
+          return openingTagSelfClose;
         } else {
-          return complexUnQuotedValue;
+          return unquotedAttributeValue;
+        }
+      }
+    },
+
+    openingTagSelfClose {
+      @Override
+      public State next(char c) {
+        if (c != '>') {
+          return text;
+        } else {
+          return openingTagEnd;
         }
       }
     },
@@ -981,6 +909,29 @@ public class HTMLParser implements Parser {
   }
 
   static {
+    /*
+      HTML has several classes of elements.
+
+      Void elements: (Elements with nothing inside)
+      [area, base, br, col, embed, hr, img, input, link, meta, param, source, track, wbr]
+
+      Template elements: (Define elements for a shadow dom)
+
+      Raw text elements: (The text is literal text, effectively a nested text document)
+      [script, style]
+
+      Escapable raw text elements: (The text is displayed and special characters need to be html escaped, no other html elements can go inside)
+      [textarea, title]
+
+      Foreign Elements: (Non html but still xmlish)
+      [MathML, svg]
+
+      Normal elements: (Everything else)
+
+      Source: http://w3c.github.io/html/syntax.html#void-elements
+      Source: https://stackoverflow.com/questions/3741896/what-do-you-call-tags-that-need-no-ending-tag
+   */
+
     DEFAULT_TAG_ATTRIBUTES = new HashMap<>();
 
     // Setup void tags
@@ -988,10 +939,10 @@ public class HTMLParser implements Parser {
     Stream.of("area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "param", "source", "track", "wbr")
           .forEach(tag -> DEFAULT_TAG_ATTRIBUTES.put(tag, voidTagAttributes));
 
-    // TODO investigate template elements?
+    // Skipping templates, very free form but it still makes sense to try to parse them, they will fallback to text
 
     // Setup raw text elements
-    TagAttributes rawTextElements = new TagAttributes(false, true, false, true);
+    TagAttributes rawTextElements = new TagAttributes(false, true, false, false);
     Stream.of("script", "style")
           .forEach(tag -> DEFAULT_TAG_ATTRIBUTES.put(tag, rawTextElements));
 

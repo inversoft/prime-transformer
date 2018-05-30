@@ -24,6 +24,7 @@ import java.util.function.Supplier
  */
 class HTMLParserTest {
 
+  // Using anonymous inner class to resolve lack of lambdas in groovy 2
   ParserAsserter asserter = new ParserAsserter(new Supplier<Parser>() {
     @Override
     Parser get() {
@@ -51,6 +52,7 @@ class HTMLParserTest {
 
   @Test
   void basic_htmlIsNotEscapedWithBackslash() {
+    // Keep BBCode separate from the html parser. HTML uses the &<codepoint>; escape style.
     asserter.assertParse("""<div class="bold">Foo\\</div>""", [[0, 18], [22, 6]], [[12, 4]]) {
       TagNode(name: "div", start: 0, nameEnd: 4, bodyBegin: 18, bodyEnd: 22, end: 28, attributes: [class: "bold"]) {
         TextNode(body: "Foo\\", start: 18, end: 22)
@@ -60,6 +62,7 @@ class HTMLParserTest {
 
   @Test
   void basic_selfClosingTag() {
+    // While HTML5 stopped using the self close slash, they are still valid (but ignored)
     asserter.assertParse("""<img src="someImage.png" alt="some text"/>""", [[0, 42]], [[10, 13], [30, 9]]) {
       TagNode(name: "img", start: 0, nameEnd: 4, bodyBegin: 42, bodyEnd: 42, end: 42,
               attributes: [src: "someImage.png", alt: "some text"])
@@ -68,9 +71,24 @@ class HTMLParserTest {
 
   @Test
   void basic_implicitlyClosedTag() {
+    // Some tags are implicitly closed
     asserter.assertParse("""<img src="someImage.png" alt="some text">""", [[0, 41]], [[10, 13], [30, 9]]) {
       TagNode(name: "img", start: 0, nameEnd: 4, bodyBegin: 41, bodyEnd: 41, end: 41,
               attributes: [src: "someImage.png", alt: "some text"])
+    }
+  }
+
+  @Test
+  void basic_booleanAttribute() {
+    asserter.assertParse("<input disabled>", [[0, 16]], [[15, 0]]) {
+      TagNode(name: "input", start: 0, nameEnd: 6, bodyBegin: 16, bodyEnd: 16, end: 16, attributes: [disabled: "true"])
+    }
+  }
+
+  @Test
+  void invalidHtml() {
+    asserter.assertParse("<not a tag<a></a> <p>", [], []) {
+      TextNode(body: "<not a tag<a></a> <p>", start: 0, end: 21)
     }
   }
 }
