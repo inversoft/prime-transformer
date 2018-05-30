@@ -520,8 +520,17 @@ public class HTMLParser implements Parser {
       switch (state) {
 
         case start:
+        case bangDash:
+        case inComment:
+        case inCommentDash:
         case closingTagBegin:
           state = state.next(source[index]);
+          index++;
+          break;
+
+        case bang:
+          state = state.next(source[index]);
+          textNode = new TextNode(document, nodes.peek(), index - 2, index);
           index++;
           break;
 
@@ -579,6 +588,7 @@ public class HTMLParser implements Parser {
           }
           break;
 
+        case inCommentDashDash:
         case openingTagSelfClose:
         case closingTagEnd:
           state = state.next(source[index]);
@@ -690,8 +700,10 @@ public class HTMLParser implements Parser {
         if (c == '/') {
           return closingTagBegin;
         } else if (Character.isWhitespace(c) || c == '<' || c == '>') {
-          // No tag name exists, i.e. [], treat as text.
+          // No tag name exists, i.e. <>, treat as text.
           return text;
+        } else if (c == '!') {
+          return bang;
         } else {
           return tagName;
         }
@@ -895,6 +907,61 @@ public class HTMLParser implements Parser {
           return tagBegin;
         } else {
           return text;
+        }
+      }
+    },
+
+    bang {
+      @Override
+      public State next(char c) {
+        if (c == '-') {
+          return bangDash;
+        } else {
+          return text;
+        }
+      }
+    },
+
+    bangDash {
+      @Override
+      public State next(char c) {
+        if (c == '-') {
+          return inComment;
+        } else {
+          return text;
+        }
+      }
+    },
+
+    inComment {
+      @Override
+      public State next(char c) {
+        if (c == '-') {
+          return inCommentDash;
+        } else {
+          return inComment;
+        }
+      }
+    },
+
+    inCommentDash {
+      @Override
+      public State next(char c) {
+        if (c == '-') {
+          return inCommentDashDash;
+        } else {
+          return inComment;
+        }
+      }
+    },
+
+    inCommentDashDash {
+      @Override
+      public State next(char c) {
+        if (c == '>') {
+          return text;
+        } else {
+          return inComment;
         }
       }
     },

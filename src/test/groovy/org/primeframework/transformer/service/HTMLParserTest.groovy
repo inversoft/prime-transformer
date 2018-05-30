@@ -42,6 +42,42 @@ class HTMLParserTest {
   }
 
   @Test
+  void comment() {
+    asserter.assertParse("<!-- Foo -->", [], []) {
+      TextNode(body: "<!-- Foo -->", start: 0, end: 12)
+    }
+  }
+
+  @Test
+  void commentWithTagInside() {
+    asserter.assertParse("<!-- Foo <bar></bar> -->", [], []) {
+      TextNode(body: "<!-- Foo <bar></bar> -->", start: 0, end: 24)
+    }
+  }
+
+  @Test
+  void commentWithTextBeforeAndAfter() {
+    asserter.assertParse("Some text<!-- Foo -->with some other text", [], []) {
+      TextNode(body: "Some text<!-- Foo -->with some other text", start: 0, end: 41)
+    }
+  }
+
+  @Test
+  void advanced_attributeNewLines() {
+    asserter.assertParse(
+        """
+<div class="someClass"
+id="someId"
+></div>
+""", [[1, 36], [37, 6]], [[13, 9], [28, 6]]) {
+      TextNode(body: "\n", start: 0, end: 1)
+      TagNode(name: "div", start: 1, nameEnd: 5, bodyBegin: 37, bodyEnd: 37, end: 43,
+              attributes: [class: "someClass", id: "someId"])
+      TextNode(body: "\n", start: 43, end: 44)
+    }
+  }
+
+  @Test
   void basic_withAttribute() {
     asserter.assertParse("""<div class="bold">Foo</div>""", [[0, 18], [21, 6]], [[12, 4]]) {
       TagNode(name: "div", start: 0, nameEnd: 4, bodyBegin: 18, bodyEnd: 21, end: 27, attributes: [class: "bold"]) {
@@ -84,7 +120,6 @@ class HTMLParserTest {
       TagNode(name: "input", start: 0, nameEnd: 6, bodyBegin: 16, bodyEnd: 16, end: 16, attributes: [disabled: "true"])
     }
   }
-
 
   @Test
   void control_embeddedTags() {
