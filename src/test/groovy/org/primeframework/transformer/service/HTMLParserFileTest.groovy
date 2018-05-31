@@ -15,6 +15,8 @@
  */
 package org.primeframework.transformer.service
 
+import com.fasterxml.jackson.core.SerializableString
+import com.fasterxml.jackson.core.io.CharacterEscapes
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
 import org.primeframework.transformer.jackson.ProxyModule
@@ -36,6 +38,18 @@ class HTMLParserFileTest {
   void beforeTest() {
     objectMapper = new ObjectMapper().configure(SerializationFeature.INDENT_OUTPUT, true)
                                      .registerModule(new ProxyModule())
+
+    objectMapper.getFactory().setCharacterEscapes(new CharacterEscapes() {
+      @Override
+      int[] getEscapeCodesForAscii() {
+        return standardAsciiEscapesForJSON()
+      }
+
+      @Override
+      SerializableString getEscapeSequence(int ch) {
+        return null
+      }
+    })
   }
 
   @DataProvider
