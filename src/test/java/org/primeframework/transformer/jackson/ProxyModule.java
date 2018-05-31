@@ -20,6 +20,10 @@ import org.primeframework.transformer.domain.BaseNode;
 import org.primeframework.transformer.domain.Document;
 import org.primeframework.transformer.domain.TagNode;
 import org.primeframework.transformer.domain.TextNode;
+import org.primeframework.transformer.jackson.proxy.ProxyBaseNode;
+import org.primeframework.transformer.jackson.proxy.ProxyDocument;
+import org.primeframework.transformer.jackson.proxy.ProxyTagNode;
+import org.primeframework.transformer.jackson.proxy.ProxyTextNode;
 
 /**
  * @author Daniel DeGroff

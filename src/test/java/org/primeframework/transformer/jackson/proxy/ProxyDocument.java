@@ -14,15 +14,23 @@
  * language governing permissions and limitations under the License.
  */
 
-package org.primeframework.transformer.jackson;
+package org.primeframework.transformer.jackson.proxy;
+
+import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import org.primeframework.transformer.domain.Document;
+import org.primeframework.transformer.domain.TagNode;
 
 /**
  * @author Daniel DeGroff
  */
-public abstract class ProxyBaseNode {
+public abstract class ProxyDocument {
   @JsonIgnore
-  public Document document;
+  public final char[] source = new char[]{};
+
+  @JsonIgnore
+  public abstract List<TagNode> getChildTagNodes();
+
+  @JsonIgnore
+  public abstract String getRawString();
 }

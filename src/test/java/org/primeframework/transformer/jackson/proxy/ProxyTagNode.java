@@ -14,7 +14,7 @@
  * language governing permissions and limitations under the License.
  */
 
-package org.primeframework.transformer.jackson;
+package org.primeframework.transformer.jackson.proxy;
 
 import java.util.List;
 
@@ -24,9 +24,9 @@ import org.primeframework.transformer.domain.TagNode;
 /**
  * @author Daniel DeGroff
  */
-public abstract class ProxyDocument {
+public abstract class ProxyTagNode {
   @JsonIgnore
-  public final char[] source = new char[]{};
+  public TagNode parent;
 
   @JsonIgnore
   public abstract List<TagNode> getChildTagNodes();
