@@ -140,6 +140,18 @@ id="someId"
   }
 
   @Test
+  void extraListItem() {
+    asserter.assertParse("<ul><li>foo</li><li></ul>", [], []) {
+      TagNode(name: "ul", start: 0, nameEnd: 3, bodyBegin: 4, bodyEnd: 20, end: 25) {
+        TagNode(name: "li", start: 4, nameEnd: 7, bodyBegin: 8, bodyEnd: 11, end: 16) {
+          TextNode(body: "foo", start: 8, end: 11)
+        }
+        TextNode(body: "<li>", start: 16, end: 20)
+      }
+    }
+  }
+
+  @Test
   void invalidHtml() {
     asserter.assertParse("<not a tag<a></a> <p>", [], []) {
       TextNode(body: "<not a tag<a></a> <p>", start: 0, end: 21)

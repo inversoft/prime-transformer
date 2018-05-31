@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015, Inversoft Inc., All Rights Reserved
+ * Copyright (c) 2015-2018, Inversoft Inc., All Rights Reserved
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,14 +33,9 @@ import static org.testng.Assert.assertEquals;
 public class TextTransformerTest {
 
   private static Map<String, TagAttributes> attributes = new HashMap<>();
-  static {
-    attributes.put("*", new TagAttributes(true, false, false, true));
-    attributes.put("code", new TagAttributes(false, true, false, true));
-    attributes.put("noparse", new TagAttributes(false, true, false, true));
-  }
 
   @Test
-  public void all() throws Exception {
+  public void bbCodeToText() {
     assertTransform("[list] [*] foo [*] bar [/list]", "  foo  bar ", (node) -> true);
     assertTransform("[b]bold[/b]No format.[b]bold[/b]", "boldNo format.bold", (node) -> true);
     assertTransform("[b] bold [/b] No format. [b] bold [/b]", " bold  No format.  bold ", (node) -> true);
@@ -52,11 +47,35 @@ public class TextTransformerTest {
     assertTransform("\\[b]Hello World\\[/b]", "[b]Hello World[/b]", (node) -> true);
   }
 
-  private void assertTransform(String str, String expected, Predicate<TagNode> transformPredicate) throws Exception {
+  @Test
+  public void htmlToText() {
+    assertHTMLTransformToText("<ul> <li> foo </li> <li> bar </li> </ul>", "  foo   bar  ", (node) -> true);
+    assertHTMLTransformToText("<strong>bold</strong>No format.<strong>bold</strong>", "boldNo format.bold", (node) -> true);
+    assertHTMLTransformToText("<strong> bold </strong> No format. <strong> bold </strong>", " bold  No format.  bold ", (node) -> true);
+    assertHTMLTransformToText("<strong>bold<em>italic<underline>underline</underline>italic</em>bold</strong>", "bolditalicunderlineitalicbold", (node) -> true);
+    assertHTMLTransformToText("z <strong>abc defg </strong>hijk <ul><li>lmn opqr</li></ul>", "z abc defg hijk lmn opqr", (node) -> true);
+    assertHTMLTransformToText("Example <pre class=\"code\" type=\"see the java oo\" syntax=\"java\"> System.out.println(\"Hello World!\"); </pre> ", "Example  System.out.println(\"Hello World!\");  ", (node) -> true);
+  }
+
+  private void assertHTMLTransformToText(String str, String expected, Predicate<TagNode> transformPredicate) {
+    HTMLParser parser = new HTMLParser();
+    Document doc = parser.buildDocument(str, attributes);
+    Transformer transformer = new TextTransformer();
+    String actual = transformer.transform(doc, transformPredicate, null, null);
+    assertEquals(actual, expected);
+  }
+
+  private void assertTransform(String str, String expected, Predicate<TagNode> transformPredicate) {
     BBCodeParser parser = new BBCodeParser();
     Document doc = parser.buildDocument(str, attributes);
     Transformer transformer = new TextTransformer();
     String actual = transformer.transform(doc, transformPredicate, null, null);
     assertEquals(actual, expected);
+  }
+
+  static {
+    attributes.put("*", new TagAttributes(true, false, false, true));
+    attributes.put("code", new TagAttributes(false, true, false, true));
+    attributes.put("noparse", new TagAttributes(false, true, false, true));
   }
 }
