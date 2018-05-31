@@ -16,7 +16,10 @@
 
 package org.primeframework.transformer.jackson;
 
+import java.util.List;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.primeframework.transformer.domain.TagNode;
 
 /**
  * @author Daniel DeGroff
@@ -24,6 +27,9 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 public abstract class ProxyDocument {
   @JsonIgnore
   public final char[] source = new char[]{};
+
+  @JsonIgnore
+  public abstract List<TagNode> getChildTagNodes();
 
   @JsonIgnore
   public abstract String getRawString();

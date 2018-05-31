@@ -17,6 +17,7 @@ package org.primeframework.transformer.service
 
 import com.fasterxml.jackson.core.SerializableString
 import com.fasterxml.jackson.core.io.CharacterEscapes
+import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
 import org.primeframework.transformer.jackson.ProxyModule
@@ -25,7 +26,6 @@ import org.testng.annotations.DataProvider
 import org.testng.annotations.Test
 
 import static java.util.Collections.emptyMap
-import static org.testng.Assert.assertEquals
 
 /**
  * @author Tyler Scott
@@ -76,7 +76,15 @@ class HTMLParserFileTest {
     def parser = new HTMLParser()
     def doc = parser.buildDocument(inData, emptyMap())
 
+    JsonNode actual = objectMapper.readTree(objectMapper.writeValueAsString(doc))
+    JsonNode expected = objectMapper.readTree(expectedOutData)
 
-    assertEquals(objectMapper.writeValueAsString(doc), expectedOutData)
+    if (actual != expected) {
+      String actualString = objectMapper.writeValueAsString(actual)
+      String expectedString = objectMapper.writeValueAsString(expected)
+
+      throw new AssertionError(
+          "The output doesn't match the expected JSON output. expected [" + expectedString + "] but found [" + actualString + "]")
+    }
   }
 }
