@@ -15,11 +15,10 @@
  */
 package org.primeframework.transformer.service
 
-import groovy.json.JsonBuilder
-import org.primeframework.transformer.domain.Document
-import org.primeframework.transformer.domain.Node
-import org.primeframework.transformer.domain.TagNode
-import org.primeframework.transformer.domain.TextNode
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.SerializationFeature
+import org.primeframework.transformer.jackson.ProxyModule
+import org.testng.annotations.BeforeTest
 import org.testng.annotations.DataProvider
 import org.testng.annotations.Test
 
@@ -30,18 +29,28 @@ import static org.testng.Assert.assertEquals
  * @author Tyler Scott
  */
 class HTMLParserFileTest {
+
+  private ObjectMapper objectMapper;
+
+  @BeforeTest
+  void beforeTest() {
+    objectMapper = new ObjectMapper().configure(SerializationFeature.INDENT_OUTPUT, true)
+                                     .registerModule(new ProxyModule())
+  }
+
   @DataProvider
   Object[][] inOutTests() {
-    List<String> files = this.getClass().getResourceAsStream("/org/primeframework/transformer/inputHtml").getText().
+    List<String> files = this.getClass().getResourceAsStream("/org/primeframework/transformer/html/source").getText().
         split('\r?\n')
 
     Object[][] results = new Object[files.size()][2]
 
     for (int i = 0; i < files.size(); ++i) {
-      results[i][0] = this.getClass().getResourceAsStream("/org/primeframework/transformer/inputHtml/" + files.get(i)).
+      results[i][0] = this.getClass().
+          getResourceAsStream("/org/primeframework/transformer/html/source/" + files.get(i)).
           getText()
       results[i][1] = this.getClass().getResourceAsStream(
-          "/org/primeframework/transformer/intermediateParseResults/" + files.get(i).replaceAll("\\.html\$", ".json")).
+          "/org/primeframework/transformer/html/parsed/" + files.get(i).replaceAll("\\.html\$", ".json")).
           getText()
     }
 
@@ -53,46 +62,7 @@ class HTMLParserFileTest {
     def parser = new HTMLParser()
     def doc = parser.buildDocument(inData, emptyMap())
 
-    assertEquals(documentToJSON(doc), expectedOutData)
-  }
 
-  private static String documentToJSON(Document document) {
-    def builder = new JsonBuilder()
-
-    builder.setContent(toJSON(document))
-
-    return builder.toPrettyString()
-  }
-
-  private static Map<String, Object> toJSON(Node node) {
-    if (node instanceof Document) {
-      def tag = node as Document
-      return [
-          begin   : tag.begin,
-          end     : tag.end,
-          children: toJSON(tag.children)
-      ]
-    } else if (node instanceof TagNode) {
-      def tag = node as TagNode
-      return [
-          begin     : tag.begin,
-          end       : tag.end,
-          attributes: tag.attributes,
-          children  : toJSON(tag.children)
-      ]
-    } else { // Text node
-      def text = node as TextNode
-      return [
-          begin: text.begin,
-          end  : text.end,
-          body : text.body
-      ]
-    }
-  }
-
-  private static List<Object> toJSON(List<Node> nodes) {
-    return nodes.collect {
-      toJSON(it)
-    }
+    assertEquals(objectMapper.writeValueAsString(doc), expectedOutData)
   }
 }

@@ -103,8 +103,8 @@ public class BBCodeToHTMLTransformerSpec extends Specification {
 
     expect: "when HTML transformer is called with bbcode properly formatted HTML is returned"
 
-      def bbCode = this.getClass().getResourceAsStream("/org/primeframework/transformer/bbcode/" + fileName).getText();
-      def html = this.getClass().getResourceAsStream("/org/primeframework/transformer/html/" + fileName).getText();
+      def bbCode = this.getClass().getResourceAsStream("/org/primeframework/transformer/bbcode/source/" + fileName).getText();
+      def html = this.getClass().getResourceAsStream("/org/primeframework/transformer/bbcode/html/" + fileName).getText();
 
       def transformFunction = new Transformer.TransformFunction.HTMLTransformFunction()
       def document = bbCodeParser.buildDocument(bbCode, attributes)
