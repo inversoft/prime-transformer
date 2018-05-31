@@ -1023,7 +1023,8 @@ public class HTMLParser implements Parser {
 
     // Skipping escapable raw text elements
 
-    // Skipping foreign elements
+    // Ignore svg stuff. It explodes the parser.
+    tagAttributesHashMap.put("svg", new TagAttributes(false, true, false, true));
 
     // Everything else has a good default mode.
 
