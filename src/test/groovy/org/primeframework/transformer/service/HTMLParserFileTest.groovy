@@ -50,7 +50,7 @@ class HTMLParserFileTest {
           getResourceAsStream("/org/primeframework/transformer/html/source/" + files.get(i)).
           getText()
       results[i][1] = this.getClass().getResourceAsStream(
-          "/org/primeframework/transformer/html/parsed/" + files.get(i).replaceAll("\\.html\$", ".json")).
+          "/org/primeframework/transformer/html/json/" + files.get(i).replaceAll("\\.html\$", ".json")).
           getText()
     }
 
