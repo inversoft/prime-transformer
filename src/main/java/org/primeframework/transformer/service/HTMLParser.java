@@ -249,6 +249,8 @@ public class HTMLParser implements Parser {
       addNode(document, attributes, tagNode, nodes);
     } else {
       handleUnexpectedState(document, attributes, index, nodes);
+      // Try completing the node again.
+      handleCompletedTagNode(document, attributes, index, nodes);
     }
   }
 
@@ -440,7 +442,9 @@ public class HTMLParser implements Parser {
     handleRemovingOffsets(document.offsets, tagNode.begin, index);
     handleRemovingOffsets(document.attributeOffsets, tagNode.begin, index);
     TextNode textNode = tagNode.toTextNode();
-    textNode.end = index;
+    if (textNode.end == 0) {
+      textNode.end = index;
+    }
     addNode(document, attributes, textNode, nodes);
   }
 
@@ -603,7 +607,7 @@ public class HTMLParser implements Parser {
           if (parsingEnabled) {
             if (state == State.attributeName) {
               attributeNameBegin = index;
-            } else if (state == State.text && parsingEnabled) {
+            } else if (state == State.tagBegin) {
               handleUnexpectedState(document, attributes, index, nodes);
             }
           }
@@ -615,7 +619,7 @@ public class HTMLParser implements Parser {
           if (parsingEnabled) {
             if (state == State.attributeValue) {
               attributeName = document.getString(attributeNameBegin, index);
-            } else if (state == State.text) {
+            } else if (state == State.tagBegin) {
               handleUnexpectedState(document, attributes, index, nodes);
             } else if (state == State.openingTagEnd || state == State.openingTagSelfClose) {
               // Boolean attribute
@@ -637,6 +641,8 @@ public class HTMLParser implements Parser {
               attributeValueBegin = index;
             } else if (state == State.singleQuotedAttributeValue || state == State.doubleQuotedAttributeValue) {
               attributeValueBegin = index + 1;
+            } else if (state == State.tagBegin) {
+              handleUnexpectedState(document, attributes, index, nodes);
             }
           }
           index++;
@@ -744,7 +750,7 @@ public class HTMLParser implements Parser {
             // Ignore whitespace
             return attribute;
           case '<':
-            return text; // tag is not closed properly
+            return tagBegin; // tag is not closed properly
 
           default:
             return attributeName;
@@ -764,6 +770,8 @@ public class HTMLParser implements Parser {
           case ' ':
             // Ignore whitespace
             return attributeName;
+          case '<':
+            return tagBegin; // tag not closed properly
           case '>':
             return openingTagEnd;
           case '/':
@@ -778,6 +786,8 @@ public class HTMLParser implements Parser {
       @Override
       public State next(char c) {
         switch (c) {
+          case '<':
+            return tagBegin;
           case '>':
             return openingTagEnd;
           case '/':

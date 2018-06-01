@@ -14,9 +14,9 @@
  * language governing permissions and limitations under the License.
  */
 
-savantVersion = "0.4.4"
+savantVersion = "1.0.0"
 
-project(group: "com.inversoft", name: "prime-transformer", version: "2.0.8", licenses: ["ApacheV2_0"]) {
+project(group: "com.inversoft", name: "prime-transformer", version: "2.1.0-{integration}", licenses: ["ApacheV2_0"]) {
 
   workflow {
     standard()

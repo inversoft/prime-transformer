@@ -141,7 +141,7 @@ id="someId"
 
   @Test
   void extraListItem() {
-    asserter.assertParse("<ul><li>foo</li><li></ul>", [], []) {
+    asserter.assertParse("<ul><li>foo</li><li></ul>", [[0, 4], [4, 4], [11, 5], [20, 5]], []) {
       TagNode(name: "ul", start: 0, nameEnd: 3, bodyBegin: 4, bodyEnd: 20, end: 25) {
         TagNode(name: "li", start: 4, nameEnd: 7, bodyBegin: 8, bodyEnd: 11, end: 16) {
           TextNode(body: "foo", start: 8, end: 11)
@@ -152,9 +152,56 @@ id="someId"
   }
 
   @Test
-  void invalidHtml() {
-    asserter.assertParse("<not a tag<a></a> <p>", [], []) {
-      TextNode(body: "<not a tag<a></a> <p>", start: 0, end: 21)
+  void unclosedStartTagAfterAttribute() {
+    asserter.assertParse("<not a tag<a></a> <p>", [[10, 3], [13, 4]], []) {
+      TextNode(body: "<not a tag", start: 0, end: 10)
+      TagNode(start: 10, name: "a", nameEnd: 12, bodyBegin: 13, bodyEnd: 13, end: 17)
+      TextNode(body: " <p>", start: 17, end: 21)
+    }
+  }
+
+  @Test
+  void unclosedStartTagInsideTagName() {
+    asserter.assertParse("<no<a></a> <p>", [[3, 3], [6, 4]], []) {
+      TextNode(body: "<no", start: 0, end: 3)
+      TagNode(start: 3, name: "a", nameEnd: 5, bodyBegin: 6, bodyEnd: 6, end: 10)
+      TextNode(body: " <p>", start: 10, end: 14)
+    }
+  }
+
+  @Test
+  void tagStartWhereTagNameGoes() {
+    asserter.assertParse("<<a></a> <p>", [[1, 3], [4, 4]], []) {
+      TextNode(body: "<", start: 0, end: 1)
+      TagNode(start: 1, name: "a", nameEnd: 3, bodyBegin: 4, bodyEnd: 4, end: 8)
+      TextNode(body: " <p>", start: 8, end: 12)
+    }
+  }
+
+  @Test
+  void unclosedStartTagInAttribute() {
+    asserter.assertParse("<not tag=<a></a> <p>", [[9, 3], [12, 4]], []) {
+      TextNode(body: "<not tag=", start: 0, end: 9)
+      TagNode(start: 9, name: "a", nameEnd: 11, bodyBegin: 12, bodyEnd: 12, end: 16)
+      TextNode(body: " <p>", start: 16, end: 20)
+    }
+  }
+
+  @Test
+  void unpairedCloseTag() {
+    asserter.assertParse("</option>", [], []) {
+      TextNode(body: "</option>", start: 0, end: 9)
+    }
+  }
+
+  @Test
+  void nestedUnpairedCloseTag() {
+    asserter.assertParse("<div><div></option></div></div>", [], []) {
+      TagNode(start: 0, name: "div", nameEnd: 4, bodyBegin: 5, bodyEnd: 25, end: 31) {
+        TagNode(start: 5, name: "div", nameEnd: 9, bodyBegin: 10, bodyEnd: 19, end: 25) {
+          TextNode(body: "</option>", start: 10, end: 19)
+        }
+      }
     }
   }
 }
