@@ -54,8 +54,13 @@ class HTMLParserFileTest {
 
   @DataProvider
   Object[][] inOutTests() {
-    List<String> files = this.getClass().getResourceAsStream("/org/primeframework/transformer/html/source").getText().
-        split('\r?\n')
+//    List<String> files = this.getClass().getResourceAsStream("/org/primeframework/transformer/html/source").getText().
+//        split('\r?\n')
+
+    // Savant does something to the class loader (maybe?) that causes directory resources to return an empty string instead
+    // of the files separated by new lines. Falling back to static filenames.
+
+    List<String> files = ["custom.html", "github.com.html", "svg.html"]
 
     Object[][] results = new Object[files.size()][2]
 
@@ -64,15 +69,14 @@ class HTMLParserFileTest {
           getResourceAsStream("/org/primeframework/transformer/html/source/" + files.get(i)).
           getText()
       results[i][1] = this.getClass().getResourceAsStream(
-          "/org/primeframework/transformer/html/json/" + files.get(i).replaceAll("\\.html\$", ".json")).
-          getText()
+          "/org/primeframework/transformer/html/json/" + files.get(i).replaceAll("\\.html\$", ".json"))
     }
 
     return results
   }
 
   @Test(dataProvider = "inOutTests")
-  void parseRealSites(String inData, String expectedOutData) {
+  void parseRealSites(String inData, InputStream expectedOutData) {
     def parser = new HTMLParser()
     def doc = parser.buildDocument(inData, emptyMap())
 

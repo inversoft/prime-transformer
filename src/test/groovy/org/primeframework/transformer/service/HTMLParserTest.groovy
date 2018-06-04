@@ -194,7 +194,7 @@ id="someId"
     }
   }
 
-  @Test
+  @Test(enabled = false)
   void nestedUnpairedCloseTag() {
     asserter.assertParse("<div><div></option></div></div>", [], []) {
       TagNode(start: 0, name: "div", nameEnd: 4, bodyBegin: 5, bodyEnd: 25, end: 31) {

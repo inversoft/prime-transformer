@@ -64,11 +64,11 @@
     <orderEntry type="module-library" scope="TEST">
       <library>
         <CLASSES>
-          <root url="jar://$USER_HOME$/.savant/cache/com/fasterxml/jackson/core/jackson-annotations/2.8.0/jackson-annotations-2.8.0.jar!/" />
+          <root url="jar://$USER_HOME$/.savant/cache/com/fasterxml/jackson/core/jackson-annotations/2.8.8/jackson-annotations-2.8.8.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES>
-          <root url="jar://$USER_HOME$/.savant/cache/com/fasterxml/jackson/core/jackson-annotations/2.8.0/jackson-annotations-2.8.0-src.jar!/" />
+          <root url="jar://$USER_HOME$/.savant/cache/com/fasterxml/jackson/core/jackson-annotations/2.8.8/jackson-annotations-2.8.8-src.jar!/" />
         </SOURCES>
       </library>
     </orderEntry>
@@ -129,3 +129,4 @@
     </orderEntry>
   </component>
 </module>
+
