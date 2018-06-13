@@ -16,7 +16,7 @@
 
 savantVersion = "1.0.0"
 
-project(group: "com.inversoft", name: "prime-transformer", version: "2.1.0-{integration}", licenses: ["ApacheV2_0"]) {
+project(group: "org.primeframework", name: "prime-transformer", version: "2.1.0", licenses: ["ApacheV2_0"]) {
 
   workflow {
     standard()
