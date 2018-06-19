@@ -19,7 +19,8 @@ package org.primeframework.transformer.domain;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Set;
+import java.util.Objects;
+import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
 
@@ -38,7 +39,7 @@ public class Document extends BaseTagNode {
    *                  14,2        26,7
    * </pre>
    */
-  public final Set<Pair<Integer, Integer>> attributeOffsets = new TreeSet<>();
+  public final SortedSet<Pair<Integer, Integer>> attributeOffsets = new TreeSet<>();
 
   /**
    * Child nodes, may contain both {@link TagNode} or {@link TextNode} types.
@@ -56,7 +57,7 @@ public class Document extends BaseTagNode {
    *      2,3        14,4
    * </pre>
    */
-  public final Set<Pair<Integer, Integer>> offsets = new TreeSet<>();
+  public final SortedSet<Pair<Integer, Integer>> offsets = new TreeSet<>();
 
   /**
    * Unstructured source string.
@@ -80,6 +81,24 @@ public class Document extends BaseTagNode {
   }
 
   @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (!(o instanceof Document)) {
+      return false;
+    }
+    if (!super.equals(o)) {
+      return false;
+    }
+    Document document = (Document) o;
+    return Objects.equals(attributeOffsets, document.attributeOffsets) &&
+        Objects.equals(children, document.children) &&
+        Objects.equals(offsets, document.offsets) &&
+        Arrays.equals(source, document.source);
+  }
+
+  @Override
   public List<Node> getChildren() {
     return children;
   }
@@ -89,38 +108,9 @@ public class Document extends BaseTagNode {
   }
 
   @Override
-  public boolean equals(Object o) {
-    if (this == o) {
-      return true;
-    }
-    if (o == null || getClass() != o.getClass()) {
-      return false;
-    }
-
-    Document document = (Document) o;
-
-    if (!children.equals(document.children)) {
-      return false;
-    }
-    if (!Arrays.equals(source, document.source)) {
-      return false;
-    }
-    if (!offsets.equals(document.offsets)) {
-      return false;
-    }
-    if (!attributeOffsets.equals(document.attributeOffsets)) {
-      return false;
-    }
-
-    return true;
-  }
-
-  @Override
   public int hashCode() {
-    int result = children.hashCode();
+    int result = Objects.hash(super.hashCode(), attributeOffsets, children, offsets);
     result = 31 * result + Arrays.hashCode(source);
-    result = 31 * result + offsets.hashCode();
-    result = 31 * result + attributeOffsets.hashCode();
     return result;
   }
 
