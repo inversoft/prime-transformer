@@ -175,6 +175,8 @@ public abstract class AbstractParser implements Parser {
       addNode(document, attributes, tagNode, nodes);
     } else {
       handleUnexpectedState(document, attributes, index, nodes);
+      // Try completing the node again.
+      handleCompletedTagNode(document, attributes, index, nodes);
     }
   }
 
@@ -273,7 +275,18 @@ public abstract class AbstractParser implements Parser {
     handleRemovingOffsets(document.offsets, tagNode.begin, index);
     handleRemovingOffsets(document.attributeOffsets, tagNode.begin, index);
     TextNode textNode = tagNode.toTextNode();
-    textNode.end = index;
+    /*
+    This can happen if the previous tag was unclosed and its end was defined by
+    the start of a close tag.
+    Ex: <ul><li></ul>
+               ^
+               The current end of the li.
+
+    If we were to overwrite that end, it would be after the close tag and convert the whole thing to text.
+     */
+    if (textNode.end == 0) { // if we already have an end, keep it
+      textNode.end = index;
+    }
     addNode(document, attributes, textNode, nodes);
   }
 

@@ -58,6 +58,18 @@ class BBCodeParserTest {
   }
 
   @Test
+  void extraListItem() {
+    parserAsserter.assertParse("[foo][bar]txt[/bar][bar][/foo]", [[0, 5], [5, 5], [13, 6], [24, 6]], []) {
+      TagNode(name: "foo", start: 0, nameEnd: 4, bodyBegin: 5, bodyEnd: 24, end: 30) {
+        TagNode(name: "bar", start: 5, nameEnd: 9, bodyBegin: 10, bodyEnd: 13, end: 19) {
+          TextNode(body: "txt", start: 10, end: 13)
+        }
+        TextNode(body: "[bar]", start: 19, end: 24)
+      }
+    }
+  }
+
+  @Test
   void edgeCase_Code() {
     parserAsserter.assertParse("char[] ca = new char[1024]", [], []) {
       TextNode(body: "char[] ca = new char[1024]", start: 0, end: 26)

@@ -54,58 +54,6 @@ public class HTMLParser extends AbstractParser {
   }
 
   /**
-   * Handle completion of a {@link TagNode}. Set the end index of this tag, and then add the node to the {@link
-   * Document} or its parent node.
-   *
-   * @param document   the document where the node will be added.
-   * @param attributes the tag attribute map
-   * @param index      the current index of the parser state
-   * @param nodes      the stack of nodes being used for temporary storage
-   */
-  @Override
-  protected void handleCompletedTagNode(Document document, Map<String, TagAttributes> attributes, int index,
-                                        Deque<TagNode> nodes) {
-    if (nodes.isEmpty()) {
-      return;
-    }
-
-    TagNode current = nodes.peek();
-    String closingTagName = closingName(document, index, current);
-    // if no closing tag is required, or this is the correct closing tag for this node
-    if (doesNotRequireClosingTag(current, attributes) || eq(current.getName(), closingTagName)) {
-      TagNode tagNode = nodes.pop();
-      tagNode.end = index;
-      addNode(document, attributes, tagNode, nodes);
-    } else {
-      handleUnexpectedState(document, attributes, index, nodes);
-      // Try completing the node again.
-      handleCompletedTagNode(document, attributes, index, nodes);
-    }
-  }
-
-  /**
-   * Handle an unexpected state transition. The current current {@link TagNode} will be converted to a {@link
-   * TextNode}.
-   *
-   * @param document   the document where the node will be added.
-   * @param attributes the tag attribute map
-   * @param index      the current index of the parser state
-   * @param nodes      the stack of nodes being used for temporary storage
-   */
-  @Override
-  protected void handleUnexpectedState(Document document, Map<String, TagAttributes> attributes, int index,
-                                       Deque<TagNode> nodes) {
-    TagNode tagNode = nodes.pop();
-    handleRemovingOffsets(document.offsets, tagNode.begin, index);
-    handleRemovingOffsets(document.attributeOffsets, tagNode.begin, index);
-    TextNode textNode = tagNode.toTextNode();
-    if (textNode.end == 0) {
-      textNode.end = index;
-    }
-    addNode(document, attributes, textNode, nodes);
-  }
-
-  /**
    * Finite State Machine parser implementation.
    *
    * @param document      The document to add nodes to.
