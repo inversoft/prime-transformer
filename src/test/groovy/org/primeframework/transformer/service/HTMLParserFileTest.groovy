@@ -57,9 +57,9 @@ class HTMLParserFileTest {
     Object[][] results = new Object[files.size()][2]
     for (int i = 0; i < files.size(); ++i) {
       String file = files.get(i)
-      results[i][0] = getClass()
+      results[i][0] = this.getClass()
           .getResourceAsStream("/org/primeframework/transformer/html/source/" + file).getText()
-      results[i][1] = getClass().
+      results[i][1] = this.getClass().
           getResourceAsStream("/org/primeframework/transformer/html/json/" + file.replaceAll("\\.html\$", ".json"))
     }
 
