@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2018, Inversoft Inc., All Rights Reserved
+ * Copyright (c) 2018, Inversoft Inc., All Rights Reserved
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,9 +16,11 @@
 package org.primeframework.transformer.service;
 
 import java.util.ArrayDeque;
+import java.util.Collections;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import org.primeframework.transformer.domain.Document;
 import org.primeframework.transformer.domain.Pair;
@@ -27,11 +29,12 @@ import org.primeframework.transformer.domain.TagNode;
 import org.primeframework.transformer.domain.TextNode;
 
 /**
- * BBCode Parser Implementation.
+ * HTML Parser Implementation.
  *
- * @author Daniel DeGroff
+ * @author Tyler Scott
  */
-public class BBCodeParser extends AbstractParser {
+public class HTMLParser extends AbstractParser {
+  private static Map<String, TagAttributes> DEFAULT_TAG_ATTRIBUTES;
 
   @Override
   public Document buildDocument(String source, Map<String, TagAttributes> tagAttributes) {
@@ -41,28 +44,13 @@ public class BBCodeParser extends AbstractParser {
   @Override
   public Document buildDocument(char[] source, Map<String, TagAttributes> tagAttributes) {
     Document document = new Document(source);
-    parse(document, tagAttributes);
+
+    // Copy the default attributes and overwrite keys with any values specified in tagAttributes
+    Map<String, TagAttributes> defaultCopy = new HashMap<>(DEFAULT_TAG_ATTRIBUTES);
+    defaultCopy.putAll(tagAttributes);
+
+    parse(document, defaultCopy);
     return document;
-  }
-
-  /**
-   * Add a simple attribute value to the {@link TagNode} and add the offsets to the {@link Document}.
-   *
-   * @param document            the document where the node will be added.
-   * @param attributeValueBegin the index where the value begins
-   * @param index               the current index of the parser state
-   * @param nodes               the stack of nodes being used for temporary storage
-   */
-  private void addSimpleAttribute(Document document, int attributeValueBegin, int index, Deque<TagNode> nodes) {
-    TagNode current = nodes.peek();
-    String name = document.getString(attributeValueBegin, index);
-    // Ignore trailing space. e.g. [foo size=5    ] bar[/foo]
-    int length = name.length();
-    name = name.trim();
-
-    // Keep the trimmed value and account for the shortened value in the offset
-    document.attributeOffsets.add(new Pair<>(attributeValueBegin, index - attributeValueBegin - (length - name.length())));
-    current.attribute = name;
   }
 
   /**
@@ -105,9 +93,17 @@ public class BBCodeParser extends AbstractParser {
       switch (state) {
 
         case start:
-        case escape:
+        case bangDash:
+        case inComment:
+        case inCommentDash:
         case closingTagBegin:
           state = state.next(source[index]);
+          index++;
+          break;
+
+        case bang:
+          state = state.next(source[index]);
+          textNode = new TextNode(document, nodes.peek(), index - 2, index);
           index++;
           break;
 
@@ -165,6 +161,8 @@ public class BBCodeParser extends AbstractParser {
           }
           break;
 
+        case inCommentDashDash:
+        case openingTagSelfClose:
         case closingTagEnd:
           state = state.next(source[index]);
           if (state == State.text && textNode == null && parsingEnabled) {
@@ -173,72 +171,55 @@ public class BBCodeParser extends AbstractParser {
           index++;
           break;
 
-        case simpleAttribute:
+        case attribute:
           state = state.next(source[index]);
           if (parsingEnabled) {
-            if (state == State.simpleUnQuotedValue) {
-              attributeValueBegin = index;
-            } else if (state == State.simpleSingleQuotedValue || state == State.simpleDoubleQuotedValue) {
-              attributeValueBegin = index + 1;
-            }
-          }
-          index++;
-          break;
-
-        case simpleDoubleQuotedValue:
-        case simpleSingleQuotedValue:
-        case simpleUnQuotedValue:
-          state = state.next(source[index]);
-          if (parsingEnabled) {
-            if (state != previous) {
-              addSimpleAttribute(document, attributeValueBegin, index, nodes);
-            }
-          }
-          index++;
-          break;
-
-        case complexAttribute:
-          state = state.next(source[index]);
-          if (parsingEnabled) {
-            if (state == State.complexAttributeName) {
+            if (state == State.attributeName) {
               attributeNameBegin = index;
-            } else if (state == State.text && parsingEnabled) {
+            } else if (state == State.tagBegin) {
               handleUnexpectedState(document, attributes, index, nodes);
             }
           }
           index++;
           break;
 
-        case complexAttributeName:
+        case attributeName:
           state = state.next(source[index]);
           if (parsingEnabled) {
-            if (state == State.complexAttributeValue) {
+            if (state == State.attributeValue) {
               attributeName = document.getString(attributeNameBegin, index);
-            } else if (state == State.text) {
+            } else if (state == State.tagBegin) {
               handleUnexpectedState(document, attributes, index, nodes);
+            } else if (state == State.openingTagEnd || state == State.openingTagSelfClose) {
+              // Boolean attribute
+              attributeName = document.getString(attributeNameBegin, index);
+              nodes.peek().attributes.put(attributeName, "true");
+              document.attributeOffsets.add(new Pair<>(index, 0));
             }
           }
           index++;
           break;
 
-        case complexAttributeValue:
+        case attributeValue:
           state = state.next(source[index]);
           if (parsingEnabled) {
             if (state == State.openingTagEnd) {
               nodes.peek().attributes.put(attributeName, "");  // No attribute value, store empty string
               document.attributeOffsets.add(new Pair<>(index, 0));
-            } else if (state == State.complexUnQuotedValue) {
+            } else if (state == State.unquotedAttributeValue) {
               attributeValueBegin = index;
-            } else if (state == State.complexSingleQuotedValue || state == State.complexDoubleQuotedValue) {
+            } else if (state == State.singleQuotedAttributeValue || state == State.doubleQuotedAttributeValue) {
               attributeValueBegin = index + 1;
+            } else if (state == State.tagBegin) {
+              handleUnexpectedState(document, attributes, index, nodes);
             }
           }
           index++;
           break;
 
-        case complexDoubleQuotedValue:
-        case complexSingleQuotedValue:
-        case complexUnQuotedValue:
+        case doubleQuotedAttributeValue:
+        case singleQuotedAttributeValue:
+        case unquotedAttributeValue:
           state = state.next(source[index]);
           if (parsingEnabled) {
             if (state != previous) {
@@ -281,20 +262,11 @@ public class BBCodeParser extends AbstractParser {
     start {
       @Override
       public State next(char c) {
-        if (c == '[') {
+        if (c == '<') {
           return tagBegin;
-        } else if (c == '\\') {
-          return escape;
         } else {
           return text;
         }
-      }
-    },
-
-    escape {
-      @Override
-      public State next(char c) {
-        return text;
       }
     },
 
@@ -303,9 +275,11 @@ public class BBCodeParser extends AbstractParser {
       public State next(char c) {
         if (c == '/') {
           return closingTagBegin;
-        } else if (Character.isWhitespace(c) || c == '[' || c == ']') {
-          // No tag name exists, i.e. [], treat as text.
+        } else if (Character.isWhitespace(c) || c == '<' || c == '>') {
+          // No tag name exists, i.e. <>, treat as text.
           return text;
+        } else if (c == '!') {
+          return bang;
         } else {
           return tagName;
         }
@@ -315,147 +289,149 @@ public class BBCodeParser extends AbstractParser {
     tagName {
       @Override
       public State next(char c) {
-        if (c == '=') {
-          return simpleAttribute;
-        } else if (c == ' ') {
-          return complexAttribute;
-        } else if (c == ']') {
-          return openingTagEnd;
-        } else if (c == '[') {
-          return tagBegin;
-        } else {
-          return tagName;
+        switch (c) {
+          case '\t':
+          case '\n':
+          case '\r':
+          case ' ':
+            return attribute;
+          case '>':
+            return openingTagEnd;
+          case '<':
+            return tagBegin;
+          default:
+            return tagName;
         }
       }
     },
 
-    simpleAttribute {
+    attribute {
       @Override
       public State next(char c) {
-        if (c == ']') {
-          return openingTagEnd;
-        } else if (c == '\'') {
-          return simpleSingleQuotedValue;
-        } else if (c == '"') {
-          return simpleDoubleQuotedValue;
-        } else {
-          return simpleUnQuotedValue;
+        switch (c) {
+          case '>':
+            return openingTagEnd;
+          case '/':
+            return openingTagSelfClose;
+          case '\t':
+          case '\n':
+          case '\r':
+          case ' ':
+            // Ignore whitespace
+            return attribute;
+          case '<':
+            return tagBegin; // tag is not closed properly
+
+          default:
+            return attributeName;
         }
       }
     },
 
-    simpleSingleQuotedValue {
+    attributeName {
       @Override
       public State next(char c) {
-        if (c == '\'') {
-          return simpleAttribute;
-        } else {
-          return simpleSingleQuotedValue;
+        switch (c) {
+          case '=':
+            return attributeValue;
+          case '\t':
+          case '\n':
+          case '\r':
+          case ' ':
+            // Ignore whitespace
+            return attributeName;
+          case '<':
+            return tagBegin; // tag not closed properly
+          case '>':
+            return openingTagEnd;
+          case '/':
+            return openingTagSelfClose;
+          default:
+            return attributeName;
         }
       }
     },
 
-    simpleDoubleQuotedValue {
+    attributeValue {
       @Override
       public State next(char c) {
-        if (c == '"') {
-          return simpleAttribute;
-        } else {
-          return simpleDoubleQuotedValue;
+        switch (c) {
+          case '<':
+            return tagBegin;
+          case '>':
+            return openingTagEnd;
+          case '/':
+            return openingTagSelfClose;
+          case '\t':
+          case '\n':
+          case '\r':
+          case ' ':
+            return attribute;
+          case '\'':
+            return singleQuotedAttributeValue;
+          case '\"':
+            return doubleQuotedAttributeValue;
+          default:
+            return unquotedAttributeValue;
         }
       }
     },
 
-    simpleUnQuotedValue {
-      @Override
-      public State next(char c) {
-        if (c == ']') {
-          return openingTagEnd;
-        } else {
-          return simpleUnQuotedValue;
-        }
-      }
-    },
-
-    complexAttribute {
-      @Override
-      public State next(char c) {
-        if (c == ']') {
-          return openingTagEnd;
-        } else if (c == ' ') {
-          // Ignore whitespace
-          return complexAttribute;
-        } else if (c == '[') {
-          return text; // tag is not closed properly
-        } else {
-          return complexAttributeName;
-        }
-      }
-    },
-
-    complexAttributeName {
-      @Override
-      public State next(char c) {
-        if (c == '=') {
-          return complexAttributeValue;
-        } else if (c == ' ') {
-          return text; // no spaces allowed between name and equals
-        } else if (c == ']') {
-          return text; // missing name and value of attribute
-        } else {
-          return complexAttributeName;
-        }
-      }
-    },
-
-    complexAttributeValue {
-      @Override
-      public State next(char c) {
-        if (c == ']') {
-          return openingTagEnd;
-        } else if (c == ' ') {
-          return complexAttribute;
-        } else if (c == '\'') {
-          return complexSingleQuotedValue;
-        } else if (c == '\"') {
-          return complexDoubleQuotedValue;
-        } else {
-          return complexUnQuotedValue;
-        }
-      }
-    },
-
-    complexDoubleQuotedValue {
+    doubleQuotedAttributeValue {
       @Override
       public State next(char c) {
         if (c == '"') {
-          return complexAttribute;
+          return attribute;
         } else {
-          return complexDoubleQuotedValue;
+          return doubleQuotedAttributeValue;
         }
       }
     },
 
-    complexSingleQuotedValue {
+    singleQuotedAttributeValue {
       @Override
       public State next(char c) {
         if (c == '\'') {
-          return complexAttribute;
+          return attribute;
         } else {
-          return complexSingleQuotedValue;
+          return singleQuotedAttributeValue;
         }
       }
     },
 
-    complexUnQuotedValue {
+    // Source: https://mothereff.in/unquoted-attributes
+    unquotedAttributeValue {
       @Override
       public State next(char c) {
-        if (c == ' ') {
-          return complexAttribute;
-        } else if (c == ']') {
+        switch (c) {
+          case '"':
+          case '\'':
+          case '=':
+          case '<':
+          case '`':
+            // Disallowed characters in unquoted attribute (won't render properly anyways, so will likely become text or get erased by a browser)
+            return text;
+          case '\t':
+          case '\n':
+          case '\r':
+          case ' ':
+            // Any whitespace ends the attribute value
+            return attribute;
+          case '>':
+            return openingTagEnd;
+          default:
+            return unquotedAttributeValue;
+        }
+      }
+    },
+
+    openingTagSelfClose {
+      @Override
+      public State next(char c) {
+        if (c == '>') {
           return openingTagEnd;
         } else {
-          return complexUnQuotedValue;
+          return text;
         }
       }
     },
@@ -463,7 +439,7 @@ public class BBCodeParser extends AbstractParser {
     openingTagEnd {
       @Override
       public State next(char c) {
-        if (c == '[') {
+        if (c == '<') {
           return tagBegin;
         } else {
           return text;
@@ -474,7 +450,7 @@ public class BBCodeParser extends AbstractParser {
     closingTagBegin {
       @Override
       public State next(char c) {
-        if (c == ']') {
+        if (c == '>') {
           return closingTagEnd; // no name of closing tag
         } else {
           return closingTagName;
@@ -485,7 +461,7 @@ public class BBCodeParser extends AbstractParser {
     closingTagName {
       @Override
       public State next(char c) {
-        if (c == ']') {
+        if (c == '>') {
           return closingTagEnd;
         } else {
           return closingTagName;
@@ -496,7 +472,7 @@ public class BBCodeParser extends AbstractParser {
     closingTagEnd {
       @Override
       public State next(char c) {
-        if (c == '[') {
+        if (c == '<') {
           return tagBegin;
         } else {
           return text;
@@ -507,12 +483,65 @@ public class BBCodeParser extends AbstractParser {
     text {
       @Override
       public State next(char c) {
-        if (c == '[') {
+        if (c == '<') {
           return tagBegin;
-        } else if (c == '\\') {
-          return escape;
         } else {
           return text;
+        }
+      }
+    },
+
+    bang {
+      @Override
+      public State next(char c) {
+        if (c == '-') {
+          return bangDash;
+        } else {
+          return text;
+        }
+      }
+    },
+
+    bangDash {
+      @Override
+      public State next(char c) {
+        if (c == '-') {
+          return inComment;
+        } else {
+          return text;
+        }
+      }
+    },
+
+    inComment {
+      @Override
+      public State next(char c) {
+        if (c == '-') {
+          return inCommentDash;
+        } else {
+          return inComment;
+        }
+      }
+    },
+
+    inCommentDash {
+      @Override
+      public State next(char c) {
+        if (c == '-') {
+          return inCommentDashDash;
+        } else {
+          return inComment;
+        }
+      }
+    },
+
+    inCommentDashDash {
+      @Override
+      public State next(char c) {
+        if (c == '>') {
+          return text;
+        } else {
+          return inComment;
         }
       }
     },
@@ -532,5 +561,53 @@ public class BBCodeParser extends AbstractParser {
      * @return the next state of the parser.
      */
     public abstract State next(char c);
+  }
+
+  static {
+    /*
+      HTML has several classes of elements.
+
+      Void elements: (Elements with nothing inside)
+      [area, base, br, col, embed, hr, img, input, link, meta, param, source, track, wbr]
+
+      Template elements: (Define elements for a shadow dom)
+
+      Raw text elements: (The text is literal text, effectively a nested text document)
+      [script, style]
+
+      Escapable raw text elements: (The text is displayed and special characters need to be html escaped, no other html elements can go inside)
+      [textarea, title]
+
+      Foreign Elements: (Non html but still xmlish)
+      [MathML, svg]
+
+      Normal elements: (Everything else)
+
+      Source: http://w3c.github.io/html/syntax.html#void-elements
+      Source: https://stackoverflow.com/questions/3741896/what-do-you-call-tags-that-need-no-ending-tag
+   */
+
+    Map<String, TagAttributes> tagAttributesHashMap = new HashMap<>();
+
+    // Setup void tags
+    TagAttributes voidTagAttributes = new TagAttributes(true, false, true, true);
+    Stream.of("area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "param", "source", "track", "wbr")
+          .forEach(tag -> tagAttributesHashMap.put(tag, voidTagAttributes));
+
+    // Skipping templates, very free form but it still makes sense to try to parse them, they will fallback to text
+
+    // Setup raw text elements
+    TagAttributes rawTextElements = new TagAttributes(false, true, false, false);
+    Stream.of("script", "style")
+          .forEach(tag -> tagAttributesHashMap.put(tag, rawTextElements));
+
+    // Skipping escapable raw text elements
+
+    // Ignore svg stuff. It explodes the parser.
+    tagAttributesHashMap.put("svg", new TagAttributes(false, true, false, true));
+
+    // Everything else has a good default mode.
+
+    DEFAULT_TAG_ATTRIBUTES = Collections.unmodifiableMap(tagAttributesHashMap);
   }
 }

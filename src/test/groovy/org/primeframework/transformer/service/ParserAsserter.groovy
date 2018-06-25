@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015, Inversoft Inc., All Rights Reserved
+ * Copyright (c) 2015-2018, Inversoft Inc., All Rights Reserved
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,12 +23,20 @@ import org.primeframework.transformer.domain.TagNode
 import org.primeframework.transformer.domain.TextNode
 import org.testng.Assert
 
+import java.util.function.Supplier
+
 /**
  * Provides an assertion DSL for asserting the parser results.
  *
  * @author Brian Pontarelli
  */
-class ParserAssert {
+class ParserAsserter {
+
+  Supplier<Parser> parserSupplier
+
+  ParserAsserter(Supplier<Parser> parserSupplier) {
+    this.parserSupplier = parserSupplier
+  }
 
   static defaultAttributes = ['*'    : new TagAttributes(true, false, false, true),
                               code   : new TagAttributes(false, true, false, true),
@@ -42,9 +50,9 @@ class ParserAssert {
    * @param attributeOffsets
    * @param closure The closure for the DSL.
    */
-  public static void assertParse(String str, List offsets = null, List attributeOffsets = null,
-                                 @DelegatesTo(NodeDelegate.class) Closure closure) {
-    assertParse(defaultAttributes, str, offsets, attributeOffsets, closure);
+  void assertParse(String str, List offsets = null, List attributeOffsets = null,
+                   @DelegatesTo(NodeDelegate.class) Closure closure) {
+    assertParse(defaultAttributes, str, offsets, attributeOffsets, closure)
   }
 
   /**
@@ -56,9 +64,9 @@ class ParserAssert {
    * @param attributeOffsets
    * @param closure The closure for the DSL.
    */
-  public static void assertParse(Map<String, TagAttributes> attributes, String str, List offsets = null,
-                                 List attributeOffsets = null,
-                                 @DelegatesTo(NodeDelegate.class) Closure closure) {
+  void assertParse(Map<String, TagAttributes> attributes, String str, List offsets = null,
+                   List attributeOffsets = null,
+                   @DelegatesTo(NodeDelegate.class) Closure closure) {
 
     Document expected = new Document(str)
     closure.delegate = new NodeDelegate(expected)
@@ -69,7 +77,7 @@ class ParserAssert {
     //  Assert.assertTrue(attribute.getValue().validate(), "TagAttribute [" + attribute.getKey() + "] failed validation.")
     //}
 
-    Document actual = new BBCodeParser().buildDocument(str, attributes);
+    Document actual = parserSupplier.get().buildDocument(str, attributes)
     if (offsets != null) {
       offsets.each { pair ->
         expected.offsets.add(new Pair<>(pair[0], pair[1]))
@@ -89,10 +97,10 @@ class ParserAssert {
     Assert.assertEquals(actual, expected)
   }
 
-  public static class NodeDelegate {
+  static class NodeDelegate {
     private BaseTagNode node
 
-    public NodeDelegate(BaseTagNode node) {
+    NodeDelegate(BaseTagNode node) {
       this.node = node
     }
 

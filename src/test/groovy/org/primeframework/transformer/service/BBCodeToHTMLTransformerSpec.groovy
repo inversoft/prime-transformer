@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015, Inversoft Inc., All Rights Reserved
+ * Copyright (c) 2015-2018, Inversoft Inc., All Rights Reserved
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -103,8 +103,8 @@ public class BBCodeToHTMLTransformerSpec extends Specification {
 
     expect: "when HTML transformer is called with bbcode properly formatted HTML is returned"
 
-      def bbCode = this.getClass().getResourceAsStream("/org/primeframework/transformer/bbcode/" + fileName).getText();
-      def html = this.getClass().getResourceAsStream("/org/primeframework/transformer/html/" + fileName).getText();
+      def bbCode = this.getClass().getResourceAsStream("/org/primeframework/transformer/bbcode/source/" + fileName).getText();
+      def html = this.getClass().getResourceAsStream("/org/primeframework/transformer/bbcode/html/" + fileName).getText();
 
       def transformFunction = new Transformer.TransformFunction.HTMLTransformFunction()
       def document = bbCodeParser.buildDocument(bbCode, attributes)

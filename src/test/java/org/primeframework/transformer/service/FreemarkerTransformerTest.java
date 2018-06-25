@@ -33,6 +33,7 @@ import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
+import static org.testng.AssertJUnit.fail;
 
 /**
  * Tests the FreeMarker transformer.
@@ -58,7 +59,7 @@ public class FreemarkerTransformerTest {
   }
 
   @Test
-  public void computedOffset() throws Exception {
+  public void computedOffset() {
     Offsets offsets = new Offsets();
     offsets.add(0, 1);
     offsets.add(1, 2);
@@ -86,6 +87,7 @@ public class FreemarkerTransformerTest {
 
     try {
       assertTransform(true, doc, (node) -> true, null, null, null);
+      fail("Expected failure");
     } catch (TransformException e) {
       assertTrue(e.getMessage().startsWith("FreeMarker processing failed for template"));
     }

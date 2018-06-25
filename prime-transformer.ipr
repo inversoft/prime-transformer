@@ -25,7 +25,7 @@
   <component name="DependencyValidationManager">
     <option name="SKIP_IMPORT_STATEMENTS" value="false" />
   </component>
-  <component name="Encoding" useUTFGuessing="true" native2AsciiForPropertiesFiles="false">
+  <component name="Encoding">
     <file url="PROJECT" charset="UTF-8" />
   </component>
   <component name="EntryPointsManager">
@@ -39,20 +39,6 @@
   </component>
   <component name="FrameworkDetectionExcludesConfiguration">
     <file type="web" url="file://$PROJECT_DIR$" />
-  </component>
-  <component name="GradleSettings">
-    <option name="linkedExternalProjectsSettings">
-      <GradleProjectSettings>
-        <option name="distributionType" value="LOCAL" />
-        <option name="externalProjectPath" value="$PROJECT_DIR$" />
-        <option name="gradleHome" value="$PROJECT_DIR$/../gradle/gradle-1.8" />
-        <option name="modules">
-          <set>
-            <option value="$PROJECT_DIR$" />
-          </set>
-        </option>
-      </GradleProjectSettings>
-    </option>
   </component>
   <component name="IdProvider" IDEtalkID="11DA1DB66DD62DDA1ED602B7079FE97C" />
   <component name="InspectionProjectProfileManager">
@@ -289,6 +275,8 @@
         </indentOptions>
       </codeStyleSettings>
       <codeStyleSettings language="JAVA">
+        <option name="RIGHT_MARGIN" value="150" />
+        <option name="KEEP_FIRST_COLUMN_COMMENT" value="false" />
         <option name="BLANK_LINES_AROUND_FIELD" value="1" />
         <option name="ALIGN_MULTILINE_CHAINED_METHODS" value="true" />
         <option name="METHOD_PARAMETERS_WRAP" value="1" />
