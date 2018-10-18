@@ -16,7 +16,7 @@
 
 savantVersion = "1.0.0"
 
-project(group: "com.inversoft", name: "prime-transformer", version: "2.1.0", licenses: ["ApacheV2_0"]) {
+project(group: "com.inversoft", name: "prime-transformer", version: "2.1.1", licenses: ["ApacheV2_0"]) {
 
   workflow {
     standard()
@@ -32,9 +32,9 @@ project(group: "com.inversoft", name: "prime-transformer", version: "2.1.0", lic
       dependency(id: "org.slf4j:slf4j-api:1.7.7")
     }
     group(name: "test-compile", export: false) {
-      dependency(id: "com.fasterxml.jackson.core:jackson-annotations:2.8.8")
-      dependency(id: "com.fasterxml.jackson.core:jackson-core:2.8.8")
-      dependency(id: "com.fasterxml.jackson.core:jackson-databind:2.8.8")
+      dependency(id: "com.fasterxml.jackson.core:jackson-annotations:2.9.6")
+      dependency(id: "com.fasterxml.jackson.core:jackson-core:2.9.6")
+      dependency(id: "com.fasterxml.jackson.core:jackson-databind:2.9.6")
       dependency(id: "org.codehaus.groovy:groovy:groovy-all:2.4.6:jar")
       dependency(id: "org.spockframework:spock-core:0.7.0+groovy2.0")
       dependency(id: "org.testng:testng:6.8.7")
