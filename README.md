@@ -37,7 +37,7 @@ This function is provided in the library, the caller can provide their own imple
 <dependency>
   <groupId>com.inversoft</groupId>
   <artifactId>prime-transformer</artifactId>
-  <version>2.1.1</version>
+  <version>2.1.2</version>
 </dependency>
 ```
 
